@@ -20,6 +20,10 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
+    "/",
+    "/invite(.*)",
+    "/sign-in(.*)",
+    "/sign-up(.*)",
     "/dashboard(.*)",
     "/onboarding(.*)",
     "/kader(.*)",
