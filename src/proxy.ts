@@ -1,0 +1,34 @@
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/onboarding(.*)",
+  "/kader(.*)",
+  "/kalender(.*)",
+  "/training(.*)",
+  "/spiele(.*)",
+  "/statistiken(.*)",
+  "/abwesenheiten(.*)",
+  "/einladungen(.*)",
+]);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (isProtectedRoute(request)) {
+    await auth.protect();
+  }
+});
+
+export const config = {
+  matcher: [
+    "/dashboard(.*)",
+    "/onboarding(.*)",
+    "/kader(.*)",
+    "/kalender(.*)",
+    "/training(.*)",
+    "/spiele(.*)",
+    "/statistiken(.*)",
+    "/abwesenheiten(.*)",
+    "/einladungen(.*)",
+    "/(api|trpc)(.*)",
+  ],
+};

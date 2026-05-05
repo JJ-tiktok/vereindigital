@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PitchMaster Pro - Kalender</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#f2f3fd",
+                    "on-surface": "#191b23",
+                    "on-primary-container": "#fefcff",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-container": "#ecedf7",
+                    "primary": "#0058be",
+                    "on-background": "#191b23",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-primary-fixed-variant": "#004395",
+                    "inverse-primary": "#adc6ff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-bright": "#f9f9ff",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed": "#111c2d",
+                    "secondary-fixed": "#d8e3fb",
+                    "on-primary-fixed": "#001a42",
+                    "on-tertiary-container": "#fffbff",
+                    "on-secondary-container": "#586377",
+                    "tertiary-container": "#b75b00",
+                    "tertiary": "#924700",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-container-high": "#e6e7f2",
+                    "inverse-on-surface": "#eff0fa",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#005ac2",
+                    "surface-dim": "#d8d9e3",
+                    "error-container": "#ffdad6",
+                    "on-surface-variant": "#424754",
+                    "on-tertiary-fixed": "#311400",
+                    "surface-container-highest": "#e1e2ec",
+                    "secondary": "#545f73",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#c2c6d6",
+                    "surface": "#f9f9ff",
+                    "error": "#ba1a1a",
+                    "background": "#f9f9ff",
+                    "outline": "#727785",
+                    "inverse-surface": "#2e3038",
+                    "surface-variant": "#e1e2ec",
+                    "secondary-container": "#d5e0f8",
+                    "on-secondary-fixed-variant": "#3c475a",
+                    "primary-container": "#2170e4",
+                    "secondary-fixed-dim": "#bcc7de",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "2xl": "48px",
+                    "sm": "8px",
+                    "container-margin": "24px",
+                    "base": "8px",
+                    "gutter": "16px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "md": "16px"
+            },
+            "fontFamily": {
+                    "h2": ["Lexend"],
+                    "body-base": ["Lexend"],
+                    "label-caps": ["Lexend"],
+                    "h3": ["Lexend"],
+                    "h1": ["Lexend"],
+                    "stats-lg": ["Lexend"],
+                    "body-sm": ["Lexend"]
+            },
+            "fontSize": {
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-base": ["16px", {"lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "h1": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "stats-lg": ["48px", {"lineHeight": "1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar Component -->
+<aside class="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r border-outline-variant bg-surface-container-lowest z-50">
+<!-- Header -->
+<div class="p-md flex items-center gap-sm border-b border-outline-variant">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Club Crest" class="w-full h-full object-cover" data-alt="A stylized, modern football club crest featuring a minimalist geometric shield design in deep blue and stark white. The emblem is illuminated by soft, professional studio lighting, creating a premium, high-stakes athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuApDQmb5AVarxqKR4gVa8OW89bgoTlI8go6lvJvrXTR1PR8O9m1u_J7z5fUTf9CV-zOyyfTHHyRvtDkT81Z7iQyd4CzdTQrnDaCMtFLuRQc4DzCkxGwFI7y4nY0MpMyZCrL90MAM5QjJcTCOyvsVI1lrnEbu7_m97qClxYBJDiqqi-KgdKI0By7EdSLkhzezDpZCbIdtXOzJcZc1eZiSrGVfcA3Pg6TQI0m7jHw65jNub_LT7V2WgiI7xCfY1r3YAuqpnNbybu6vA"/>
+</div>
+<div>
+<h2 class="font-h3 text-h3 text-primary font-extrabold truncate">First Team</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Premier League</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 py-4 overflow-y-auto px-sm flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-primary-container text-on-primary-container border-r-2 border-primary translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-body-sm text-body-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-sm text-body-sm font-medium">Roster</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">strategy</span>
+<span class="font-body-sm text-body-sm font-medium">Tactics</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">search_insights</span>
+<span class="font-body-sm text-body-sm font-medium">Scouting</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-sm text-body-sm font-medium">Medical</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-sm text-body-sm font-medium">Analytics</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="p-sm border-t border-outline-variant flex flex-col gap-xs mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-sm text-body-sm font-medium">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="flex-1 flex flex-col md:ml-64 h-screen min-w-0">
+<!-- TopNavBar Component -->
+<header class="flex justify-between items-center h-16 px-6 w-full bg-surface-container-lowest border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-md w-1/3">
+<!-- Search Bar Placeholder -->
+<div class="relative w-full max-w-sm hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-body-sm font-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Suchen..." type="text"/>
+</div>
+</div>
+<div class="text-lg font-bold tracking-tight text-on-surface absolute left-1/2 -translate-x-1/2 hidden lg:block">
+                PitchMaster Pro
+            </div>
+<div class="flex items-center justify-end gap-sm w-1/3">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors hidden sm:block">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-8 h-8 rounded-full ml-2 overflow-hidden border border-outline-variant shrink-0 cursor-pointer">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a football manager with a focused expression, wearing a sleek, dark technical training top. The background is a clean, minimal white studio environment with soft, flattering lighting, conveying authority and modern athletic intelligence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqQwnQ1gLpQaqPB1JJjVqHmbVQG-OwKVSA4_w3QkhyoXH5c9TvijdU46F2i5Mno9l9JTidmwscINN3THfSOpbjWbXucFY2b6KA7jytXr0d70hCn_oSYb6y41ZsbEcORbAfJzzpL8xg8qbzaLEqUanrUSiChbIAGR0apfAkIF1LbUFXhv5nY7LEdMRh3RRbiGYQxAMOHukNfVhKSFYysqObLR680NwiwoUeJFjzgzTixei4HhSPBp54Res68NzMEtpLbzHTalSISg"/>
+</div>
+</div>
+</header>
+<!-- Page Content Canvas -->
+<div class="flex-1 overflow-y-auto p-lg bg-surface flex flex-col gap-lg">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface">Terminplaner</h1>
+<p class="font-body-base text-body-base text-on-surface-variant mt-1">Saison 2023/24 - Erste Mannschaft</p>
+</div>
+<div class="flex items-center bg-surface-container-lowest border border-outline-variant rounded-lg p-1">
+<button class="px-md py-1.5 font-body-sm text-body-sm rounded-md hover:bg-surface-container transition-colors text-on-surface-variant">Tag</button>
+<button class="px-md py-1.5 font-body-sm text-body-sm rounded-md hover:bg-surface-container transition-colors text-on-surface-variant">Woche</button>
+<button class="px-md py-1.5 font-body-sm text-body-sm rounded-md bg-primary-container text-on-primary-container font-medium shadow-sm transition-colors">Monat</button>
+</div>
+</div>
+<!-- Bento Layout: Calendar Grid & Sidebar -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-lg flex-1 min-h-[600px]">
+<!-- Main Calendar Grid (Spans 8 columns on large screens) -->
+<div class="xl:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col overflow-hidden shadow-sm">
+<!-- Calendar Header Controls -->
+<div class="flex justify-between items-center p-md border-b border-outline-variant">
+<div class="flex items-center gap-sm">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<h2 class="font-h2 text-h2 text-on-surface min-w-[160px] text-center">Oktober 2023</h2>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+<button class="px-md py-2 bg-primary text-on-primary font-body-sm text-body-sm font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">add</span>
+                            Neuer Termin
+                        </button>
+</div>
+<!-- Weekdays -->
+<div class="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low">
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Mo</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Di</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Mi</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Do</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Fr</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Sa</div>
+<div class="py-2 text-center font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">So</div>
+</div>
+<!-- Days Grid -->
+<div class="flex-1 grid grid-cols-7 grid-rows-5 bg-outline-variant gap-[1px]">
+<!-- Example Week 1 (Padding empty days) -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">25</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">26</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">27</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">28</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">29</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs opacity-50"><span class="font-body-sm text-body-sm text-on-surface-variant p-1">30</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">1</span></div>
+<!-- Example Week 2 -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">2</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-secondary-container text-on-secondary-container text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">10:00 Training</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">3</span>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">4</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-surface-variant text-on-surface-variant text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">14:00 Team-Meeting</div>
+<div class="bg-secondary-container text-on-secondary-container text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">16:00 Training</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">5</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">6</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-secondary-container text-on-secondary-container text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">10:00 Abschlusstraining</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">7</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-primary text-on-primary text-[10px] font-bold px-1.5 py-0.5 rounded truncate shadow-sm">15:30 Spieltag vs FCB</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">8</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-surface-variant text-on-surface-variant text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">Regeneration</div>
+</div>
+</div>
+<!-- Example Week 3 (Includes Selected Day) -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">9</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">10</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-secondary-container text-on-secondary-container text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">10:00 Training</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">11</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">12</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs">
+<span class="font-body-sm text-body-sm text-on-surface font-medium p-1">13</span>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-surface-variant text-on-surface-variant text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">13:00 Videoanalyse</div>
+</div>
+</div>
+<!-- Selected Day -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs ring-2 ring-primary ring-inset relative z-10 rounded-sm">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-primary font-bold p-1 bg-primary-container rounded-full w-6 h-6 flex items-center justify-center">14</span>
+</div>
+<div class="mt-1 flex flex-col gap-[2px]">
+<div class="bg-secondary-container text-on-secondary-container text-[10px] font-semibold px-1.5 py-0.5 rounded truncate border border-primary/20">10:00 Taktiktraining</div>
+<div class="bg-surface-variant text-on-surface-variant text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">12:30 Physio-Check</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">15</span></div>
+<!-- Example Week 4 (Sparse) -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">16</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">17</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">18</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">19</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">20</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">21</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium p-1">22</span></div>
+</div>
+</div>
+<!-- Event Details Sidebar (Spans 4 columns) -->
+<div class="xl:col-span-4 flex flex-col gap-md">
+<!-- Daily Overview Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="border-b border-outline-variant pb-md mb-md">
+<h3 class="font-h3 text-h3 text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+                                Samstag, 14. Oktober
+                            </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">2 Termine geplant</p>
+</div>
+<!-- Selected Event Details -->
+<div class="bg-surface border border-outline-variant rounded-lg p-md relative overflow-hidden">
+<!-- Accent left border -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex justify-between items-start mb-sm pl-2">
+<h4 class="font-h3 text-h3 text-on-surface text-base">Taktiktraining</h4>
+<span class="bg-secondary-container text-on-secondary-container font-label-caps text-[10px] px-2 py-1 rounded-full uppercase tracking-wide">Training</span>
+</div>
+<div class="flex flex-col gap-3 pl-2">
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-body-sm text-body-sm">10:00 - 12:00 Uhr</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="font-body-sm text-body-sm">Trainingsplatz 1, Hauptgelände</span>
+</div>
+</div>
+<!-- Focus Areas -->
+<div class="mt-md pl-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">Schwerpunkte</span>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-high text-on-surface text-xs px-2 py-1 rounded-md font-medium border border-outline-variant">Pressing-Linien</span>
+<span class="bg-surface-container-high text-on-surface text-xs px-2 py-1 rounded-md font-medium border border-outline-variant">Umschaltspiel</span>
+<span class="bg-surface-container-high text-on-surface text-xs px-2 py-1 rounded-md font-medium border border-outline-variant">Fitness</span>
+</div>
+</div>
+<!-- Attendance Preview -->
+<div class="mt-md pt-md border-t border-outline-variant pl-2">
+<div class="flex justify-between items-end mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Anwesenheit (22/24)</span>
+</div>
+<div class="flex items-center -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden bg-surface-variant">
+<img alt="Player" class="w-full h-full object-cover" data-alt="A close-up profile picture of a young male football player looking directly at the camera. Soft, high-key studio lighting emphasizes a modern, clean aesthetic against a pure white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJQAXiiYW3PMc9Gz10DCB7g2TgrP2rjuwILgFyjBaNH9Y8Fgj1Sbbi2KPfeQPsuiQt9ew7_vLtulYL4e6X0fBhVkydksO33u7JnGFT335knFk8c9-XKT8Y5C7Wci_v1IDRMT5rYpCFyaOdTb35Lc30GhcYk0Vb1pipYtfBS3gB2QYxXDf3s98J850mJ41hDAYZ6HHaAGPxzfbfI2BQkFy73q2BQNwrnvdBZzFKQ-unH3rGe0MQbXJnFLYfmWdEOHVzSJHIVnKTBQ"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden bg-surface-variant">
+<img alt="Player" class="w-full h-full object-cover" data-alt="A close-up profile picture of a male football player with a focused expression. Soft, high-key studio lighting emphasizes a modern, clean aesthetic against a pure white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpkNabSjnj4KHrlzauYGAR3W55wtUDudgR0MTF9riEdWcOi65ayKuWjQCxUTI8IlhSZCDUWNlNv-1Hgok11F_jKPstCEJBMmeSa7Ly_9AsvjqMdSpHDhQf9ZFhTI3Py2mjl9nNXibcyNZpjTYD-PbnfhtOroGt6ulmslTb5xddmHlP1egAb0HfTGXoM-uWGtILUZNgYxqyleERMZclQXZqTqL84oeSll_JZYfWndbSgBOq8JfOwsSFY5xKqiTdaFhl_yJu4u2urw"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest overflow-hidden bg-surface-variant">
+<img alt="Player" class="w-full h-full object-cover" data-alt="A close-up profile picture of a male athlete smiling slightly. Soft, high-key studio lighting emphasizes a modern, clean aesthetic against a pure white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOhG1kuUoeN1S5I57kkkCbMZlj05fQSZCuOMARRh8dxw8bUqW7fNfOawoNn9U2Furku1s4HfqdlFQBOq9Tbm_Rw2FkeMe9LduH4Fvi3I_Gz1rmIAAdVKojx2PZ9oxXDMxws6VMkNAime0TQ22XuOZFysSpUaL-JY3eNjkBCn0hpysY_bkyfVST7YVhGx6Wlmyp7lQUOzh7h3aLdYoCfwiryHaJkfstMQ6uB0D4b8hHvtTWIYyD6Ki1azoJhz2gTHq_owBVdAXKsQ"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-lowest bg-surface-container flex items-center justify-center z-10 text-xs font-medium text-on-surface-variant">
+                                        +19
+                                    </div>
+</div>
+</div>
+<button class="w-full mt-md py-2 border border-outline-variant text-on-surface font-body-sm text-body-sm font-medium rounded-lg hover:bg-surface-container transition-colors">
+                                Details bearbeiten
+                            </button>
+</div>
+<!-- Secondary Event (Compact) -->
+<div class="mt-sm p-sm rounded-lg hover:bg-surface-container transition-colors cursor-pointer border border-transparent hover:border-outline-variant flex gap-3 items-center">
+<div class="w-1 h-8 bg-surface-variant rounded-full shrink-0"></div>
+<div>
+<h5 class="font-body-sm text-body-sm text-on-surface font-medium">Physio-Check</h5>
+<p class="text-xs text-on-surface-variant">12:30 Uhr • Medizinische Abteilung</p>
+</div>
+</div>
+</div>
+<!-- Quick Stats Snippet for the Month -->
+<div class="bg-primary text-on-primary rounded-xl p-md flex items-center justify-between shadow-sm">
+<div>
+<span class="font-label-caps text-label-caps text-primary-fixed opacity-80">Oktober Übersicht</span>
+<div class="font-h2 text-h2 mt-1">4 Spiele</div>
+</div>
+<span class="material-symbols-outlined text-4xl opacity-50">sports_soccer</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

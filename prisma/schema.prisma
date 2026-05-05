@@ -1,0 +1,658 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TeamMembershipStatus {
+  ACTIVE
+  INVITED
+  INACTIVE
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum CalendarEventType {
+  TRAINING
+  MATCH
+  TEAM_EVENT
+  OTHER
+}
+
+enum CalendarEventStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum AttendanceStatus {
+  ACCEPTED
+  MAYBE
+  DECLINED
+}
+
+enum AvailabilityType {
+  VACATION
+  INJURY
+  ILLNESS
+  OTHER
+}
+
+enum MatchStatus {
+  PLANNED
+  LIVE
+  FINISHED
+  CANCELLED
+}
+
+enum LineupStatus {
+  STARTER
+  SUBSTITUTE
+  NOT_USED
+}
+
+enum TrainingExerciseCategory {
+  WARMUP
+  TECHNIQUE
+  TACTICS
+  CONDITIONING
+  FINISHING
+  GAME_FORM
+  COOLDOWN
+  OTHER
+}
+
+enum TrainingIntensity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TrainingExerciseVisibility {
+  TEAM
+  CLUB
+}
+
+enum TrainingPitchType {
+  FULL_FIELD
+  HALF_FIELD
+  PENALTY_AREA
+  SMALL_FIELD
+  FREE_AREA
+}
+
+enum PlayerAttributeCategory {
+  TECHNICAL
+  TACTICAL
+  PHYSICAL
+  MENTAL
+  GOALKEEPER
+  POSITION_SPECIFIC
+}
+
+enum PlayerPositionGroup {
+  ALL
+  GOALKEEPER
+  DEFENDER
+  FULLBACK
+  MIDFIELDER
+  WINGER
+  FORWARD
+}
+
+enum PlayerFileEntryType {
+  PLAYER_TALK
+  GOAL_AGREEMENT
+  FEEDBACK
+  TRAINING_OBSERVATION
+  MATCH_OBSERVATION
+  DISCIPLINE
+  LOAD_INJURY
+  OTHER
+}
+
+enum PlayerFormTrend {
+  UP
+  STABLE
+  DOWN
+}
+
+model Club {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teams             Team[]
+  users             User[]
+  playerProfiles    PlayerProfile[]
+  roles             Role[]
+  memberships       ClubMembership[]
+  invitations       Invitation[]
+  trainingExercises TrainingExercise[]
+  attributeDefinitions PlayerAttributeDefinition[]
+
+  @@map("clubs")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  ageGroup  String?
+  season    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberships    TeamMembership[]
+  calendarEvents CalendarEvent[]
+  matches        Match[]
+  invitations    Invitation[]
+  attributeSnapshots PlayerAttributeSnapshot[]
+  formSnapshots  PlayerFormSnapshot[]
+  fileEntries    PlayerFileEntry[]
+  trainingExercises TrainingExercise[]
+
+  @@unique([clubId, name, season])
+  @@index([clubId])
+  @@map("teams")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clubId      String
+  clerkUserId String   @unique
+  email       String
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  club              Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  playerProfiles    PlayerProfile[]
+  clubMemberships   ClubMembership[]
+  memberships       TeamMembership[]
+  attendancesSet    EventAttendance[]  @relation("AttendanceSetBy")
+  eventsCreated     CalendarEvent[]    @relation("CalendarEventCreatedBy")
+  invitationsCreated Invitation[]      @relation("InvitationCreatedBy")
+  exercisesCreated  TrainingExercise[] @relation("TrainingExerciseCreatedBy")
+  attributeSnapshotsCreated PlayerAttributeSnapshot[] @relation("PlayerAttributeSnapshotCreatedBy")
+  trainingPerformancesCreated PlayerTrainingPerformance[] @relation("PlayerTrainingPerformanceCreatedBy")
+  fileEntriesCreated PlayerFileEntry[] @relation("PlayerFileEntryCreatedBy")
+  fileEntriesUpdated PlayerFileEntry[] @relation("PlayerFileEntryUpdatedBy")
+
+  @@index([clubId])
+  @@index([email])
+  @@map("users")
+}
+
+model PlayerProfile {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String?
+  firstName String
+  lastName  String
+  birthDate DateTime
+  position  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club          Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  memberships   TeamMembership[]
+  attendances   EventAttendance[]
+  availabilities PlayerAvailability[]
+  matchStats    PlayerMatchStat[]
+  attributeSnapshots PlayerAttributeSnapshot[]
+  formSnapshots PlayerFormSnapshot[]
+  fileEntries   PlayerFileEntry[]
+  trainingPerformances PlayerTrainingPerformance[]
+
+  @@index([clubId])
+  @@index([userId])
+  @@map("player_profiles")
+}
+
+model Role {
+  id           String   @id @default(cuid())
+  clubId       String
+  name         String
+  key          String
+  isSystemRole Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  club            Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  rolePermissions RolePermission[]
+  clubMemberships ClubMembership[]
+  memberships     TeamMembership[]
+  invitations     Invitation[]
+
+  @@unique([clubId, key])
+  @@index([clubId])
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model ClubMembership {
+  id        String               @id @default(cuid())
+  clubId    String
+  userId    String
+  roleId    String
+  status    TeamMembershipStatus @default(ACTIVE)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([clubId, userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("club_memberships")
+}
+
+model TeamMembership {
+  id              String               @id @default(cuid())
+  teamId          String
+  userId          String?
+  playerProfileId String?
+  roleId          String
+  status          TeamMembershipStatus @default(ACTIVE)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  team          Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  role          Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([teamId])
+  @@index([userId])
+  @@index([playerProfileId])
+  @@index([roleId])
+  @@unique([teamId, userId, roleId])
+  @@unique([teamId, playerProfileId, roleId])
+  @@map("team_memberships")
+}
+
+model Invitation {
+  id              String           @id @default(cuid())
+  clubId          String
+  teamId          String?
+  roleId          String
+  email           String?
+  token           String           @unique
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  createdByUserId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  club          Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  role          Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  createdByUser User? @relation("InvitationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId])
+  @@index([teamId])
+  @@index([roleId])
+  @@index([email])
+  @@map("invitations")
+}
+
+model CalendarEvent {
+  id              String              @id @default(cuid())
+  teamId          String
+  type            CalendarEventType
+  title           String
+  description     String?
+  location        String?
+  startsAt        DateTime
+  endsAt          DateTime
+  status          CalendarEventStatus @default(SCHEDULED)
+  createdByUserId String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?             @relation("CalendarEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  attendances   EventAttendance[]
+  match         Match?
+  trainingPlan  TrainingPlan?
+  trainingPerformances PlayerTrainingPerformance[]
+
+  @@index([teamId, startsAt])
+  @@index([type])
+  @@map("calendar_events")
+}
+
+model EventAttendance {
+  id              String           @id @default(cuid())
+  calendarEventId String
+  playerProfileId String
+  status          AttendanceStatus
+  reason          String?
+  setByUserId     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  calendarEvent CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  setByUser     User?         @relation("AttendanceSetBy", fields: [setByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([calendarEventId, playerProfileId])
+  @@index([playerProfileId])
+  @@index([setByUserId])
+  @@map("event_attendances")
+}
+
+model PlayerAvailability {
+  id              String           @id @default(cuid())
+  playerProfileId String
+  type            AvailabilityType
+  startsAt        DateTime
+  endsAt          DateTime
+  note            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId, startsAt, endsAt])
+  @@map("player_availabilities")
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  teamId          String
+  calendarEventId String?     @unique
+  opponent        String
+  isHomeGame      Boolean     @default(true)
+  goalsFor        Int?
+  goalsAgainst    Int?
+  status          MatchStatus @default(PLANNED)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  calendarEvent CalendarEvent?    @relation(fields: [calendarEventId], references: [id], onDelete: SetNull)
+  playerStats   PlayerMatchStat[]
+
+  @@index([teamId])
+  @@map("matches")
+}
+
+model PlayerMatchStat {
+  id              String       @id @default(cuid())
+  matchId         String
+  playerProfileId String
+  goals           Int          @default(0)
+  assists         Int          @default(0)
+  yellowCards     Int          @default(0)
+  redCards        Int          @default(0)
+  minutesPlayed   Int          @default(0)
+  lineupStatus    LineupStatus @default(NOT_USED)
+  rating          Float?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  match         Match         @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerProfileId])
+  @@index([playerProfileId])
+  @@map("player_match_stats")
+}
+
+model PlayerAttributeDefinition {
+  id              String                  @id @default(cuid())
+  clubId          String
+  key             String
+  name            String
+  category        PlayerAttributeCategory
+  positionGroup   PlayerPositionGroup     @default(ALL)
+  description     String?
+  sortOrder       Int                     @default(0)
+  isSystemDefault Boolean                 @default(false)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  club    Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  ratings PlayerAttributeRating[]
+
+  @@unique([clubId, key])
+  @@index([clubId, category])
+  @@index([positionGroup])
+  @@map("player_attribute_definitions")
+}
+
+model PlayerAttributeSnapshot {
+  id              String   @id @default(cuid())
+  playerProfileId String
+  teamId          String
+  season          String?
+  title           String
+  notes           String?
+  ratedAt         DateTime
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  playerProfile PlayerProfile           @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  team          Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?                   @relation("PlayerAttributeSnapshotCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  ratings       PlayerAttributeRating[]
+
+  @@index([playerProfileId, ratedAt])
+  @@index([teamId])
+  @@index([createdByUserId])
+  @@map("player_attribute_snapshots")
+}
+
+model PlayerAttributeRating {
+  id                    String   @id @default(cuid())
+  snapshotId            String
+  attributeDefinitionId String
+  value                 Int
+  note                  String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  snapshot            PlayerAttributeSnapshot   @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  attributeDefinition PlayerAttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, attributeDefinitionId])
+  @@index([attributeDefinitionId])
+  @@map("player_attribute_ratings")
+}
+
+model PlayerTrainingPerformance {
+  id              String   @id @default(cuid())
+  calendarEventId String
+  playerProfileId String
+  rating          Float
+  note            String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  calendarEvent CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  createdByUser User?         @relation("PlayerTrainingPerformanceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([calendarEventId, playerProfileId])
+  @@index([playerProfileId])
+  @@index([createdByUserId])
+  @@map("player_training_performances")
+}
+
+model PlayerFormSnapshot {
+  id              String          @id @default(cuid())
+  playerProfileId String
+  teamId          String
+  value           Float
+  trend           PlayerFormTrend @default(STABLE)
+  calculatedFrom  String?
+  notes           String?
+  calculatedAt    DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([playerProfileId, calculatedAt])
+  @@index([teamId])
+  @@map("player_form_snapshots")
+}
+
+model PlayerFileEntry {
+  id              String              @id @default(cuid())
+  playerProfileId String
+  teamId          String
+  type            PlayerFileEntryType
+  title           String
+  body            String
+  occurredAt      DateTime
+  followUpAt      DateTime?
+  season          String?
+  createdByUserId String?
+  updatedByUserId String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  playerProfile PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?         @relation("PlayerFileEntryCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser User?         @relation("PlayerFileEntryUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([playerProfileId, occurredAt])
+  @@index([teamId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@map("player_file_entries")
+}
+
+model TrainingExercise {
+  id              String                   @id @default(cuid())
+  clubId          String
+  teamId          String?
+  createdByUserId String?
+  title           String
+  description     String?
+  objective       String?
+  organization    String?
+  flow            String?
+  coachingPoints  String?
+  variations      String?
+  material        String?
+  category        TrainingExerciseCategory
+  durationMinutes Int?
+  minPlayers      Int?
+  maxPlayers      Int?
+  intensity       TrainingIntensity?
+  visibility      TrainingExerciseVisibility @default(TEAM)
+  pitchType       TrainingPitchType          @default(FREE_AREA)
+  sketchData      Json?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  club             Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team             Team?                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser    User?                  @relation("TrainingExerciseCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  planExercises    TrainingPlanExercise[]
+  sketches         TrainingExerciseSketch[]
+
+  @@index([clubId])
+  @@index([teamId])
+  @@index([createdByUserId])
+  @@index([category])
+  @@index([visibility])
+  @@map("training_exercises")
+}
+
+model TrainingExerciseSketch {
+  id                 String            @id @default(cuid())
+  trainingExerciseId String
+  title              String
+  pitchType          TrainingPitchType @default(FREE_AREA)
+  sketchData         Json?
+  sortOrder          Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  trainingExercise TrainingExercise @relation(fields: [trainingExerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([trainingExerciseId, sortOrder])
+  @@index([trainingExerciseId])
+  @@map("training_exercise_sketches")
+}
+
+model TrainingPlan {
+  id              String   @id @default(cuid())
+  calendarEventId String   @unique
+  objective       String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  calendarEvent CalendarEvent          @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  exercises     TrainingPlanExercise[]
+
+  @@map("training_plans")
+}
+
+model TrainingPlanExercise {
+  id                 String   @id @default(cuid())
+  trainingPlanId     String
+  trainingExerciseId String
+  sortOrder          Int
+  durationMinutes    Int?
+  coachingPoints     String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  trainingPlan     TrainingPlan     @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  trainingExercise TrainingExercise @relation(fields: [trainingExerciseId], references: [id], onDelete: Restrict)
+
+  @@unique([trainingPlanId, sortOrder])
+  @@index([trainingExerciseId])
+  @@map("training_plan_exercises")
+}

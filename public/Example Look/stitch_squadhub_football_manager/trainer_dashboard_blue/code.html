@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Performance Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#3c475a",
+                      "on-background": "#191b23",
+                      "on-secondary": "#ffffff",
+                      "surface-dim": "#d8d9e3",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "secondary-fixed": "#d8e3fb",
+                      "surface": "#f9f9ff",
+                      "surface-bright": "#f9f9ff",
+                      "on-tertiary-container": "#fffbff",
+                      "tertiary-fixed-dim": "#ffb786",
+                      "on-secondary-fixed": "#111c2d",
+                      "primary": "#0058be",
+                      "surface-container": "#ecedf7",
+                      "primary-container": "#2170e4",
+                      "outline-variant": "#c2c6d6",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#e1e2ec",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#b75b00",
+                      "surface-container-highest": "#e1e2ec",
+                      "inverse-primary": "#adc6ff",
+                      "secondary-container": "#d5e0f8",
+                      "on-tertiary": "#ffffff",
+                      "secondary-fixed-dim": "#bcc7de",
+                      "on-secondary-container": "#586377",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#001a42",
+                      "surface-container-high": "#e6e7f2",
+                      "primary-fixed": "#d8e2ff",
+                      "background": "#f9f9ff",
+                      "tertiary": "#924700",
+                      "inverse-on-surface": "#eff0fa",
+                      "on-primary-fixed-variant": "#004395",
+                      "surface-container-low": "#f2f3fd",
+                      "error": "#ba1a1a",
+                      "surface-tint": "#005ac2",
+                      "on-primary-container": "#fefcff",
+                      "outline": "#727785",
+                      "on-tertiary-fixed": "#311400",
+                      "on-surface": "#191b23",
+                      "error-container": "#ffdad6",
+                      "secondary": "#545f73",
+                      "inverse-surface": "#2e3038",
+                      "on-surface-variant": "#424754",
+                      "tertiary-fixed": "#ffdcc6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "lg": "24px",
+                      "container-margin": "24px",
+                      "md": "16px",
+                      "base": "8px",
+                      "xl": "32px",
+                      "xs": "4px",
+                      "2xl": "48px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Lexend"],
+                      "stats-lg": ["Lexend"],
+                      "h2": ["Lexend"],
+                      "h1": ["Lexend"],
+                      "body-base": ["Lexend"],
+                      "h3": ["Lexend"],
+                      "body-sm": ["Lexend"]
+              },
+              "fontSize": {
+                      "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                      "stats-lg": ["48px", { "lineHeight": "1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                      "h2": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                      "h1": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "body-base": ["16px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }],
+                      "h3": ["20px", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                      "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-base antialiased min-h-screen flex w-full">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-white dark:bg-slate-950 h-screen w-64 border-r border-slate-200 dark:border-slate-800 shadow-none font-['Lexend'] text-sm antialiased hidden md:flex flex-col flex-shrink-0 z-50">
+<div class="p-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 h-16">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">AI</div>
+<div>
+<h2 class="text-lg font-bold tracking-tighter text-slate-900 dark:text-slate-50 leading-tight">Athletic Intel</h2>
+<p class="text-xs text-slate-500">Pro Coach Portal</p>
+</div>
+</div>
+<nav class="flex flex-col gap-y-4 p-4 flex-1">
+<!-- Active Tab: Dashboard -->
+<a class="bg-slate-100 dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold rounded-md flex items-center gap-3 p-3 transition-colors duration-200 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-900" href="#">
+<span class="material-symbols-outlined fill">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-3 p-3 transition-colors duration-200 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Squad</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-3 p-3 transition-colors duration-200 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span>Training</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-3 p-3 transition-colors duration-200 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md" href="#">
+<span class="material-symbols-outlined">strategy</span>
+<span>Tactics</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-3 p-3 transition-colors duration-200 ease-in-out hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Analysis</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 flex h-16 items-center justify-between px-8 w-full border-b border-slate-200 dark:border-slate-800 shadow-none font-['Lexend'] font-medium">
+<div class="flex items-center gap-4">
+<span class="text-h3 font-h3 text-blue-600 dark:text-blue-400">Performance Dashboard</span>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search (Left concept applied as an input here) -->
+<div class="hidden lg:flex relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-sm focus:ring-2 focus:ring-primary focus:bg-surface w-64 transition-all" placeholder="Suche..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 transition-all active:opacity-80 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:text-blue-500 dark:hover:text-blue-300 transition-all active:opacity-80">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="Coach Profile" class="w-8 h-8 rounded-full border border-slate-200 object-cover ml-2" data-alt="A professional headshot of a confident, modern football coach in his 40s wearing a high-end, minimalist navy quarter-zip training top. He has a neat, short beard and is looking slightly off-camera with a focused, analytical expression. The lighting is studio-quality, clean, and bright, illuminating his face against a neutral, light grey background that matches a sleek, modern UI aesthetic. The mood is authoritative yet approachable, emphasizing professional sports management." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEOEg_fym6jn57DNPg9PKNhqn_tMWDpoM0l8FuQJq8Hr7PoZIaGiXvYhq-YX_FSeoWvNbEOjOcsdfm-WxsaDeBeOvP1DWW0dwaCsW_EaKVvWYVkBX8X12Z5W5bPRYOHLcvrZskXCm2ecFdfv0ZJGkxjXWfa0UNxl_QASh1t42gdAiLe9D8SlWEGm_RGuF7ft7RQI8PZ1Xa68JunfGO9Gey4JTOcGObRgasp56_H4U31RiXy7QMitJstzqjKu3QoXQxFHn9dgkRJw"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-container-margin flex flex-col gap-lg bg-background">
+<!-- Hero Section -->
+<section class="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-surface-container-low to-transparent opacity-50 pointer-events-none"></div>
+<div class="z-10 relative">
+<h1 class="font-h1 text-h1 text-on-surface mb-2">Willkommen zurück, Coach</h1>
+<p class="font-body-base text-on-surface-variant max-w-2xl">
+                        Das Team ist in guter Verfassung nach dem letzten Sieg. Die Daten der aktuellen Trainingswoche sind verarbeitet und bereit für Ihre Analyse.
+                    </p>
+</div>
+<div class="z-10 relative mt-md md:mt-0 flex flex-col items-start md:items-end bg-surface-container-low p-md rounded-lg border border-outline-variant/50">
+<span class="font-label-caps text-label-caps text-primary mb-1 uppercase tracking-widest">Nächstes Training</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">schedule</span>
+<span class="font-h3 text-h3 text-on-surface">Heute, 15:30</span>
+</div>
+<span class="font-body-sm text-on-surface-variant mt-1">Schwerpunkt: Taktik &amp; Standards</span>
+</div>
+</section>
+<!-- Metrics & Charts Bento Grid -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Participation Chart -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/30 pb-2">
+<h3 class="font-h3 text-h3 text-on-surface">Trainingsbeteiligung</h3>
+<span class="material-symbols-outlined text-outline">groups</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center relative">
+<svg class="w-32 h-32 transform -rotate-90" viewbox="0 0 36 36">
+<!-- Background track -->
+<path class="stroke-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3"></path>
+<!-- Progress -->
+<path class="stroke-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="92, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-stats-lg text-stats-lg text-on-surface">92<span class="text-h3">%</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">SQUAD FIT</span>
+</div>
+</div>
+<div class="mt-4 flex justify-between font-body-sm text-on-surface-variant">
+<span>24/26 Spieler bereit</span>
+<span class="text-error flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">local_hospital</span> 2 Verletzt</span>
+</div>
+</div>
+<!-- Team Form Radial -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/30 pb-2">
+<h3 class="font-h3 text-h3 text-on-surface">Teamform</h3>
+<span class="material-symbols-outlined text-outline">trending_up</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center relative">
+<svg class="w-32 h-32 transform -rotate-90" viewbox="0 0 36 36">
+<path class="stroke-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3"></path>
+<path class="stroke-[#059669]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="85, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-stats-lg text-stats-lg text-on-surface">85</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">INDEX</span>
+</div>
+</div>
+<div class="mt-4 flex justify-between font-body-sm text-on-surface-variant">
+<span>Letzte 5 Spiele</span>
+<span class="text-[#059669] flex items-center gap-1">S S S U S</span>
+</div>
+</div>
+<!-- Intensity Load Radial -->
+<div class="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant/30 pb-2">
+<h3 class="font-h3 text-h3 text-on-surface">Belastungsintensität</h3>
+<span class="material-symbols-outlined text-outline">vital_signs</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center relative">
+<svg class="w-32 h-32 transform -rotate-90" viewbox="0 0 36 36">
+<path class="stroke-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3"></path>
+<path class="stroke-[#ea580c]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="78, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-stats-lg text-stats-lg text-on-surface">78<span class="text-h3">%</span></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">ACWR</span>
+</div>
+</div>
+<div class="mt-4 flex justify-between font-body-sm text-on-surface-variant">
+<span>Akut:Chronisch (1.14)</span>
+<span class="text-[#ea580c] flex items-center gap-1">Optimal</span>
+</div>
+</div>
+</section>
+<!-- Bottom Row: Quick Access & Schedule -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Quick Access Grid -->
+<div class="lg:col-span-8 flex flex-col gap-md">
+<h2 class="font-h2 text-h2 text-on-background border-b border-outline-variant/30 pb-2 mb-2">Schnellzugriff</h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-md">
+<button class="group flex flex-col items-start p-lg bg-surface border border-outline-variant hover:border-primary transition-colors rounded-xl text-left relative overflow-hidden h-32">
+<div class="absolute right-[-10px] bottom-[-10px] opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">fitness_center</span>
+</div>
+<span class="material-symbols-outlined text-primary mb-auto">fitness_center</span>
+<span class="font-h3 text-h3 text-on-surface group-hover:text-primary transition-colors mt-2">Training planen</span>
+</button>
+<button class="group flex flex-col items-start p-lg bg-surface border border-outline-variant hover:border-primary transition-colors rounded-xl text-left relative overflow-hidden h-32">
+<div class="absolute right-[-10px] bottom-[-10px] opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">groups</span>
+</div>
+<span class="material-symbols-outlined text-primary mb-auto">groups</span>
+<span class="font-h3 text-h3 text-on-surface group-hover:text-primary transition-colors mt-2">Kader verwalten</span>
+</button>
+<button class="group flex flex-col items-start p-lg bg-surface border border-outline-variant hover:border-primary transition-colors rounded-xl text-left relative overflow-hidden h-32">
+<div class="absolute right-[-10px] bottom-[-10px] opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[100px]">strategy</span>
+</div>
+<span class="material-symbols-outlined text-primary mb-auto">strategy</span>
+<span class="font-h3 text-h3 text-on-surface group-hover:text-primary transition-colors mt-2">Taktiktafel</span>
+</button>
+</div>
+</div>
+<!-- Daily Schedule -->
+<div class="lg:col-span-4 flex flex-col gap-md">
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-2 mb-2">
+<h2 class="font-h2 text-h2 text-on-background">Tagesablauf</h2>
+<span class="font-body-sm text-on-surface-variant">Heute</span>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+<div class="flex items-start gap-4 p-md border-b border-surface-container-high bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<div class="font-label-caps text-label-caps text-on-surface-variant w-12 pt-1 text-right">10:00</div>
+<div class="flex-1 flex flex-col">
+<span class="font-h3 text-h3 text-on-surface text-base">Videostudium</span>
+<span class="font-body-sm text-on-surface-variant">Analyse Gegner - Konferenzraum A</span>
+</div>
+</div>
+<div class="flex items-start gap-4 p-md border-b border-surface-container-high bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<div class="font-label-caps text-label-caps text-on-surface-variant w-12 pt-1 text-right">12:30</div>
+<div class="flex-1 flex flex-col">
+<span class="font-h3 text-h3 text-on-surface text-base">Team-Meeting</span>
+<span class="font-body-sm text-on-surface-variant">Taktikbesprechung vor dem Training</span>
+</div>
+</div>
+<div class="flex items-start gap-4 p-md bg-primary-fixed-dim/20 hover:bg-primary-fixed-dim/30 transition-colors border-l-4 border-l-primary">
+<div class="font-label-caps text-label-caps text-primary w-11 pt-1 text-right font-bold">15:30</div>
+<div class="flex-1 flex flex-col">
+<span class="font-h3 text-h3 text-primary text-base">Training</span>
+<span class="font-body-sm text-on-surface-variant">Platz 1 - Taktik &amp; Standards</span>
+<div class="mt-2 flex -space-x-2 overflow-hidden">
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-surface bg-surface-container-high text-[10px] flex items-center justify-center font-bold text-on-surface">AT</div>
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-surface bg-surface-container-high text-[10px] flex items-center justify-center font-bold text-on-surface">MJ</div>
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-surface bg-surface-container-high text-[10px] flex items-center justify-center font-bold text-on-surface">+22</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>
