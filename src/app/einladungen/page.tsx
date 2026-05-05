@@ -45,6 +45,7 @@ export default async function InvitationsPage({
       createdAt: "desc",
     },
   });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   return (
     <AppShell context={context} activePath="/einladungen">
@@ -123,7 +124,7 @@ export default async function InvitationsPage({
           <div className="divide-y divide-border">
             {invitations.length > 0 ? (
               invitations.map((invitation) => {
-                const url = `http://localhost:3000/invite/${invitation.token}`;
+                const url = `${appUrl.replace(/\/$/, "")}/invite/${invitation.token}`;
                 const expired = invitation.expiresAt < new Date();
 
                 return (
