@@ -11,14 +11,28 @@ import {
 import Link from "next/link";
 
 import { AppShell, EmptyState } from "@/components/app-shell";
-import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
+import { requireAppContext } from "@/lib/app-context";
 import { formatDate, formatDateTime, getInitials } from "@/lib/format";
 import { eventTypeLabel } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
 
 export default async function DashboardPage() {
   const context = await requireAppContext();
-  const activeTeam = requireActiveTeam(context);
+  const activeTeam = context.activeTeam;
+
+  if (!activeTeam) {
+    return (
+      <AppShell context={context} activePath="/dashboard">
+        <section className="py-6">
+          <EmptyState
+            title="Noch kein Team vorhanden"
+            description="Lege im Onboarding oder spaeter in der Vereinsverwaltung ein Team an, damit das Dashboard Daten anzeigen kann."
+          />
+        </section>
+      </AppShell>
+    );
+  }
+
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);

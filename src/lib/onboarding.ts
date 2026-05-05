@@ -66,7 +66,7 @@ export async function completeClubOnboarding(formData: FormData) {
       },
     });
 
-    await tx.team.create({
+    const team = await tx.team.create({
       data: {
         clubId: club.id,
         name: teamName,
@@ -102,6 +102,13 @@ export async function completeClubOnboarding(formData: FormData) {
         await tx.clubMembership.create({
           data: {
             clubId: club.id,
+            userId: user.id,
+            roleId: role.id,
+          },
+        });
+        await tx.teamMembership.create({
+          data: {
+            teamId: team.id,
             userId: user.id,
             roleId: role.id,
           },
