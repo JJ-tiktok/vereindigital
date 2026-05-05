@@ -3,7 +3,7 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { defaultRoles } from "@/lib/rbac";
+import { defaultRoles, permissionDefinitions } from "@/lib/rbac";
 import { createSlug } from "@/lib/slug";
 import { prisma } from "@/lib/prisma";
 
@@ -42,6 +42,11 @@ export async function completeClubOnboarding(formData: FormData) {
   const clubSlug = await createUniqueClubSlug(clubName);
 
   await prisma.$transaction(async (tx) => {
+    await tx.permission.createMany({
+      data: permissionDefinitions.map(([key, description]) => ({ key, description })),
+      skipDuplicates: true,
+    });
+
     const permissions = await tx.permission.findMany();
     const permissionByKey = new Map(permissions.map((permission) => [permission.key, permission.id]));
 
