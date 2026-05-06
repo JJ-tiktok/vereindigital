@@ -6,6 +6,11 @@ import { createInvitation, revokeInvitation } from "@/lib/actions";
 import { requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
+type TeamOption = {
+  id: string;
+  name: string;
+};
+
 export default async function InvitationsPage({
   searchParams,
 }: {
@@ -13,7 +18,13 @@ export default async function InvitationsPage({
 }) {
   const context = await requireAppContext();
   const query = await searchParams;
-  const teams = context.isClubAdmin ? context.teams : context.teams.filter((team) => team.id === context.activeTeam?.id);
+  const accessibleTeams = context.isClubAdmin
+    ? context.teams
+    : context.teams.filter((team: TeamOption) => team.id === context.activeTeam?.id);
+  const teams: TeamOption[] = accessibleTeams.map((team: TeamOption) => ({
+    id: team.id,
+    name: team.name,
+  }));
   const roles = await prisma.role.findMany({
     where: {
       clubId: context.club.id,
@@ -32,7 +43,7 @@ export default async function InvitationsPage({
         ? {}
         : {
             teamId: {
-              in: teams.map((team) => team.id),
+              in: teams.map((team: TeamOption) => team.id),
             },
           }),
     },
@@ -75,7 +86,7 @@ export default async function InvitationsPage({
 
           <Field label="Team">
             <select className="h-11 w-full rounded-lg border border-border px-3 text-sm" name="teamId" required>
-              {teams.map((team) => (
+              {teams.map((team: TeamOption) => (
                 <option key={team.id} value={team.id}>
                   {team.name}
                 </option>

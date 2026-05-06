@@ -2,12 +2,12 @@ import { MailPlus, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
-import { requireAppContext } from "@/lib/app-context";
+import { type AppTeam, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
 export default async function MembersPage() {
   const context = await requireAppContext();
-  const teamIds = context.teams.map((team) => team.id);
+  const teamIds = context.teams.map((team: AppTeam) => team.id);
   const [memberships, pendingInvitations] = await Promise.all([
     prisma.teamMembership.findMany({
       where: {
@@ -71,7 +71,7 @@ export default async function MembersPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="space-y-6">
           {context.teams.length > 0 ? (
-            context.teams.map((team) => {
+            context.teams.map((team: AppTeam) => {
               const teamMemberships = memberships.filter((membership) => membership.teamId === team.id);
 
               return (
@@ -80,7 +80,7 @@ export default async function MembersPage() {
                     <div>
                       <h2 className="text-xl font-bold text-slate-950">{team.name}</h2>
                       <p className="mt-1 text-sm text-muted">
-                        {teamMemberships.length} Rollen / {team.seasonRef?.name ?? team.season ?? "ohne Saison"}
+                        {teamMemberships.length} Rollen / {context.activeSeason.name}
                       </p>
                     </div>
                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
