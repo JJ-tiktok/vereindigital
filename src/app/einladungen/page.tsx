@@ -13,7 +13,9 @@ export default async function InvitationsPage({
 }) {
   const context = await requireAppContext();
   const query = await searchParams;
-  const teams = context.isClubAdmin ? context.teams : context.teams.filter((team) => team.id === context.activeTeam?.id);
+  const teams: typeof context.teams = context.isClubAdmin
+    ? context.teams
+    : context.teams.filter((team: (typeof context.teams)[number]) => team.id === context.activeTeam?.id);
   const roles = await prisma.role.findMany({
     where: {
       clubId: context.club.id,
