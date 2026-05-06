@@ -80,7 +80,7 @@ export default async function MembersPage() {
                     <div>
                       <h2 className="text-xl font-bold text-slate-950">{team.name}</h2>
                       <p className="mt-1 text-sm text-muted">
-                        {teamMemberships.length} Rollen / {team.seasonRef?.name ?? team.season ?? "ohne Saison"}
+                        {teamMemberships.length} Rollen / {context.activeSeason.name}
                       </p>
                     </div>
                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">

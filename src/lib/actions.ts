@@ -827,7 +827,7 @@ export async function createPlayerFileEntry(formData: FormData) {
       body,
       occurredAt,
       followUpAt,
-      season: activeTeam.seasonRef?.name ?? activeTeam.season,
+      season: context.activeSeason.name,
       createdByUserId: context.appUser.id,
       updatedByUserId: context.appUser.id,
     },
@@ -871,7 +871,7 @@ export async function createPlayerAttributeSnapshot(formData: FormData) {
     data: {
       playerProfileId,
       teamId: activeTeam.id,
-      season: activeTeam.seasonRef?.name ?? activeTeam.season,
+      season: context.activeSeason.name,
       title,
       ratedAt,
       notes: notes || null,
