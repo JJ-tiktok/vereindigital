@@ -8,6 +8,7 @@ import {
   Shield,
   Trophy,
   Users,
+  UserCog,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -16,6 +17,7 @@ import type { AppContext } from "@/lib/app-context";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Kader", href: "/kader", icon: Users },
+  { label: "Mitglieder", href: "/mitglieder", icon: UserCog },
   { label: "Kalender", href: "/kalender", icon: CalendarDays },
   { label: "Training", href: "/training", icon: Dumbbell },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
