@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { getDefaultSeasonWindow } from "@/lib/seasons";
 
 export async function requireAppContext() {
   const clerkUser = await currentUser();
@@ -26,7 +27,11 @@ export async function requireAppContext() {
       memberships: {
         include: {
           role: true,
-          team: true,
+          team: {
+            include: {
+              seasonRef: true,
+            },
+          },
           playerProfile: true,
         },
       },
@@ -40,22 +45,28 @@ export async function requireAppContext() {
   const isClubAdmin = appUser.clubMemberships.some(
     (membership) => membership.status === "ACTIVE" && membership.role.key === "admin",
   );
+  const activeSeason = await ensureActiveSeason(appUser.clubId);
 
   const teams = isClubAdmin
     ? await prisma.team.findMany({
         where: {
           clubId: appUser.clubId,
+          seasonId: activeSeason.id,
+        },
+        include: {
+          seasonRef: true,
         },
         orderBy: [{ name: "asc" }],
       })
     : appUser.memberships
-        .filter((membership) => membership.status === "ACTIVE")
+        .filter((membership) => membership.status === "ACTIVE" && membership.team.seasonId === activeSeason.id)
         .map((membership) => membership.team);
 
   return {
     clerkUser,
     appUser,
     club: appUser.club,
+    activeSeason,
     isClubAdmin,
     teams,
     activeTeam: teams[0] ?? null,
@@ -87,4 +98,52 @@ export function requireCoachingStaffTeam(context: AppContext, teamId: string) {
   if (!canAccess) {
     redirect("/dashboard");
   }
+}
+
+async function ensureActiveSeason(clubId: string) {
+  const activeSeason = await prisma.season.findFirst({
+    where: {
+      clubId,
+      isActive: true,
+    },
+    orderBy: {
+      startsAt: "desc",
+    },
+  });
+
+  if (activeSeason) {
+    return activeSeason;
+  }
+
+  const latestSeason = await prisma.season.findFirst({
+    where: {
+      clubId,
+    },
+    orderBy: {
+      startsAt: "desc",
+    },
+  });
+
+  if (latestSeason) {
+    return prisma.season.update({
+      where: {
+        id: latestSeason.id,
+      },
+      data: {
+        isActive: true,
+      },
+    });
+  }
+
+  const defaultSeason = getDefaultSeasonWindow();
+
+  return prisma.season.create({
+    data: {
+      clubId,
+      name: defaultSeason.name,
+      startsAt: defaultSeason.startsAt,
+      endsAt: defaultSeason.endsAt,
+      isActive: true,
+    },
+  });
 }

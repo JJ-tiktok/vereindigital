@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { defaultRoles, permissionDefinitions } from "@/lib/rbac";
 import { createSlug } from "@/lib/slug";
 import { prisma } from "@/lib/prisma";
+import { getDefaultSeasonWindow } from "@/lib/seasons";
 
 export async function completeClubOnboarding(formData: FormData) {
   "use server";
@@ -40,6 +41,7 @@ export async function completeClubOnboarding(formData: FormData) {
   }
 
   const clubSlug = await createUniqueClubSlug(clubName);
+  const defaultSeason = getDefaultSeasonWindow();
 
   await prisma.$transaction(async (tx) => {
     await tx.permission.createMany({
@@ -66,10 +68,22 @@ export async function completeClubOnboarding(formData: FormData) {
       },
     });
 
+    const season = await tx.season.create({
+      data: {
+        clubId: club.id,
+        name: defaultSeason.name,
+        startsAt: defaultSeason.startsAt,
+        endsAt: defaultSeason.endsAt,
+        isActive: true,
+      },
+    });
+
     const team = await tx.team.create({
       data: {
         clubId: club.id,
+        seasonId: season.id,
         name: teamName,
+        season: season.name,
       },
     });
 

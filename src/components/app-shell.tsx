@@ -1,6 +1,7 @@
 import {
   BarChart3,
   CalendarDays,
+  CalendarRange,
   ClipboardList,
   MailPlus,
   Dumbbell,
@@ -19,6 +20,7 @@ const navItems = [
   { label: "Kader", href: "/kader", icon: Users },
   { label: "Mitglieder", href: "/mitglieder", icon: UserCog },
   { label: "Kalender", href: "/kalender", icon: CalendarDays },
+  { label: "Saisons", href: "/saisons", icon: CalendarRange },
   { label: "Training", href: "/training", icon: Dumbbell },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
   { label: "Statistiken", href: "/statistiken", icon: BarChart3 },
@@ -71,6 +73,9 @@ export function AppShell({
           </nav>
 
           <div className="mt-6 hidden rounded-lg border border-border bg-slate-50 p-4 lg:block">
+            <p className="text-xs font-semibold uppercase text-muted">Aktive Saison</p>
+            <p className="mt-2 font-semibold">{context.activeSeason.name}</p>
+            <div className="my-3 h-px bg-border" />
             <p className="text-xs font-semibold uppercase text-muted">Aktives Team</p>
             <p className="mt-2 font-semibold">{context.activeTeam?.name ?? "Kein Team"}</p>
             <p className="mt-1 text-sm text-muted">

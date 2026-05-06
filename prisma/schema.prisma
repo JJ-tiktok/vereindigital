@@ -134,6 +134,7 @@ model Club {
   updatedAt DateTime @updatedAt
 
   teams             Team[]
+  seasons           Season[]
   users             User[]
   playerProfiles    PlayerProfile[]
   roles             Role[]
@@ -145,9 +146,28 @@ model Club {
   @@map("clubs")
 }
 
+model Season {
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  startsAt  DateTime
+  endsAt    DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club  Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  teams Team[]
+
+  @@unique([clubId, name])
+  @@index([clubId, isActive])
+  @@map("seasons")
+}
+
 model Team {
   id        String   @id @default(cuid())
   clubId    String
+  seasonId  String
   name      String
   ageGroup  String?
   season    String?
@@ -155,6 +175,7 @@ model Team {
   updatedAt DateTime @updatedAt
 
   club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  seasonRef      Season          @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   memberships    TeamMembership[]
   calendarEvents CalendarEvent[]
   matches        Match[]
@@ -164,8 +185,9 @@ model Team {
   fileEntries    PlayerFileEntry[]
   trainingExercises TrainingExercise[]
 
-  @@unique([clubId, name, season])
+  @@unique([clubId, seasonId, name])
   @@index([clubId])
+  @@index([seasonId])
   @@map("teams")
 }
 

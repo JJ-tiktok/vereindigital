@@ -19,6 +19,7 @@ import { redirect } from "next/navigation";
 
 import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
+import { getDefaultSeasonWindow } from "@/lib/seasons";
 
 function readString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -50,6 +51,107 @@ function readOptionalDays(formData: FormData, key: string, fallback: number) {
   const days = Number.parseInt(value, 10);
 
   return Number.isNaN(days) || days < 1 ? fallback : days;
+}
+
+export async function createSeason(formData: FormData) {
+  const context = await requireAppContext();
+
+  if (!context.isClubAdmin) {
+    redirect("/dashboard");
+  }
+
+  const defaults = getDefaultSeasonWindow();
+  const name = readString(formData, "name") || defaults.name;
+  const startsAt = readDate(formData, "startsAt");
+  const endsAt = readDate(formData, "endsAt");
+  const shouldActivate = readString(formData, "activate") === "on";
+
+  if (endsAt <= startsAt) {
+    redirect("/saisons?error=invalid-range");
+  }
+
+  const existingSeason = await prisma.season.findUnique({
+    where: {
+      clubId_name: {
+        clubId: context.club.id,
+        name,
+      },
+    },
+  });
+
+  if (existingSeason) {
+    redirect("/saisons?error=duplicate");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (shouldActivate) {
+      await tx.season.updateMany({
+        where: {
+          clubId: context.club.id,
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    }
+
+    await tx.season.create({
+      data: {
+        clubId: context.club.id,
+        name,
+        startsAt,
+        endsAt,
+        isActive: shouldActivate,
+      },
+    });
+  });
+
+  revalidatePath("/saisons");
+  revalidatePath("/dashboard");
+  redirect("/saisons");
+}
+
+export async function setActiveSeason(formData: FormData) {
+  const context = await requireAppContext();
+
+  if (!context.isClubAdmin) {
+    redirect("/dashboard");
+  }
+
+  const seasonId = readRequiredString(formData, "seasonId");
+  const season = await prisma.season.findFirst({
+    where: {
+      id: seasonId,
+      clubId: context.club.id,
+    },
+  });
+
+  if (!season) {
+    redirect("/saisons?error=missing-season");
+  }
+
+  await prisma.$transaction([
+    prisma.season.updateMany({
+      where: {
+        clubId: context.club.id,
+      },
+      data: {
+        isActive: false,
+      },
+    }),
+    prisma.season.update({
+      where: {
+        id: season.id,
+      },
+      data: {
+        isActive: true,
+      },
+    }),
+  ]);
+
+  revalidatePath("/saisons");
+  revalidatePath("/dashboard");
+  redirect("/saisons");
 }
 
 export async function createInvitation(formData: FormData) {
@@ -725,7 +827,7 @@ export async function createPlayerFileEntry(formData: FormData) {
       body,
       occurredAt,
       followUpAt,
-      season: activeTeam.season,
+      season: activeTeam.seasonRef?.name ?? activeTeam.season,
       createdByUserId: context.appUser.id,
       updatedByUserId: context.appUser.id,
     },
@@ -769,7 +871,7 @@ export async function createPlayerAttributeSnapshot(formData: FormData) {
     data: {
       playerProfileId,
       teamId: activeTeam.id,
-      season: activeTeam.season,
+      season: activeTeam.seasonRef?.name ?? activeTeam.season,
       title,
       ratedAt,
       notes: notes || null,
