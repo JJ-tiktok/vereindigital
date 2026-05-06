@@ -1,14 +1,41 @@
 import { MailPlus, UserCog, Users } from "lucide-react";
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { type AppTeam, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
+type ClubMembershipRow = Prisma.ClubMembershipGetPayload<{
+  include: {
+    role: true;
+    user: true;
+  };
+}>;
+
+type TeamMembershipRow = Prisma.TeamMembershipGetPayload<{
+  include: {
+    playerProfile: true;
+    role: true;
+    team: true;
+    user: true;
+  };
+}>;
+
 export default async function MembersPage() {
   const context = await requireAppContext();
   const teamIds = context.teams.map((team: AppTeam) => team.id);
-  const [memberships, pendingInvitations] = await Promise.all([
+  const [clubMemberships, memberships, pendingInvitations] = await Promise.all([
+    prisma.clubMembership.findMany({
+      where: {
+        clubId: context.club.id,
+      },
+      include: {
+        role: true,
+        user: true,
+      },
+      orderBy: [{ role: { name: "asc" } }, { createdAt: "asc" }],
+    }),
     prisma.teamMembership.findMany({
       where: {
         teamId: {
@@ -41,9 +68,14 @@ export default async function MembersPage() {
       take: 8,
     }),
   ]);
-  const userMemberships = memberships.filter((membership) => membership.userId);
-  const profileOnlyMemberships = memberships.filter((membership) => !membership.userId && membership.playerProfileId);
-  const uniqueUsers = new Set(userMemberships.map((membership) => membership.userId));
+  const userMemberships = memberships.filter((membership: TeamMembershipRow) => membership.userId);
+  const profileOnlyMemberships = memberships.filter(
+    (membership: TeamMembershipRow) => !membership.userId && membership.playerProfileId,
+  );
+  const uniqueUsers = new Set([
+    ...clubMemberships.map((membership: ClubMembershipRow) => membership.userId),
+    ...userMemberships.map((membership: TeamMembershipRow) => membership.userId),
+  ]);
 
   return (
     <AppShell context={context} activePath="/mitglieder">
@@ -70,9 +102,73 @@ export default async function MembersPage() {
 
       <section className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="space-y-6">
+          <article className="overflow-hidden rounded-lg border border-border bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">Vereinsrollen</h2>
+                <p className="mt-1 text-sm text-muted">{clubMemberships.length} Rollen auf Vereinsebene</p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                Gesamtverein
+              </span>
+            </div>
+
+            {clubMemberships.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-[720px] w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                    <tr>
+                      <th className="px-5 py-3">Mitglied</th>
+                      <th className="px-5 py-3">Rolle</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Typ</th>
+                      <th className="px-5 py-3">Seit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {clubMemberships.map((membership: ClubMembershipRow) => (
+                      <tr key={membership.id}>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <AvatarLabel label={membership.user.displayName ?? membership.user.email} />
+                            <div>
+                              <p className="font-semibold text-slate-950">
+                                {membership.user.displayName ?? membership.user.email}
+                              </p>
+                              <p className="text-sm text-muted">{membership.user.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
+                            {membership.role.name}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={statusClass(membership.status)}>{statusLabel(membership.status)}</span>
+                        </td>
+                        <td className="px-5 py-4 text-slate-700">Vereinsrolle</td>
+                        <td className="px-5 py-4 text-slate-700">
+                          {membership.createdAt.toLocaleDateString("de-DE")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-5">
+                <EmptyState
+                  title="Noch keine Vereinsrollen"
+                  description="Sobald Admins oder Vereinsrollen vergeben sind, erscheinen sie hier."
+                />
+              </div>
+            )}
+          </article>
+
           {context.teams.length > 0 ? (
             context.teams.map((team: AppTeam) => {
-              const teamMemberships = memberships.filter((membership) => membership.teamId === team.id);
+              const teamMemberships = memberships.filter((membership: TeamMembershipRow) => membership.teamId === team.id);
 
               return (
                 <article className="overflow-hidden rounded-lg border border-border bg-white" key={team.id}>
@@ -101,7 +197,7 @@ export default async function MembersPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {teamMemberships.map((membership) => (
+                          {teamMemberships.map((membership: TeamMembershipRow) => (
                             <tr key={membership.id}>
                               <td className="px-5 py-4">
                                 <div className="flex items-center gap-3">
