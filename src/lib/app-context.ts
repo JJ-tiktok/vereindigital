@@ -1,10 +1,17 @@
 import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
+import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { getDefaultSeasonWindow } from "@/lib/seasons";
+
+export type AppTeam = Prisma.TeamGetPayload<{
+  include: {
+    seasonRef: true;
+  };
+}>;
 
 export async function requireAppContext() {
   const clerkUser = await currentUser();
@@ -47,7 +54,7 @@ export async function requireAppContext() {
   );
   const activeSeason = await ensureActiveSeason(appUser.clubId);
 
-  const teams = isClubAdmin
+  const teams: AppTeam[] = isClubAdmin
     ? await prisma.team.findMany({
         where: {
           clubId: appUser.clubId,
@@ -60,7 +67,7 @@ export async function requireAppContext() {
       })
     : appUser.memberships
         .filter((membership) => membership.status === "ACTIVE" && membership.team.seasonId === activeSeason.id)
-        .map((membership) => membership.team);
+        .map((membership) => membership.team as AppTeam);
 
   return {
     clerkUser,

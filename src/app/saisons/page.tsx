@@ -7,6 +7,11 @@ import { formatDate, toDateInputValue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getDefaultSeasonWindow } from "@/lib/seasons";
 
+type SeasonTeam = {
+  id: string;
+  name: string;
+};
+
 export default async function SeasonsPage({
   searchParams,
 }: {
@@ -83,7 +88,7 @@ export default async function SeasonsPage({
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted">Teams in dieser Saison</p>
                 {season.teams.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {season.teams.map((team) => (
+                    {season.teams.map((team: SeasonTeam) => (
                       <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700" key={team.id}>
                         {team.name}
                       </span>
