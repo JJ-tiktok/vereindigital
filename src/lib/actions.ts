@@ -396,6 +396,7 @@ export async function createPlayerProfile(formData: FormData) {
         lastName: readRequiredString(formData, "lastName"),
         birthDate: readDate(formData, "birthDate"),
         position: readRequiredString(formData, "position"),
+        jerseyNumber: readOptionalInt(formData, "jerseyNumber"),
       },
     });
 
@@ -415,7 +416,11 @@ export async function createPlayerProfile(formData: FormData) {
 
 export async function updatePlayerProfile(formData: FormData) {
   const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requireCoachingStaffTeam(context, activeTeam.id);
   const playerId = readRequiredString(formData, "playerId");
+
+  await ensurePlayerInActiveTeam(playerId, activeTeam.id, context.club.id);
 
   await prisma.playerProfile.update({
     where: {
@@ -427,12 +432,50 @@ export async function updatePlayerProfile(formData: FormData) {
       lastName: readRequiredString(formData, "lastName"),
       birthDate: readDate(formData, "birthDate"),
       position: readRequiredString(formData, "position"),
+      jerseyNumber: readOptionalInt(formData, "jerseyNumber"),
     },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/kader");
   redirect(`/kader/${playerId}`);
+}
+
+export async function removePlayerFromActiveTeam(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requireCoachingStaffTeam(context, activeTeam.id);
+  const playerId = readRequiredString(formData, "playerId");
+
+  await ensurePlayerInActiveTeam(playerId, activeTeam.id, context.club.id);
+
+  const playerRole = await prisma.role.findUniqueOrThrow({
+    where: {
+      clubId_key: {
+        clubId: context.club.id,
+        key: "player",
+      },
+    },
+  });
+
+  await prisma.teamMembership.updateMany({
+    where: {
+      playerProfileId: playerId,
+      roleId: playerRole.id,
+      status: "ACTIVE",
+      teamId: activeTeam.id,
+    },
+    data: {
+      status: "INACTIVE",
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/kader");
+  revalidatePath(`/kader/${playerId}`);
+  revalidatePath("/kalender");
+  revalidatePath("/abwesenheiten");
+  redirect("/kader?removed=1");
 }
 
 export async function createCalendarEvent(formData: FormData) {
@@ -691,7 +734,9 @@ export async function updatePlayerMatchStat(formData: FormData) {
   const yellowCards = readInt(formData, "yellowCards", 0);
   const redCards = readInt(formData, "redCards", 0);
   const minutesPlayed = readInt(formData, "minutesPlayed", 0);
-  const rating = readOptionalFloat(formData, "rating");
+  const rawRating = readString(formData, "rating");
+  const parsedRating = readOptionalFloat(formData, "rating");
+  const rating = lineupStatus === LineupStatus.NOT_USED && minutesPlayed === 0 && (!rawRating || rawRating === "0") ? null : parsedRating;
 
   const match = await prisma.match.findFirst({
     where: {
@@ -714,6 +759,7 @@ export async function updatePlayerMatchStat(formData: FormData) {
     redCards < 0 ||
     minutesPlayed < 0 ||
     minutesPlayed > 120 ||
+    ((minutesPlayed > 0 || lineupStatus !== LineupStatus.NOT_USED) && rating === null) ||
     (rating !== null && (rating < 1 || rating > 10))
   ) {
     redirect(`/spiele/${matchId}?error=stat-values`);

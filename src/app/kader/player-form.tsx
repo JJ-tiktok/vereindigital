@@ -13,6 +13,7 @@ export function PlayerForm({
     lastName: string;
     birthDate: Date;
     position: string;
+    jerseyNumber: number | null;
   };
   embedded?: boolean;
 }) {
@@ -26,6 +27,19 @@ export function PlayerForm({
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Vorname" name="firstName" defaultValue={player?.firstName} />
         <Field label="Nachname" name="lastName" defaultValue={player?.lastName} />
+        <div>
+          <label className="text-sm font-semibold text-slate-800" htmlFor="jerseyNumber">
+            Rueckennummer
+          </label>
+          <input
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            defaultValue={player?.jerseyNumber ?? ""}
+            id="jerseyNumber"
+            min={1}
+            name="jerseyNumber"
+            type="number"
+          />
+        </div>
         <div>
           <label className="text-sm font-semibold text-slate-800" htmlFor="birthDate">
             Geburtsdatum

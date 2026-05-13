@@ -126,6 +126,44 @@ enum PlayerFormTrend {
   DOWN
 }
 
+enum ImportType {
+  ROSTER
+  MATCH_STATS
+}
+
+enum ImportSourceType {
+  TEMPLATE_CSV
+  AI_URL
+}
+
+enum ImportStatus {
+  DRAFT
+  PARSED
+  CONFIRMED
+  FAILED
+}
+
+enum FeedbackType {
+  BUG
+  FEATURE_REQUEST
+  IMPROVEMENT
+  OTHER
+}
+
+enum FeedbackStatus {
+  NEW
+  TRIAGED
+  IN_PROGRESS
+  DONE
+  WONT_DO
+}
+
+enum FeedbackPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Club {
   id        String   @id @default(cuid())
   name      String
@@ -142,6 +180,8 @@ model Club {
   invitations       Invitation[]
   trainingExercises TrainingExercise[]
   attributeDefinitions PlayerAttributeDefinition[]
+  importJobs        ImportJob[]
+  feedbackItems     FeedbackItem[]
 
   @@map("clubs")
 }
@@ -158,6 +198,8 @@ model Season {
 
   club  Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
   teams Team[]
+  importJobs ImportJob[]
+  feedbackItems FeedbackItem[]
 
   @@unique([clubId, name])
   @@index([clubId, isActive])
@@ -184,6 +226,8 @@ model Team {
   formSnapshots  PlayerFormSnapshot[]
   fileEntries    PlayerFileEntry[]
   trainingExercises TrainingExercise[]
+  importJobs      ImportJob[]
+  feedbackItems   FeedbackItem[]
 
   @@unique([clubId, seasonId, name])
   @@index([clubId])
@@ -212,6 +256,8 @@ model User {
   trainingPerformancesCreated PlayerTrainingPerformance[] @relation("PlayerTrainingPerformanceCreatedBy")
   fileEntriesCreated PlayerFileEntry[] @relation("PlayerFileEntryCreatedBy")
   fileEntriesUpdated PlayerFileEntry[] @relation("PlayerFileEntryUpdatedBy")
+  importJobsCreated ImportJob[] @relation("ImportJobCreatedBy")
+  feedbackItemsCreated FeedbackItem[] @relation("FeedbackItemCreatedBy")
 
   @@index([clubId])
   @@index([email])
@@ -226,6 +272,7 @@ model PlayerProfile {
   lastName  String
   birthDate DateTime
   position  String
+  jerseyNumber Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -590,6 +637,66 @@ model PlayerFileEntry {
   @@index([createdByUserId])
   @@index([updatedByUserId])
   @@map("player_file_entries")
+}
+
+model ImportJob {
+  id              String           @id @default(cuid())
+  clubId          String
+  teamId          String
+  seasonId        String
+  type            ImportType
+  sourceType      ImportSourceType
+  status          ImportStatus     @default(DRAFT)
+  sourceUrl       String?
+  fileName        String?
+  parsedData      Json?
+  issues          Json?
+  createdByUserId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("ImportJobCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, createdAt])
+  @@index([teamId, type, status])
+  @@index([seasonId])
+  @@index([createdByUserId])
+  @@map("import_jobs")
+}
+
+model FeedbackItem {
+  id              String           @id @default(cuid())
+  clubId          String
+  teamId          String?
+  seasonId        String?
+  createdByUserId String?
+  type            FeedbackType
+  status          FeedbackStatus   @default(NEW)
+  priority        FeedbackPriority @default(MEDIUM)
+  title           String
+  description     String           @db.Text
+  route           String?
+  userAgent       String?          @db.Text
+  viewportWidth   Int?
+  viewportHeight  Int?
+  screenshotData  String?          @db.Text
+  context         Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  season        Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  createdByUser User?   @relation("FeedbackItemCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, status, createdAt])
+  @@index([teamId])
+  @@index([seasonId])
+  @@index([createdByUserId])
+  @@map("feedback_items")
 }
 
 model TrainingExercise {
