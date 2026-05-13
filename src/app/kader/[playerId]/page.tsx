@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { PlayerForm } from "@/app/kader/player-form";
-import { createPlayerAttributeSnapshot, createPlayerFileEntry } from "@/lib/actions";
+import { RemovePlayerButton } from "@/app/kader/[playerId]/remove-player-button";
+import { createPlayerAttributeSnapshot, createPlayerFileEntry, removePlayerFromActiveTeam } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import {
@@ -34,6 +35,7 @@ export default async function PlayerDetailPage({
       memberships: {
         some: {
           teamId: activeTeam.id,
+          status: "ACTIVE",
         },
       },
     },
@@ -273,6 +275,17 @@ export default async function PlayerDetailPage({
               <div className="p-5">
                 <PlayerForm player={player} embedded />
               </div>
+            </article>
+
+            <article className="rounded-lg border border-rose-100 bg-rose-50/40 p-5">
+              <h2 className="text-lg font-bold text-rose-950">Kader entfernen</h2>
+              <p className="mt-2 text-sm leading-6 text-rose-800">
+                Entfernt den Spieler aus dem aktuellen Teamkader. Bereits erfasste Statistiken und Akteneintraege bleiben erhalten.
+              </p>
+              <form action={removePlayerFromActiveTeam} className="mt-4">
+                <input name="playerId" type="hidden" value={player.id} />
+                <RemovePlayerButton />
+              </form>
             </article>
           </aside>
         </section>

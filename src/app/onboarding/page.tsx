@@ -1,10 +1,18 @@
 import { completeClubOnboarding } from "@/lib/onboarding";
+import { getCurrentAuthContext } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function OnboardingPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const { appUser } = await getCurrentAuthContext();
+
+  if (appUser) {
+    redirect("/dashboard");
+  }
+
   const params = await searchParams;
 
   return (
