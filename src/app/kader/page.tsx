@@ -86,6 +86,7 @@ export default async function SquadPage({
       id: player.id,
       name: `${player.firstName} ${player.lastName}`,
       initials: getInitials(player.firstName, player.lastName),
+      jerseyNumber: player.jerseyNumber,
       position: player.position,
       age: getAge(player.birthDate),
       goals: sum(player.matchStats.map((stat) => stat.goals)),
@@ -96,6 +97,18 @@ export default async function SquadPage({
       fileEntries: player.fileEntries.length,
       status: getPlayerStatus(player.availabilities[0]?.type),
     };
+  }).sort((a, b) => {
+    const positionDiff = positionRank(a.position) - positionRank(b.position);
+    if (positionDiff !== 0) {
+      return positionDiff;
+    }
+
+    const jerseyDiff = (a.jerseyNumber ?? 999) - (b.jerseyNumber ?? 999);
+    if (jerseyDiff !== 0) {
+      return jerseyDiff;
+    }
+
+    return a.name.localeCompare(b.name);
   });
   const fitCount = squadRows.filter((player) => player.status.kind === "fit").length;
   const injuredCount = squadRows.filter((player) => player.status.kind === "injured").length;
@@ -230,9 +243,10 @@ export default async function SquadPage({
 
             <div className="overflow-hidden rounded-lg border border-border bg-white">
               <div className="border-b border-border bg-slate-50 px-5 py-3">
-                <div className="grid grid-cols-[48px_minmax(240px,1.3fr)_90px_120px_160px_110px_90px] gap-4 text-xs font-semibold uppercase tracking-wide text-muted max-xl:hidden">
+                <div className="grid grid-cols-[48px_minmax(240px,1.3fr)_70px_90px_120px_160px_110px_90px] gap-4 text-xs font-semibold uppercase tracking-wide text-muted max-xl:hidden">
                   <span>#</span>
                   <span>Spieler</span>
+                  <span>Nr.</span>
                   <span>Position</span>
                   <span>Status</span>
                   <span>Trainingsform</span>
@@ -252,7 +266,7 @@ export default async function SquadPage({
                     href={`/kader/${player.id}`}
                     key={player.id}
                   >
-                    <div className="grid gap-4 xl:grid-cols-[48px_minmax(240px,1.3fr)_90px_120px_160px_110px_90px] xl:items-center">
+                    <div className="grid gap-4 xl:grid-cols-[48px_minmax(240px,1.3fr)_70px_90px_120px_160px_110px_90px] xl:items-center">
                       <span className="hidden text-sm font-bold tabular-nums text-slate-700 xl:block">{index + 1}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-blue-50 text-sm font-bold text-primary">
@@ -261,13 +275,16 @@ export default async function SquadPage({
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-slate-950">{player.name}</p>
                           <p className="mt-1 text-sm text-muted xl:hidden">
-                            {player.position} / {player.age} Jahre / {player.status.label}
+                            {player.jerseyNumber ? `#${player.jerseyNumber} / ` : ""}{player.position} / {player.age} Jahre / {player.status.label}
                           </p>
                           <p className="hidden text-sm text-muted xl:block">
                             {player.goals} Tore / {player.assists} Vorlagen / {player.minutes} Min.
                           </p>
                         </div>
                       </div>
+                      <span className="hidden text-sm font-bold tabular-nums text-slate-700 xl:block">
+                        {player.jerseyNumber ? `#${player.jerseyNumber}` : "-"}
+                      </span>
                       <span className="hidden w-max rounded-lg bg-slate-100 px-3 py-1 text-center text-xs font-semibold text-slate-700 xl:block">
                         {player.position}
                       </span>
@@ -461,6 +478,28 @@ function getPlayerStatus(type?: string) {
     kind: "fit" as const,
     label: "Fit",
   };
+}
+
+function positionRank(position: string) {
+  const normalized = position.toUpperCase();
+
+  if (normalized === "TW" || normalized === "GK") {
+    return 0;
+  }
+
+  if (["IV", "AV", "LV", "RV", "CB", "LB", "RB"].includes(normalized)) {
+    return 1;
+  }
+
+  if (["DM", "ZM", "OM", "CM", "CDM", "CAM", "LM", "RM"].includes(normalized)) {
+    return 2;
+  }
+
+  if (["FL", "ST", "LA", "RA", "LW", "RW", "CF", "MS"].includes(normalized)) {
+    return 3;
+  }
+
+  return 4;
 }
 
 function buildFormBars(trainingForm: number | null, matchForm: number | null) {

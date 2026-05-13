@@ -8,6 +8,7 @@ import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "
 import {
   isMatchStatsImportData,
   isRosterImportData,
+  normalizeRosterPosition,
   parseImportUrl,
   parseMatchStatsCsv,
   parseRosterCsv,
@@ -283,7 +284,8 @@ export async function confirmRosterImportJob(formData: FormData) {
       const firstName = readString(formData, `firstName-${index}`) || row.firstName;
       const lastName = readString(formData, `lastName-${index}`) || row.lastName;
       const birthDateValue = readString(formData, `birthDate-${index}`) || row.birthDate;
-      const position = (readString(formData, `position-${index}`) || row.position).toUpperCase();
+      const position = normalizeRosterPosition(readString(formData, `position-${index}`) || row.position);
+      const jerseyNumber = readOptionalInt(formData, `jerseyNumber-${index}`) ?? row.jerseyNumber;
 
       if (skipRow || action === "skip") {
         continue;
@@ -306,6 +308,7 @@ export async function confirmRosterImportJob(formData: FormData) {
                 firstName,
                 lastName,
                 position,
+                jerseyNumber,
               },
             })
           : await tx.playerProfile.create({
@@ -315,6 +318,7 @@ export async function confirmRosterImportJob(formData: FormData) {
                 firstName,
                 lastName,
                 position,
+                jerseyNumber,
               },
             });
 
@@ -488,7 +492,8 @@ function buildRosterReviewData(formData: FormData, importData: RosterImportData)
       const firstName = readString(formData, `firstName-${index}`) || row.firstName;
       const lastName = readString(formData, `lastName-${index}`) || row.lastName;
       const birthDate = readDateInputValue(readString(formData, `birthDate-${index}`) || row.birthDate);
-      const position = (readString(formData, `position-${index}`) || row.position).toUpperCase();
+      const position = normalizeRosterPosition(readString(formData, `position-${index}`) || row.position);
+      const jerseyNumber = readOptionalInt(formData, `jerseyNumber-${index}`) ?? row.jerseyNumber;
       const skipRow = readString(formData, `skip-${index}`) === "true" || readString(formData, `action-${index}`) === "skip";
 
       if (!skipRow) {
@@ -512,6 +517,7 @@ function buildRosterReviewData(formData: FormData, importData: RosterImportData)
       return {
         birthDate,
         firstName,
+        jerseyNumber,
         lastName,
         position,
         skipRow,
@@ -522,6 +528,7 @@ function buildRosterReviewData(formData: FormData, importData: RosterImportData)
     .map((row) => ({
       birthDate: row.birthDate,
       firstName: row.firstName,
+      jerseyNumber: row.jerseyNumber,
       lastName: row.lastName,
       position: row.position,
       sourceRow: row.sourceRow,

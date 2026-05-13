@@ -84,12 +84,13 @@ export default async function ImportReviewPage({
               <p className="mt-1 text-sm text-muted">Waehle je Zeile, ob ein Spieler neu angelegt, aktualisiert oder uebersprungen wird.</p>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-[960px] w-full text-left text-sm">
+              <table className="min-w-[1040px] w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-4 py-3">Zeile</th>
                     <th className="px-4 py-3">Vorname</th>
                     <th className="px-4 py-3">Nachname</th>
+                    <th className="px-4 py-3">Nr.</th>
                     <th className="px-4 py-3">Geburtsdatum</th>
                     <th className="px-4 py-3">Position</th>
                     <th className="px-4 py-3">Aktion</th>
@@ -121,6 +122,15 @@ export default async function ImportReviewPage({
                             className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
                             defaultValue={row.lastName}
                             name={`lastName-${index}`}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            className="h-10 w-20 rounded-lg border border-border px-2 text-sm tabular-nums text-slate-900"
+                            defaultValue={row.jerseyNumber ?? ""}
+                            min={1}
+                            name={`jerseyNumber-${index}`}
+                            type="number"
                           />
                         </td>
                         <td className="px-4 py-3">

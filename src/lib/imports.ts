@@ -14,6 +14,7 @@ export type ImportIssue = {
 export type RosterImportRow = {
   birthDate: string;
   firstName: string;
+  jerseyNumber: number | null;
   lastName: string;
   position: string;
   sourceRow: number;
@@ -63,6 +64,13 @@ const rosterHeaderMap = new Map([
   ["geburtsdatum", "birthDate"],
   ["geburtstag", "birthDate"],
   ["birthdate", "birthDate"],
+  ["nummer", "jerseyNumber"],
+  ["rueckennummer", "jerseyNumber"],
+  ["ruckennummer", "jerseyNumber"],
+  ["rückennummer", "jerseyNumber"],
+  ["trikotnummer", "jerseyNumber"],
+  ["jersey number", "jerseyNumber"],
+  ["number", "jerseyNumber"],
   ["position", "position"],
 ]);
 
@@ -106,8 +114,9 @@ export function parseRosterCsv(csv: string) {
   const parsedRows: RosterImportRow[] = rows.map((row, index) => ({
     birthDate: normalizeDateString(row.birthDate),
     firstName: row.firstName,
+    jerseyNumber: readOptionalInteger(row.jerseyNumber),
     lastName: row.lastName,
-    position: row.position.toUpperCase(),
+    position: normalizeRosterPosition(row.position),
     sourceRow: index + 2,
   }));
 
@@ -425,6 +434,18 @@ function readNumber(value?: string | null) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
+function readOptionalInteger(value?: string | null) {
+  const raw = String(value ?? "").trim();
+
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 function readOptionalNumber(value?: string | null) {
   const raw = String(value ?? "").trim().replace(",", ".");
 
@@ -449,6 +470,64 @@ function normalizeLineupStatus(value?: string | null) {
   }
 
   return LineupStatus.NOT_USED;
+}
+
+export function normalizeRosterPosition(value?: string | null) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\./g, "")
+    .replace(/\s+/g, "_");
+
+  const aliases: Record<string, string> = {
+    ABWEHR: "IV",
+    ANGRIFF: "ST",
+    AUSSENVERTEIDIGER: "AV",
+    DEFENDER: "IV",
+    DEFENSIVE: "IV",
+    DEFENSIVES_MITTELFELD: "DM",
+    FLUEGEL: "FL",
+    FLUGEL: "FL",
+    FORWARD: "ST",
+    GOALKEEPER: "TW",
+    KEEPER: "TW",
+    MITTELFELD: "ZM",
+    MIDFIELD: "ZM",
+    OFFENSIVE: "OM",
+    OFFENSIVES_MITTELFELD: "OM",
+    STUERMER: "ST",
+    STURM: "ST",
+    TOR: "TW",
+    TORHUETER: "TW",
+    TORHUTER: "TW",
+    TW: "TW",
+    GK: "TW",
+    IV: "IV",
+    CB: "IV",
+    AV: "AV",
+    LV: "AV",
+    RV: "AV",
+    LB: "AV",
+    RB: "AV",
+    DM: "DM",
+    CDM: "DM",
+    ZM: "ZM",
+    CM: "ZM",
+    OM: "OM",
+    CAM: "OM",
+    FL: "FL",
+    LA: "FL",
+    RA: "FL",
+    LW: "FL",
+    RW: "FL",
+    ST: "ST",
+    CF: "ST",
+    MS: "ST",
+  };
+
+  return aliases[normalized] ?? normalized;
 }
 
 function requiresRating(minutesPlayed: number, lineupStatus: LineupStatus) {
@@ -576,10 +655,10 @@ function extractOpenAiOutputText(payload: OpenAiResponsePayload) {
 function normalizeAiRoster(value: unknown) {
   const rows = Array.isArray((value as { rows?: unknown }).rows) ? (value as { rows: unknown[] }).rows : [];
   const csv = [
-    "Vorname;Nachname;Geburtsdatum;Position",
+    "Vorname;Nachname;Geburtsdatum;Position;Rueckennummer",
     ...rows.map((row) => {
-      const candidate = row as Partial<Record<"birthDate" | "firstName" | "lastName" | "position", string>>;
-      return [candidate.firstName, candidate.lastName, candidate.birthDate, candidate.position].map((entry) => entry ?? "").join(";");
+      const candidate = row as Partial<Record<"birthDate" | "firstName" | "lastName" | "position", string> & { jerseyNumber: number | null }>;
+      return [candidate.firstName, candidate.lastName, candidate.birthDate, candidate.position, candidate.jerseyNumber].map((entry) => entry ?? "").join(";");
     }),
   ].join("\n");
 
@@ -651,10 +730,11 @@ const rosterJsonSchema = {
         properties: {
           birthDate: { type: "string" },
           firstName: { type: "string" },
+          jerseyNumber: { type: ["integer", "null"] },
           lastName: { type: "string" },
           position: { type: "string" },
         },
-        required: ["firstName", "lastName", "birthDate", "position"],
+        required: ["firstName", "lastName", "birthDate", "position", "jerseyNumber"],
         type: "object",
       },
       type: "array",
