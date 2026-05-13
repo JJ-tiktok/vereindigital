@@ -12,6 +12,8 @@ const isProtectedRoute = createRouteMatcher([
   "/statistiken(.*)",
   "/abwesenheiten(.*)",
   "/einladungen(.*)",
+  "/importe(.*)",
+  "/feedback(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
@@ -37,6 +39,8 @@ export const config = {
     "/statistiken(.*)",
     "/abwesenheiten(.*)",
     "/einladungen(.*)",
+    "/importe(.*)",
+    "/feedback(.*)",
     "/(api|trpc)(.*)",
   ],
 };

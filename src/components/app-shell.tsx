@@ -5,7 +5,9 @@ import {
   ClipboardList,
   MailPlus,
   Dumbbell,
+  FileUp,
   LayoutDashboard,
+  MessageSquare,
   Shield,
   Trophy,
   Users,
@@ -13,7 +15,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { FeedbackWidget } from "@/components/feedback-widget";
 import type { AppContext } from "@/lib/app-context";
+import { canUseFeedback } from "@/lib/feedback-permissions";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -24,8 +28,10 @@ const navItems = [
   { label: "Training", href: "/training", icon: Dumbbell },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
   { label: "Statistiken", href: "/statistiken", icon: BarChart3 },
+  { label: "Importe", href: "/importe", icon: FileUp },
   { label: "Abwesenheiten", href: "/abwesenheiten", icon: ClipboardList },
   { label: "Einladungen", href: "/einladungen", icon: MailPlus },
+  { label: "Feedback", href: "/feedback", icon: MessageSquare },
 ];
 
 export function AppShell({
@@ -37,6 +43,9 @@ export function AppShell({
   activePath: string;
   children: React.ReactNode;
 }) {
+  const showFeedback = canUseFeedback(context);
+  const visibleNavItems = showFeedback ? navItems : navItems.filter((item) => item.href !== "/feedback");
+
   return (
     <main className="min-h-screen bg-background text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col lg:flex-row">
@@ -52,7 +61,7 @@ export function AppShell({
           </div>
 
           <nav className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const active = activePath === item.href;
 
               return (
@@ -84,7 +93,14 @@ export function AppShell({
           </div>
         </aside>
 
-        <section className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</section>
+        <section className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          {showFeedback ? (
+            <div className="mb-4 flex justify-end">
+              <FeedbackWidget />
+            </div>
+          ) : null}
+          {children}
+        </section>
       </div>
     </main>
   );
