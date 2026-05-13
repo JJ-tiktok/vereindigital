@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const lexend = Lexend({
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="de" className={`${lexend.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ClerkProvider>{children}</ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
