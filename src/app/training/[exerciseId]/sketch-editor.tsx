@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  Copy,
+  Download,
+  Eraser,
+  MousePointer2,
+  Save,
+  Trash2,
+  Type,
+  Undo2,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
 
 import { updateTrainingExerciseSketch } from "@/lib/actions";
@@ -166,12 +178,14 @@ const areaToolTypes = new Set<Tool>(["ZONE_RECT", "ZONE_CIRCLE"]);
 
 export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch, initialSketch }: SketchEditorProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [title, setTitle] = useState(initialTitle);
   const [pitch, setPitch] = useState<PitchType>(() => normalizePitch(initialSketch?.pitch ?? initialPitch));
   const [elements, setElements] = useState<SketchElement[]>(() => normalizeElements(initialSketch?.elements ?? []));
   const [tool, setTool] = useState<Tool>("SELECT");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [pathStart, setPathStart] = useState<{ x: number; y: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
   const [, setHistory] = useState<SketchElement[][]>([]);
 
   const sketchData = useMemo(
@@ -183,6 +197,8 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     [elements, pitch],
   );
   const selectedElement = selectedId ? elements.find((element) => element.id === selectedId) : null;
+  const selectedTool = getToolMeta(tool);
+  const canEditLabel = Boolean(selectedElement && isPointElement(selectedElement));
 
   function pushHistory(currentElements = elements) {
     setHistory((currentHistory) => [...currentHistory.slice(-24), currentElements]);
@@ -198,7 +214,26 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     setSelectedId(element.id);
   }
 
+  function capturePointer(pointerId: number) {
+    try {
+      svgRef.current?.setPointerCapture(pointerId);
+    } catch {
+      // Pointer capture is best-effort across stylus, touch and mouse devices.
+    }
+  }
+
+  function releasePointer(pointerId: number) {
+    try {
+      if (svgRef.current?.hasPointerCapture(pointerId)) {
+        svgRef.current.releasePointerCapture(pointerId);
+      }
+    } catch {
+      // Some browsers already release capture on pointer cancellation.
+    }
+  }
+
   function handleCanvasPointerDown(event: PointerEvent<SVGSVGElement>) {
+    capturePointer(event.pointerId);
     const point = getSvgPoint(event);
     if (!point) {
       return;
@@ -240,17 +275,12 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     }
 
     if (pointToolTypes.has(tool)) {
-      const label = tool === "TEXT" ? window.prompt("Text fuer die Skizze", "Coachingpunkt")?.trim() : undefined;
-      if (tool === "TEXT" && !label) {
-        return;
-      }
-
       addElement({
         id: createId(),
         type: tool as PointTool,
         x: point.x,
         y: point.y,
-        label: tool === "TEXT" ? label : defaultLabel(tool),
+        label: tool === "TEXT" ? "Text" : defaultLabel(tool),
       });
     }
   }
@@ -305,12 +335,19 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     );
   }
 
-  function handlePointerUp() {
+  function handlePointerUp(event: PointerEvent<SVGSVGElement>) {
     setDragState(null);
+    releasePointer(event.pointerId);
+  }
+
+  function handlePointerCancel(event: PointerEvent<SVGSVGElement>) {
+    setDragState(null);
+    releasePointer(event.pointerId);
   }
 
   function handleElementPointerDown(element: SketchElement, event: PointerEvent<SVGGElement>) {
     event.stopPropagation();
+    capturePointer(event.pointerId);
     const point = getSvgPoint(event);
     if (!point) {
       return;
@@ -396,13 +433,8 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     addElement(duplicate);
   }
 
-  function editSelectedText() {
+  function updateSelectedLabel(label: string) {
     if (!selectedElement || !isPointElement(selectedElement)) {
-      return;
-    }
-
-    const label = window.prompt("Label bearbeiten", selectedElement.label ?? "")?.trim();
-    if (!label) {
       return;
     }
 
@@ -421,6 +453,14 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     setElements([]);
     setSelectedId(null);
     setPathStart(null);
+  }
+
+  function fitStage() {
+    setZoom(1);
+  }
+
+  function zoomStage(delta: number) {
+    setZoom((currentZoom) => clamp(Math.round((currentZoom + delta) * 10) / 10, 0.8, 1.6));
   }
 
   async function downloadSketchImage() {
@@ -467,169 +507,356 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[280px_1fr]">
-      <aside className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">Feldvorlage</p>
-          <div className="mt-3 grid gap-2">
-            {pitchOptions.map((option) => (
-              <button
-                className={`rounded-xl border p-3 text-left transition ${
-                  pitch === option.value
-                    ? "border-blue-500 bg-blue-50 text-blue-950"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
-                }`}
-                key={option.value}
-                onClick={() => {
-                  setPitch(option.value);
-                  setPathStart(null);
-                }}
-                type="button"
-              >
-                <span className="block text-sm font-bold">{option.label}</span>
-                <span className="mt-1 block text-xs text-slate-500">{option.description}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="grid min-h-[calc(100vh-150px)] min-w-0 gap-4 xl:grid-cols-[92px_minmax(0,1fr)_340px] 2xl:grid-cols-[104px_minmax(0,1fr)_380px]">
+      <form action={updateTrainingExerciseSketch} className="hidden" id="sketch-save-form">
+        <input name="exerciseId" type="hidden" value={exerciseId} />
+        <input name="sketchId" type="hidden" value={sketchId ?? ""} />
+        <input name="pitchType" type="hidden" value={pitch} />
+        <input name="sketchData" type="hidden" value={sketchData} />
+        <input name="title" readOnly type="hidden" value={title} />
+      </form>
 
-        <div className="space-y-4">
-          {toolGroups.map((group) => (
-            <div key={group.title}>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{group.title}</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {group.tools.map((item) => (
-                  <button
-                    className={`min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-semibold transition ${
-                      tool === item.value
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-white"
-                    }`}
-                    key={item.value}
-                    onClick={() => {
-                      setTool(item.value);
-                      setPathStart(null);
-                    }}
-                    title={item.hint}
-                    type="button"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </aside>
+      <ToolPanel
+        className="hidden xl:flex"
+        onSelect={(nextTool) => {
+          setTool(nextTool);
+          setPathStart(null);
+        }}
+        tool={tool}
+      />
 
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div>
-            <p className="text-sm font-bold text-slate-950">Trainingsgrafik</p>
-            <p className="text-sm text-slate-500">
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-white p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Trainingsgrafik</p>
+            <p className="mt-1 text-sm text-slate-600">
               {pathStart
                 ? "Zweiten Punkt setzen, um das Element abzuschliessen."
                 : selectedElement
                   ? `Ausgewaehlt: ${elementLabel(selectedElement.type)}`
-                  : "Werkzeug waehlen, ins Feld klicken und Elemente verschieben."}
+                  : `${selectedTool?.label ?? "Werkzeug"} aktiv. Tippen zum Platzieren, ziehen zum Verschieben.`}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={undo} type="button">
-              Rueckgaengig
-            </button>
+            <IconButton label="Rueckgaengig" onClick={undo}>
+              <Undo2 className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton disabled={!selectedElement} label="Duplizieren" onClick={duplicateSelected}>
+              <Copy className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton disabled={!selectedElement} label="Loeschen" tone="danger" onClick={deleteSelected}>
+              <Trash2 className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton label="Leeren" onClick={clearSketch}>
+              <Eraser className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton label="Export" onClick={downloadSketchImage}>
+              <Download className="size-4" aria-hidden="true" />
+            </IconButton>
             <button
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
-              disabled={!selectedElement}
-              onClick={duplicateSelected}
-              type="button"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white transition hover:bg-primary-strong"
+              form="sketch-save-form"
+              type="submit"
             >
-              Duplizieren
-            </button>
-            <button
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
-              disabled={!selectedElement || !isPointElement(selectedElement)}
-              onClick={editSelectedText}
-              type="button"
-            >
-              Label
-            </button>
-            <button
-              className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40"
-              disabled={!selectedElement}
-              onClick={deleteSelected}
-              type="button"
-            >
-              Loeschen
-            </button>
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={clearSketch} type="button">
-              Leeren
-            </button>
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={downloadSketchImage} type="button">
-              Bild exportieren
+              <Save className="size-4" aria-hidden="true" />
+              Speichern
             </button>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
-          <svg
-            aria-label="Trainingsskizze Editor"
-            className="block aspect-[4/3] w-full touch-none bg-slate-100"
-            onPointerDown={handleCanvasPointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            ref={svgRef}
-            role="img"
-            viewBox="0 0 100 100"
-          >
-            <defs>
-              <marker id="sketch-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
-                <path d="M0,0 L4,2 L0,4 Z" fill="#0f172a" />
-              </marker>
-              <marker id="sketch-blue-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
-                <path d="M0,0 L4,2 L0,4 Z" fill="#0b63ce" />
-              </marker>
-              <pattern height="8" id="grid-pattern" patternUnits="userSpaceOnUse" width="8">
-                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" strokeWidth="0.2" />
-              </pattern>
-            </defs>
+        <div className="overflow-hidden rounded-2xl border border-border bg-slate-200 p-2 shadow-sm sm:p-3">
+          <div className="flex min-h-[520px] items-center justify-center overflow-auto rounded-xl bg-slate-300/60 p-2 lg:min-h-[calc(100vh-260px)]">
+            <div className="min-w-[560px] max-w-none md:min-w-0" style={{ width: `${zoom * 100}%` }}>
+              <svg
+                aria-label="Trainingsskizze Editor"
+                className="block aspect-[4/3] w-full touch-none rounded-xl bg-slate-100 shadow-inner"
+                onPointerCancel={handlePointerCancel}
+                onPointerDown={handleCanvasPointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                ref={svgRef}
+                role="img"
+                viewBox="0 0 100 100"
+              >
+                <defs>
+                  <marker id="sketch-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
+                    <path d="M0,0 L4,2 L0,4 Z" fill="#0f172a" />
+                  </marker>
+                  <marker id="sketch-blue-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
+                    <path d="M0,0 L4,2 L0,4 Z" fill="#0b63ce" />
+                  </marker>
+                  <pattern height="8" id="grid-pattern" patternUnits="userSpaceOnUse" width="8">
+                    <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" strokeWidth="0.2" />
+                  </pattern>
+                </defs>
 
-            <PitchTemplate pitch={pitch} />
-            {pathStart ? <circle cx={pathStart.x} cy={pathStart.y} fill="#0b63ce" r="1.2" /> : null}
-            {elements.map((element) => (
-              <SketchElementView
-                element={element}
-                key={element.id}
-                onPointerDown={(event) => handleElementPointerDown(element, event)}
-                selected={element.id === selectedId}
-              />
-            ))}
-          </svg>
+                <PitchTemplate pitch={pitch} />
+                {pathStart ? <circle cx={pathStart.x} cy={pathStart.y} fill="#0b63ce" r="1.2" /> : null}
+                {elements.map((element) => (
+                  <SketchElementView
+                    element={element}
+                    key={element.id}
+                    onPointerDown={(event) => handleElementPointerDown(element, event)}
+                    selected={element.id === selectedId}
+                  />
+                ))}
+              </svg>
+            </div>
+          </div>
         </div>
 
-        <form action={updateTrainingExerciseSketch} className="flex flex-wrap justify-end gap-3">
-          <input name="exerciseId" type="hidden" value={exerciseId} />
-          <input name="sketchId" type="hidden" value={sketchId ?? ""} />
-          <input name="pitchType" type="hidden" value={pitch} />
-          <input name="sketchData" type="hidden" value={sketchData} />
-          <label className="mr-auto w-full sm:max-w-xs">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Skizzentitel</span>
-            <input
-              className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              defaultValue={initialTitle}
-              name="title"
-              placeholder="z.B. Phase 1: Aufbau"
-            />
-          </label>
-          <button className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700" type="button" onClick={undo}>
-            Rueckgaengig
-          </button>
-          <button className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700" type="submit">
-            Skizze speichern
-          </button>
-        </form>
+        <ToolPanel
+          className="sticky bottom-3 z-20 flex xl:hidden"
+          compact
+          onSelect={(nextTool) => {
+            setTool(nextTool);
+            setPathStart(null);
+          }}
+          tool={tool}
+        />
+
+        <InspectorPanel
+          canEditLabel={canEditLabel}
+          className="xl:hidden"
+          elements={elements}
+          fitStage={fitStage}
+          pitch={pitch}
+          selectedElement={selectedElement}
+          setPitch={(nextPitch) => {
+            setPitch(nextPitch);
+            setPathStart(null);
+          }}
+          setTitle={setTitle}
+          title={title}
+          updateSelectedLabel={updateSelectedLabel}
+          zoom={zoom}
+          zoomStage={zoomStage}
+        />
       </section>
+
+      <InspectorPanel
+        canEditLabel={canEditLabel}
+        className="hidden xl:block"
+        elements={elements}
+        fitStage={fitStage}
+        pitch={pitch}
+        selectedElement={selectedElement}
+        setPitch={(nextPitch) => {
+          setPitch(nextPitch);
+          setPathStart(null);
+        }}
+        setTitle={setTitle}
+        title={title}
+        updateSelectedLabel={updateSelectedLabel}
+        zoom={zoom}
+        zoomStage={zoomStage}
+      />
     </div>
+  );
+}
+
+function ToolPanel({
+  className,
+  compact = false,
+  onSelect,
+  tool,
+}: {
+  className?: string;
+  compact?: boolean;
+  onSelect: (tool: Tool) => void;
+  tool: Tool;
+}) {
+  return (
+    <aside className={`rounded-2xl border border-border bg-white p-2 shadow-sm ${className ?? ""}`}>
+      <div className={compact ? "flex gap-3 overflow-x-auto" : "flex h-full flex-col gap-4 overflow-y-auto"}>
+        {toolGroups.map((group) => (
+          <div className={compact ? "flex shrink-0 items-center gap-2" : "space-y-2"} key={group.title}>
+            <p className={compact ? "sr-only" : "px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted"}>
+              {group.title}
+            </p>
+            <div className={compact ? "flex gap-2" : "grid gap-2"}>
+              {group.tools.map((item) => {
+                const active = tool === item.value;
+
+                return (
+                  <button
+                    className={`inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border px-3 text-xs font-bold transition ${
+                      active
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-border bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-white"
+                    } ${compact ? "shrink-0" : "w-full"}`}
+                    key={item.value}
+                    onClick={() => onSelect(item.value)}
+                    title={`${group.title}: ${item.hint}`}
+                    type="button"
+                  >
+                    <span className={compact ? "whitespace-nowrap" : "text-center leading-4"}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function InspectorPanel({
+  canEditLabel,
+  className,
+  elements,
+  fitStage,
+  pitch,
+  selectedElement,
+  setPitch,
+  setTitle,
+  title,
+  updateSelectedLabel,
+  zoom,
+  zoomStage,
+}: {
+  canEditLabel: boolean;
+  className?: string;
+  elements: SketchElement[];
+  fitStage: () => void;
+  pitch: PitchType;
+  selectedElement: SketchElement | null | undefined;
+  setPitch: (pitch: PitchType) => void;
+  setTitle: (title: string) => void;
+  title: string;
+  updateSelectedLabel: (label: string) => void;
+  zoom: number;
+  zoomStage: (delta: number) => void;
+}) {
+  const selectedLabel = selectedElement ? elementLabel(selectedElement.type) : "Kein Element";
+  const labelValue = selectedElement && isPointElement(selectedElement) ? selectedElement.label ?? "" : "";
+
+  return (
+    <aside className={`space-y-3 rounded-2xl border border-border bg-white p-4 shadow-sm ${className ?? ""}`}>
+      <section>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Skizze</p>
+        <label className="mt-3 block">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Titel</span>
+          <input
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            onChange={(event) => setTitle(event.target.value)}
+            value={title}
+          />
+        </label>
+      </section>
+
+      <section className="border-t border-border pt-3">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Feldvorlage</p>
+        <div className="mt-3 grid gap-2">
+          {pitchOptions.map((option) => (
+            <button
+              className={`rounded-lg border p-3 text-left transition ${
+                pitch === option.value
+                  ? "border-blue-500 bg-blue-50 text-blue-950"
+                  : "border-border bg-white text-slate-700 hover:border-blue-300"
+              }`}
+              key={option.value}
+              onClick={() => setPitch(option.value)}
+              type="button"
+            >
+              <span className="block text-sm font-bold">{option.label}</span>
+              <span className="mt-1 block text-xs text-muted">{option.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-t border-border pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Ansicht</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-slate-900">{Math.round(zoom * 100)}%</p>
+          </div>
+          <div className="flex gap-2">
+            <IconButton label="Verkleinern" onClick={() => zoomStage(-0.1)}>
+              <ZoomOut className="size-4" aria-hidden="true" />
+            </IconButton>
+            <IconButton label="Vergroessern" onClick={() => zoomStage(0.1)}>
+              <ZoomIn className="size-4" aria-hidden="true" />
+            </IconButton>
+          </div>
+        </div>
+        <button
+          className="mt-3 h-10 w-full rounded-lg border border-border bg-white px-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+          onClick={fitStage}
+          type="button"
+        >
+          Auf Flaeche einpassen
+        </button>
+      </section>
+
+      <section className="border-t border-border pt-3">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Inspector</p>
+        <div className="mt-3 rounded-lg bg-slate-50 p-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-slate-950">
+            {selectedElement ? <MousePointer2 className="size-4 text-primary" aria-hidden="true" /> : <Type className="size-4 text-muted" aria-hidden="true" />}
+            {selectedLabel}
+          </div>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            {selectedElement
+              ? "Elemente koennen direkt auf der Flaeche gezogen werden."
+              : `${elements.length} Elemente auf dieser Skizze.`}
+          </p>
+        </div>
+
+        <label className="mt-3 block">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Label</span>
+          <input
+            className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm outline-none transition disabled:bg-slate-100 disabled:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
+            disabled={!canEditLabel}
+            onChange={(event) => updateSelectedLabel(event.target.value)}
+            placeholder="Element auswaehlen"
+            value={labelValue}
+          />
+        </label>
+      </section>
+
+      <button
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white transition hover:bg-primary-strong"
+        form="sketch-save-form"
+        type="submit"
+      >
+        <Save className="size-4" aria-hidden="true" />
+        Skizze speichern
+      </button>
+    </aside>
+  );
+}
+
+function IconButton({
+  children,
+  disabled,
+  label,
+  onClick,
+  tone = "default",
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <button
+      aria-label={label}
+      className={`inline-flex size-10 items-center justify-center rounded-lg border text-sm font-bold transition disabled:opacity-40 ${
+        tone === "danger"
+          ? "border-red-200 bg-white text-red-700 hover:bg-red-50"
+          : "border-border bg-white text-slate-700 hover:bg-slate-50"
+      }`}
+      disabled={disabled}
+      onClick={onClick}
+      title={label}
+      type="button"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -737,7 +964,7 @@ function SketchElementView({
 
     return (
       <g className="cursor-move" onPointerDown={onPointerDown}>
-        <path d={path} fill="none" stroke="transparent" strokeLinecap="round" strokeWidth="5" />
+        <path d={path} fill="none" stroke="transparent" strokeLinecap="round" strokeWidth="7" />
         <path d={path} fill="none" markerEnd={markerEnd} stroke={stroke} strokeDasharray={element.type === "DRIBBLE" ? "1.3 1" : undefined} strokeLinecap="round" strokeWidth="0.9" />
         {outline}
       </g>
@@ -747,6 +974,7 @@ function SketchElementView({
   if (isAreaElement(element)) {
     return (
       <g className="cursor-move" onPointerDown={onPointerDown}>
+        <rect fill="transparent" height={element.height + 6} width={element.width + 6} x={element.x - 3} y={element.y - 3} />
         {element.type === "ZONE_RECT" ? (
           <rect fill="#0b63ce22" height={element.height} rx="1.4" stroke="#0b63ce" strokeDasharray="1.8 1.3" strokeWidth="0.55" width={element.width} x={element.x} y={element.y} />
         ) : (
@@ -768,6 +996,7 @@ function SketchElementView({
 
   return (
     <g className="cursor-move" onPointerDown={onPointerDown} transform={`translate(${element.x} ${element.y})`}>
+      <circle fill="transparent" r="8" />
       <PointSymbol element={element} />
       {outline}
     </g>
@@ -1032,14 +1261,18 @@ function defaultLabel(toolType: Tool) {
 }
 
 function elementLabel(type: Tool) {
+  return getToolMeta(type)?.label ?? type;
+}
+
+function getToolMeta(type: Tool) {
   for (const group of toolGroups) {
     const item = group.tools.find((toolItem) => toolItem.value === type);
     if (item) {
-      return item.label;
+      return item;
     }
   }
 
-  return type;
+  return null;
 }
 
 function isPointElement(element: SketchElement): element is PointElement {

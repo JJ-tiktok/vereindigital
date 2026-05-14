@@ -168,11 +168,11 @@ export default async function DashboardPage() {
 
   return (
     <AppShell context={context} activePath="/dashboard">
-      <section className="space-y-6 py-2">
+      <section className="min-w-0 space-y-5 py-2 sm:space-y-6">
         <div className="flex flex-col gap-4 border-b border-border pb-5 xl:flex-row xl:items-center xl:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase text-primary">Performance Dashboard</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-normal text-slate-950 sm:text-5xl">Saisonueberblick</h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-normal text-slate-950 sm:text-5xl">Saisonueberblick</h1>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative">
@@ -190,21 +190,21 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <section className="rounded-lg border border-border bg-white p-5 sm:p-7">
-          <div className="grid gap-5 lg:grid-cols-[1fr_330px] lg:items-center">
-            <div>
-              <h2 className="text-4xl font-bold tracking-normal text-slate-950 sm:text-5xl">
+        <section className="rounded-lg border border-border bg-white p-4 sm:p-7">
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-center">
+            <div className="min-w-0">
+              <h2 className="text-3xl font-bold tracking-normal text-slate-950 sm:text-5xl">
                 Willkommen zurueck, Coach
               </h2>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-700 sm:text-lg sm:leading-8">
                 {players.length > 0
                   ? `${activeTeam.name} hat ${fitCount} einsatzbereite Spieler. Die naechsten Termine und Leistungsdaten sind bereit fuer deine Analyse.`
                   : "Lege deinen ersten Kader an, damit das Dashboard mit echten Leistungsdaten arbeitet."}
               </p>
             </div>
-            <article className="rounded-lg border border-border bg-slate-50 p-5">
+            <article className="min-w-0 rounded-lg border border-border bg-slate-50 p-4 sm:p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-primary">Naechstes Training</p>
-              <h3 className="mt-3 text-2xl font-bold text-slate-950">
+              <h3 className="mt-3 break-words text-xl font-bold text-slate-950 sm:text-2xl">
                 {nextTraining ? formatDashboardTime(nextTraining.startsAt) : "Noch nicht geplant"}
               </h3>
               <p className="mt-3 text-sm leading-6 text-muted">
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-3">
+        <section className="grid min-w-0 gap-4 lg:grid-cols-3">
           <RingCard
             color="blue"
             detail={`${fitCount}/${players.length} Spieler bereit`}
@@ -246,29 +246,29 @@ export default async function DashboardPage() {
           />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
-          <div className="space-y-6">
+        <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-6">
+          <div className="min-w-0 space-y-5 sm:space-y-6">
             <section>
               <div className="flex items-center justify-between border-b border-border pb-3">
-                <h2 className="text-2xl font-bold text-slate-950">Schnellzugriff</h2>
+                <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Schnellzugriff</h2>
               </div>
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <div className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-4">
                 <QuickAction href="/training" icon={<CalendarDays className="size-5" />} label="Training planen" />
                 <QuickAction href="/kader" icon={<Users className="size-5" />} label="Kader verwalten" />
                 <QuickAction href="/spiele" icon={<Trophy className="size-5" />} label="Spieltag oeffnen" />
               </div>
             </section>
 
-            <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
-              <article className="rounded-lg border border-border bg-white p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Spielanalyse</h2>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-6">
+              <article className="min-w-0 rounded-lg border border-border bg-white p-4 sm:p-5">
+                <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Spielanalyse</h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <ResultBar color="blue" label="Siege" total={finishedMatches.length} value={wins} />
                   <ResultBar color="slate" label="Unentschieden" total={finishedMatches.length} value={draws} />
                   <ResultBar color="red" label="Niederlagen" total={finishedMatches.length} value={losses} />
                 </div>
                 <div className="mt-8 border-t border-border pt-5">
-                  <h3 className="text-xl font-bold text-slate-950">Saisonkennzahlen</h3>
+                  <h3 className="text-lg font-bold text-slate-950 sm:text-xl">Saisonkennzahlen</h3>
                   <div className="mt-5 grid gap-4 sm:grid-cols-3">
                     <MiniMetric label="Punkte" value={points.toString()} />
                     <MiniMetric label="Tordifferenz" value={formatSigned(goalDifference)} />
@@ -278,9 +278,9 @@ export default async function DashboardPage() {
                 </div>
               </article>
 
-              <article className="rounded-lg border border-border bg-white p-5">
+              <article className="min-w-0 rounded-lg border border-border bg-white p-4 sm:p-5">
                 <div className="flex items-center justify-between border-b border-border pb-4">
-                  <h2 className="text-2xl font-bold text-slate-950">Top Performer</h2>
+                  <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Top Performer</h2>
                   <Shield className="size-5 text-muted" aria-hidden="true" />
                 </div>
                 {topPerformers.length > 0 ? (
@@ -304,44 +304,51 @@ export default async function DashboardPage() {
               </article>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-border bg-white">
-              <div className="flex items-center justify-between border-b border-border p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Letzte Spiele</h2>
+            <section className="min-w-0 overflow-hidden rounded-lg border border-border bg-white">
+              <div className="flex items-center justify-between border-b border-border p-4 sm:p-5">
+                <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Letzte Spiele</h2>
                 <Link className="text-sm font-semibold text-primary" href="/spiele">
                   Alle anzeigen
                 </Link>
               </div>
               {lastMatches.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-[760px] w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
-                      <tr>
-                        <th className="px-5 py-3">Datum</th>
-                        <th className="px-5 py-3">Gegner</th>
-                        <th className="px-5 py-3">Ergebnis</th>
-                        <th className="px-5 py-3">Tendenz</th>
-                        <th className="px-5 py-3">Spielerwerte</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {lastMatches.map((match) => (
-                        <tr key={match.id}>
-                          <td className="px-5 py-4 text-slate-700">
-                            {match.calendarEvent ? formatDate(match.calendarEvent.startsAt) : "-"}
-                          </td>
-                          <td className="px-5 py-4 font-semibold text-slate-950">{match.opponent}</td>
-                          <td className="px-5 py-4 font-bold tabular-nums text-slate-950">
-                            {match.goalsFor} - {match.goalsAgainst}
-                          </td>
-                          <td className="px-5 py-4">
-                            <ResultPill goalsFor={match.goalsFor ?? 0} goalsAgainst={match.goalsAgainst ?? 0} />
-                          </td>
-                          <td className="px-5 py-4 text-slate-700">{match.playerStats.length} Eintraege</td>
+                <>
+                  <div className="divide-y divide-border md:hidden">
+                    {lastMatches.map((match) => (
+                      <LastMatchCard match={match} key={match.id} />
+                    ))}
+                  </div>
+                  <div className="hidden md:block">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                        <tr>
+                          <th className="px-5 py-3">Datum</th>
+                          <th className="px-5 py-3">Gegner</th>
+                          <th className="px-5 py-3">Ergebnis</th>
+                          <th className="px-5 py-3">Tendenz</th>
+                          <th className="px-5 py-3">Spielerwerte</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {lastMatches.map((match) => (
+                          <tr key={match.id}>
+                            <td className="px-5 py-4 text-slate-700">
+                              {match.calendarEvent ? formatDate(match.calendarEvent.startsAt) : "-"}
+                            </td>
+                            <td className="px-5 py-4 font-semibold text-slate-950">{match.opponent}</td>
+                            <td className="px-5 py-4 font-bold tabular-nums text-slate-950">
+                              {match.goalsFor} - {match.goalsAgainst}
+                            </td>
+                            <td className="px-5 py-4">
+                              <ResultPill goalsFor={match.goalsFor ?? 0} goalsAgainst={match.goalsAgainst ?? 0} />
+                            </td>
+                            <td className="px-5 py-4 text-slate-700">{match.playerStats.length} Eintraege</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="p-5">
                   <EmptyState title="Noch keine Spiele abgeschlossen" description="Sobald Spielergebnisse erfasst sind, erscheinen sie hier." />
@@ -350,25 +357,25 @@ export default async function DashboardPage() {
             </section>
           </div>
 
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-5 sm:space-y-6">
             <article className="rounded-lg border border-border bg-white">
-              <div className="flex items-center justify-between border-b border-border p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Tagesablauf</h2>
+              <div className="flex items-center justify-between border-b border-border p-4 sm:p-5">
+                <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Tagesablauf</h2>
                 <p className="text-sm text-muted">Heute</p>
               </div>
               {todayEvents.length > 0 ? (
                 <div className="divide-y divide-border">
                   {todayEvents.map((event) => (
                     <Link
-                      className={`grid grid-cols-[64px_1fr] gap-4 p-5 transition hover:bg-blue-50/60 ${
+                      className={`grid grid-cols-[56px_minmax(0,1fr)] gap-3 p-4 transition hover:bg-blue-50/60 sm:grid-cols-[64px_minmax(0,1fr)] sm:gap-4 sm:p-5 ${
                         event.id === nextTraining?.id ? "border-l-4 border-primary bg-blue-50" : ""
                       }`}
                       href={`/kalender/${event.id}`}
                       key={event.id}
                     >
                       <p className="text-sm font-bold tabular-nums text-slate-900">{formatTime(event.startsAt)}</p>
-                      <div>
-                        <p className="text-xl font-bold text-slate-950">{event.title}</p>
+                      <div className="min-w-0">
+                        <p className="break-words text-lg font-bold text-slate-950 sm:text-xl">{event.title}</p>
                         <p className="mt-1 text-sm text-muted">
                           {eventTypeLabel(event.type)}
                           {event.location ? ` / ${event.location}` : ""}
@@ -385,7 +392,7 @@ export default async function DashboardPage() {
               )}
             </article>
 
-            <article className="rounded-lg border border-border bg-slate-950 p-5 text-white">
+            <article className="rounded-lg border border-border bg-slate-950 p-4 text-white sm:p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-blue-200">Naechste Termine</p>
               <div className="mt-4 space-y-4">
                 {upcomingEvents.slice(0, 3).map((event) => (
@@ -431,13 +438,13 @@ function RingCard({
   const dash = `${Math.max(0, Math.min(value, 100))} 100`;
 
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <h2 className="text-xl font-bold text-slate-950">{label}</h2>
-        <span className={colorClass}>{icon}</span>
+    <article className="min-w-0 rounded-lg border border-border bg-white p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3 border-b border-border pb-4">
+        <h2 className="min-w-0 break-words text-lg font-bold text-slate-950 sm:text-xl">{label}</h2>
+        <span className={`shrink-0 ${colorClass}`}>{icon}</span>
       </div>
-      <div className="mt-6 flex items-center justify-center">
-        <div className="relative size-40">
+      <div className="mt-5 flex items-center justify-center sm:mt-6">
+        <div className="relative size-36 sm:size-40">
           <svg className="-rotate-90" viewBox="0 0 36 36">
             <path
               d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831a15.9155 15.9155 0 1 1 0 -31.831"
@@ -455,22 +462,29 @@ function RingCard({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-4xl font-bold tabular-nums text-slate-950">{value}</p>
+            <p className="text-3xl font-bold tabular-nums text-slate-950 sm:text-4xl">{value}</p>
             <p className="text-xs font-bold uppercase tracking-wide text-slate-800">{sublabel}</p>
           </div>
         </div>
       </div>
-      <p className="mt-5 text-sm font-medium text-slate-700">{detail}</p>
+      <p className="mt-5 break-words text-sm font-medium text-slate-700">{detail}</p>
     </article>
   );
 }
 
 function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
-    <Link className="relative overflow-hidden rounded-lg border border-border bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-sm" href={href}>
-      <span className="text-primary">{icon}</span>
-      <p className="mt-6 text-2xl font-bold leading-tight text-slate-950">{label}</p>
-      <div className="absolute -bottom-6 -right-5 text-8xl font-bold text-slate-100">{label[0]}</div>
+    <Link
+      className="relative isolate min-w-0 overflow-hidden rounded-lg border border-border bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm sm:p-5"
+      href={href}
+    >
+      <span className="relative z-10 text-primary">{icon}</span>
+      <p className="relative z-10 mt-4 break-words text-lg font-bold leading-tight text-slate-950 sm:mt-6 sm:text-2xl">
+        {label}
+      </p>
+      <div className="pointer-events-none absolute -bottom-6 -right-5 z-0 text-7xl font-bold text-slate-100 sm:text-8xl">
+        {label[0]}
+      </div>
     </Link>
   );
 }
@@ -497,9 +511,9 @@ function ResultBar({ color, label, total, value }: { color: "blue" | "red" | "sl
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-4">
+    <div className="min-w-0 rounded-lg bg-slate-50 p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-2 text-3xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-2 break-words text-2xl font-bold tabular-nums text-slate-950 sm:text-3xl">{value}</p>
     </div>
   );
 }
@@ -524,6 +538,49 @@ function ResultPill({ goalsAgainst, goalsFor }: { goalsAgainst: number; goalsFor
         : "bg-rose-50 text-rose-700";
 
   return <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>{result}</span>;
+}
+
+function LastMatchCard({
+  match,
+}: {
+  match: {
+    calendarEvent: {
+      startsAt: Date;
+    } | null;
+    goalsAgainst: number | null;
+    goalsFor: number | null;
+    opponent: string;
+    playerStats: unknown[];
+  };
+}) {
+  const goalsFor = match.goalsFor ?? 0;
+  const goalsAgainst = match.goalsAgainst ?? 0;
+
+  return (
+    <article className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            {match.calendarEvent ? formatDate(match.calendarEvent.startsAt) : "Ohne Datum"}
+          </p>
+          <h3 className="mt-1 break-words text-lg font-bold text-slate-950">{match.opponent}</h3>
+        </div>
+        <ResultPill goalsFor={goalsFor} goalsAgainst={goalsAgainst} />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Ergebnis</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-slate-950">
+            {match.goalsFor} - {match.goalsAgainst}
+          </p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">Spielerwerte</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-slate-950">{match.playerStats.length}</p>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function buildTopPerformers(
