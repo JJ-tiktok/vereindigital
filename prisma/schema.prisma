@@ -135,7 +135,6 @@ model Club {
 
   teams             Team[]
   seasons           Season[]
-  users             User[]
   playerProfiles    PlayerProfile[]
   roles             Role[]
   memberships       ClubMembership[]
@@ -170,7 +169,6 @@ model Team {
   seasonId  String
   name      String
   ageGroup  String?
-  season    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -193,14 +191,12 @@ model Team {
 
 model User {
   id          String   @id @default(cuid())
-  clubId      String
   clerkUserId String   @unique
   email       String
   displayName String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  club              Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   playerProfiles    PlayerProfile[]
   clubMemberships   ClubMembership[]
   memberships       TeamMembership[]
@@ -213,7 +209,6 @@ model User {
   fileEntriesCreated PlayerFileEntry[] @relation("PlayerFileEntryCreatedBy")
   fileEntriesUpdated PlayerFileEntry[] @relation("PlayerFileEntryUpdatedBy")
 
-  @@index([clubId])
   @@index([email])
   @@map("users")
 }
@@ -224,8 +219,8 @@ model PlayerProfile {
   userId    String?
   firstName String
   lastName  String
-  birthDate DateTime
-  position  String
+  birthDate DateTime?
+  position  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

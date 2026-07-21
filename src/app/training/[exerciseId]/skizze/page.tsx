@@ -5,7 +5,7 @@ import { SketchEditor } from "@/app/training/[exerciseId]/sketch-editor";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
 import { createTrainingExerciseSketch, deleteTrainingExerciseSketch } from "@/lib/actions";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 import { trainingPitchLabel } from "@/lib/training";
 
@@ -18,7 +18,7 @@ export default async function TrainingSketchPage({
 }) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "training.catalog.manage", activeTeam.id);
   const { exerciseId } = await params;
   const query = await searchParams;
   const exercise = await prisma.trainingExercise.findFirst({

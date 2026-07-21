@@ -250,7 +250,7 @@ export default async function SquadPage() {
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-slate-950">{player.name}</p>
                           <p className="mt-1 text-sm text-muted xl:hidden">
-                            {player.position} / {player.age} Jahre / {player.status.label}
+                            {player.position ?? "?"} / {player.age ?? "?"} Jahre / {player.status.label}
                           </p>
                           <p className="hidden text-sm text-muted xl:block">
                             {player.goals} Tore / {player.assists} Vorlagen / {player.minutes} Min.
@@ -399,7 +399,11 @@ function LoadIndicator({ value }: { value: number | null }) {
   );
 }
 
-function getAge(birthDate: Date) {
+function getAge(birthDate: Date | null) {
+  if (!birthDate) {
+    return null;
+  }
+
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());

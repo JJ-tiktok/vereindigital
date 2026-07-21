@@ -1,11 +1,11 @@
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { TrainingExerciseForm } from "@/app/training/exercise-form";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 
 export default async function NewTrainingExercisePage() {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "training.catalog.manage", activeTeam.id);
 
   return (
     <AppShell context={context} activePath="/training">

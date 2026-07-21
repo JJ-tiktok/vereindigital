@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { PlayerForm } from "@/app/kader/player-form";
 import { createPlayerAttributeSnapshot, createPlayerFileEntry } from "@/lib/actions";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import {
   attributeCategoryLabel,
@@ -23,7 +23,7 @@ export default async function PlayerDetailPage({
 }) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "player.profile.manage", activeTeam.id);
   const { playerId } = await params;
   const query = await searchParams;
   await ensureDefaultAttributeDefinitions(context.club.id);
@@ -164,9 +164,9 @@ export default async function PlayerDetailPage({
               <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium text-muted">
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="size-4" aria-hidden="true" />
-                  {age} Jahre
+                  {age ?? "?"} Jahre
                 </span>
-                <span>Geboren am {formatDate(player.birthDate)}</span>
+                <span>Geboren am {player.birthDate ? formatDate(player.birthDate) : "unbekannt"}</span>
                 <span>{activeTeam.name}</span>
               </div>
               <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -392,8 +392,8 @@ function AttributeRow({
   );
 }
 
-function PitchCard({ position }: { position: string }) {
-  const normalizedPosition = position.toUpperCase();
+function PitchCard({ position }: { position: string | null }) {
+  const normalizedPosition = (position ?? "").toUpperCase();
   const markerClass = positionMarkerClass(normalizedPosition);
 
   return (
@@ -525,7 +525,11 @@ function formatSkill(value: number | null) {
   return value.toFixed(0);
 }
 
-function getAge(birthDate: Date) {
+function getAge(birthDate: Date | null) {
+  if (!birthDate) {
+    return null;
+  }
+
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());

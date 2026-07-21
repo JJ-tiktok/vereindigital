@@ -414,6 +414,16 @@ Diese Punkte muessen spaeter noch konkretisiert werden:
 - wie Einladungen per WhatsApp oder SMS technisch umgesetzt werden
 - ob Material- oder Beitragsstatus in den Trainer-MVP gehoert
 
+## Architektur-Update (Juli 2026)
+
+- Vereinszugehoerigkeit laeuft ausschliesslich ueber `ClubMembership`; ein User kann mehreren Vereinen angehoeren.
+- Berechtigungen werden ueber `Role`/`Permission`/`RolePermission` enforced (`hasPermission`/`requirePermission`).
+- Saisonuebernahme: Beim Anlegen einer Saison koennen Teams samt aktiver Kader aus einer Quellsaison kopiert werden.
+- Team-Switcher: Nutzer mit mehreren Teams wechseln das aktive Team in der Sidebar (Cookie-basiert).
+- Soft-Delete-Konvention statt Hard-Delete, Details in `DATA_MODEL.md`.
+- Server Actions liegen domaenenweise unter `src/lib/actions/`, validiert mit Zod; Hauptformulare nutzen `useActionState`.
+- Unit-Tests mit Vitest: `npm test`.
+
 ## Entwicklung
 
 Lokalen Entwicklungsserver starten:

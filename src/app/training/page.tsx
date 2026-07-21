@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 import {
   trainingCategoryLabel,
@@ -28,7 +28,7 @@ export default async function TrainingLibraryPage({
 }) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "training.catalog.read", activeTeam.id);
   const query = await searchParams;
   const search = query.q?.trim() ?? "";
   const category = isTrainingCategory(query.category) ? query.category : "";

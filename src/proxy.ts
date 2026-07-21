@@ -1,42 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/onboarding(.*)",
-  "/kader(.*)",
-  "/mitglieder(.*)",
-  "/kalender(.*)",
-  "/saisons(.*)",
-  "/training(.*)",
-  "/spiele(.*)",
-  "/statistiken(.*)",
-  "/abwesenheiten(.*)",
-  "/einladungen(.*)",
-]);
+const isPublicRoute = createRouteMatcher(["/", "/invite(.*)", "/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (isProtectedRoute(request)) {
+  if (!isPublicRoute(request)) {
     await auth.protect();
   }
 });
 
 export const config = {
   matcher: [
-    "/",
-    "/invite(.*)",
-    "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/dashboard(.*)",
-    "/onboarding(.*)",
-    "/kader(.*)",
-    "/mitglieder(.*)",
-    "/kalender(.*)",
-    "/saisons(.*)",
-    "/training(.*)",
-    "/spiele(.*)",
-    "/statistiken(.*)",
-    "/abwesenheiten(.*)",
-    "/einladungen(.*)",
+    // Run on everything except static assets and Next.js internals.
+    "/((?!_next|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|woff2?)$).*)",
     "/(api|trpc)(.*)",
   ],
 };

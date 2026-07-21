@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
 import { duplicateTrainingExercise } from "@/lib/actions";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import {
   trainingCategoryLabel,
   trainingIntensityLabel,
@@ -21,7 +21,7 @@ export default async function TrainingExerciseDetailPage({
 }) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "training.catalog.read", activeTeam.id);
   const { exerciseId } = await params;
   const exercise = await prisma.trainingExercise.findFirst({
     where: {

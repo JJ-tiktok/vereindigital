@@ -19,7 +19,7 @@ export default async function NewCalendarEventPage({
         description={`Neuen Termin fuer ${activeTeam.name} anlegen.`}
       />
       <div className="py-6">
-        <EventForm error={params.error} selectedDate={params.date} />
+        <EventForm selectedDate={params.date} />
       </div>
     </AppShell>
   );

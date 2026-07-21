@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { PrintButton } from "@/components/print-button";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { trainingCategoryLabel, trainingIntensityLabel } from "@/lib/training";
@@ -15,7 +15,7 @@ export default async function TrainingPlanPrintPage({
 }) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requirePermission(context, "calendar.events.manage", activeTeam.id);
   const { eventId } = await params;
   const event = await prisma.calendarEvent.findFirst({
     where: {

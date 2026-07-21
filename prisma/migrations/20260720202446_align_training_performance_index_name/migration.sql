@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "player_training_performances_calendarEventId_playerProfileId_ke" RENAME TO "player_training_performances_calendarEventId_playerProfileI_key";
