@@ -82,8 +82,11 @@ export async function updatePlayerMatchStat(formData: FormData) {
     redirect("/spiele");
   }
 
-  const { matchId, playerProfileId, lineupStatus, goals, assists, yellowCards, redCards, minutesPlayed, rating } =
+  const { matchId, playerProfileId, lineupStatus, goals, assists, yellowCards, redCards, minutesPlayed } =
     parsed.data;
+  const played = lineupStatus !== LineupStatus.NOT_USED || minutesPlayed > 0;
+  const rawRating = String(formData.get("rating") ?? "").trim();
+  const rating = !played && (!rawRating || rawRating === "0") ? null : parsed.data.rating;
 
   const match = await prisma.match.findFirst({
     where: {
@@ -108,6 +111,7 @@ export async function updatePlayerMatchStat(formData: FormData) {
     redCards < 0 ||
     minutesPlayed < 0 ||
     minutesPlayed > 120 ||
+    (played && rating === null) ||
     (rating !== null && (rating < 1 || rating > 10))
   ) {
     redirect(`/spiele/${matchId}?error=stat-values`);

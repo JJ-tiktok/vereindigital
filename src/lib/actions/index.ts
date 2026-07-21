@@ -1,7 +1,12 @@
 export { createSeason, setActiveSeason } from "./seasons";
 export { setActiveTeam } from "./team";
 export { acceptInvitation, createInvitation, revokeInvitation } from "./invitations";
-export { createPlayerAvailability, createPlayerProfile, updatePlayerProfile } from "./players";
+export {
+  createPlayerAvailability,
+  createPlayerProfile,
+  removePlayerFromActiveTeam,
+  updatePlayerProfile,
+} from "./players";
 export { createCalendarEvent, updateEventAttendance } from "./calendar";
 export { updateMatchResult, updatePlayerMatchStat } from "./matches";
 export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";

@@ -17,6 +17,7 @@ export function PlayerForm({
     lastName: string;
     birthDate: Date | null;
     position: string | null;
+    jerseyNumber: number | null;
   };
   embedded?: boolean;
 }) {
@@ -46,6 +47,19 @@ export function PlayerForm({
           label="Nachname"
           name="lastName"
         />
+        <div>
+          <label className="text-sm font-semibold text-slate-800" htmlFor="jerseyNumber">
+            Rueckennummer
+          </label>
+          <input
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            defaultValue={player?.jerseyNumber ?? ""}
+            id="jerseyNumber"
+            min={1}
+            name="jerseyNumber"
+            type="number"
+          />
+        </div>
         <div>
           <label className="text-sm font-semibold text-slate-800" htmlFor="birthDate">
             Geburtsdatum

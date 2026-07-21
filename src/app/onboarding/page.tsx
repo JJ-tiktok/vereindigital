@@ -1,10 +1,31 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
 import { completeClubOnboarding } from "@/lib/onboarding";
+import { prisma } from "@/lib/prisma";
 
 export default async function OnboardingPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const clerkUser = await currentUser();
+
+  if (clerkUser) {
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        clerkUserId: clerkUser.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingUser) {
+      redirect("/dashboard");
+    }
+  }
+
   const params = await searchParams;
 
   return (

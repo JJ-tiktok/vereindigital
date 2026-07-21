@@ -5,14 +5,27 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
+import { hasPermission, requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
-import { availabilityReason, parseForm, zDate, zOptionalString, zRequiredString, type ActionState } from "./helpers";
+import { ensurePlayerInTeam } from "./guards";
+import {
+  availabilityReason,
+  parseForm,
+  zDate,
+  zOptionalInt,
+  zOptionalString,
+  zRequiredString,
+  type ActionState,
+} from "./helpers";
 
-function revalidateRoster() {
+function revalidateRoster(playerId?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/kader");
+
+  if (playerId) {
+    revalidatePath(`/kader/${playerId}`);
+  }
 }
 
 const playerProfileSchema = z.object({
@@ -20,6 +33,7 @@ const playerProfileSchema = z.object({
   lastName: zRequiredString,
   birthDate: zDate,
   position: zRequiredString,
+  jerseyNumber: zOptionalInt,
 });
 
 export async function createPlayerProfile(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -228,4 +242,39 @@ export async function createPlayerAvailability(_prevState: ActionState, formData
   revalidatePath("/kalender");
   revalidatePath("/abwesenheiten");
   redirect("/abwesenheiten");
+}
+
+export async function removePlayerFromActiveTeam(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "player.profile.manage", activeTeam.id);
+  const playerId = String(formData.get("playerId") ?? "");
+
+  await ensurePlayerInTeam(playerId, activeTeam.id, context.club.id);
+
+  const playerRole = await prisma.role.findUniqueOrThrow({
+    where: {
+      clubId_key: {
+        clubId: context.club.id,
+        key: "player",
+      },
+    },
+  });
+
+  await prisma.teamMembership.updateMany({
+    where: {
+      playerProfileId: playerId,
+      roleId: playerRole.id,
+      status: "ACTIVE",
+      teamId: activeTeam.id,
+    },
+    data: {
+      status: "INACTIVE",
+    },
+  });
+
+  revalidateRoster(playerId);
+  revalidatePath("/kalender");
+  revalidatePath("/abwesenheiten");
+  redirect("/kader?removed=1");
 }

@@ -6,9 +6,14 @@ import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { getInitials } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-export default async function SquadPage() {
+export default async function SquadPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ removed?: string }>;
+}) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
+  const query = await searchParams;
   const now = new Date();
   const players = await prisma.playerProfile.findMany({
     where: {
@@ -107,6 +112,12 @@ export default async function SquadPage() {
   return (
     <AppShell context={context} activePath="/kader">
       <section className="space-y-6 py-2">
+        {query.removed ? (
+          <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+            Spieler wurde aus dem aktuellen Kader entfernt.
+          </p>
+        ) : null}
+
         <div className="flex flex-col gap-4 border-b border-border pb-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase text-primary">Kaderverwaltung</p>
