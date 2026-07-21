@@ -1,7 +1,7 @@
-import type { AppContext } from "@/lib/app-context";
+import { hasPermission, type AppContext } from "@/lib/app-context";
 
 export function canUseFeedback(context: AppContext) {
-  return context.isClubAdmin || getActiveTeamRoleKeys(context).some((key) => ["trainer", "assistant_coach"].includes(key));
+  return context.isClubAdmin || hasPermission(context, "calendar.events.manage");
 }
 
 export function getActiveTeamRoleKeys(context: AppContext) {

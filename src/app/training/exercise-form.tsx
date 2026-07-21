@@ -1,6 +1,10 @@
+"use client";
+
+import { useActionState } from "react";
+
 import type { TrainingExercise } from "@prisma/client";
 
-import { createTrainingExercise, updateTrainingExercise } from "@/lib/actions";
+import { createTrainingExercise, updateTrainingExercise, type ActionState } from "@/lib/actions";
 import {
   trainingCategoryLabel,
   trainingCategoryOptions,
@@ -33,9 +37,18 @@ type TrainingExerciseFormValue = Pick<
 >;
 
 export function TrainingExerciseForm({ exercise }: { exercise?: TrainingExerciseFormValue }) {
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+    exercise ? updateTrainingExercise : createTrainingExercise,
+    null,
+  );
+
   return (
-    <form action={exercise ? updateTrainingExercise : createTrainingExercise} className="space-y-6">
+    <form action={formAction} className="space-y-6">
       {exercise ? <input name="exerciseId" type="hidden" value={exercise.id} /> : null}
+
+      {state?.error ? (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{state.error}</p>
+      ) : null}
 
       <section className="rounded-lg border border-border bg-white p-5">
         <h2 className="text-xl font-semibold text-slate-950">Grunddaten</h2>
@@ -95,8 +108,12 @@ export function TrainingExerciseForm({ exercise }: { exercise?: TrainingExercise
         </div>
       </section>
 
-      <button className="h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-white" type="submit">
-        {exercise ? "Uebung speichern" : "Uebung anlegen"}
+      <button
+        className="h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={isPending}
+        type="submit"
+      >
+        {isPending ? "Speichern..." : exercise ? "Uebung speichern" : "Uebung anlegen"}
       </button>
     </form>
   );

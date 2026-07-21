@@ -61,7 +61,6 @@ export async function completeClubOnboarding(formData: FormData) {
 
     const user = await tx.user.create({
       data: {
-        clubId: club.id,
         clerkUserId: clerkUser.id,
         email,
         displayName: clerkUser.fullName ?? email,
@@ -83,7 +82,6 @@ export async function completeClubOnboarding(formData: FormData) {
         clubId: club.id,
         seasonId: season.id,
         name: teamName,
-        season: season.name,
       },
     });
 

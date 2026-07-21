@@ -352,11 +352,11 @@ export default async function ImportReviewPage({
 }
 
 type PlayerOption = {
-  birthDate: Date;
+  birthDate: Date | null;
   firstName: string;
   id: string;
   lastName: string;
-  position: string;
+  position: string | null;
 };
 
 type MatchOption = {
@@ -481,13 +481,14 @@ function findRosterCandidate(row: { birthDate: string; firstName: string; lastNa
       (player) =>
         normalize(player.firstName) === normalize(row.firstName) &&
         normalize(player.lastName) === normalize(row.lastName) &&
+        player.birthDate !== null &&
         formatDateInput(player.birthDate) === row.birthDate,
     ) ??
     players.find(
       (player) =>
         normalize(player.firstName) === normalize(row.firstName) &&
         normalize(player.lastName) === normalize(row.lastName) &&
-        normalize(player.position) === normalize(row.position),
+        normalize(player.position ?? "") === normalize(row.position),
     )
   );
 }

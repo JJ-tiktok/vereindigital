@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { TeamSwitcher } from "@/components/team-switcher";
 import type { AppContext } from "@/lib/app-context";
 import { canUseFeedback } from "@/lib/feedback-permissions";
 
@@ -83,10 +84,17 @@ export function AppShell({
 
           <div className="mt-6 hidden rounded-lg border border-border bg-slate-50 p-4 lg:block">
             <p className="text-xs font-semibold uppercase text-muted">Aktive Saison</p>
-            <p className="mt-2 font-semibold">{context.activeSeason.name}</p>
+            <p className="mt-2 font-semibold">{context.activeSeason?.name ?? "Keine Saison"}</p>
             <div className="my-3 h-px bg-border" />
             <p className="text-xs font-semibold uppercase text-muted">Aktives Team</p>
-            <p className="mt-2 font-semibold">{context.activeTeam?.name ?? "Kein Team"}</p>
+            {context.teams.length > 1 && context.activeTeam ? (
+              <TeamSwitcher
+                activeTeamId={context.activeTeam.id}
+                teams={context.teams.map((team) => ({ id: team.id, name: team.name }))}
+              />
+            ) : (
+              <p className="mt-2 font-semibold">{context.activeTeam?.name ?? "Kein Team"}</p>
+            )}
             <p className="mt-1 text-sm text-muted">
               {context.isClubAdmin ? "Admin-Zugriff" : "Team-Zugriff"}
             </p>

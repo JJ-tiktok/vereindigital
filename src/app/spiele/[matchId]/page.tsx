@@ -67,7 +67,7 @@ export default async function MatchDetailPage({
         minutesPlayed: stat?.minutesPlayed ?? 0,
         name: `${player.firstName} ${player.lastName}`,
         played,
-        position: player.position,
+        position: player.position ?? "?",
         rating: stat?.rating ?? null,
         redCards: stat?.redCards ?? 0,
         saved: Boolean(stat),

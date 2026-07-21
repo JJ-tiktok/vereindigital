@@ -4,7 +4,13 @@ import { CalendarEventType, ImportType, LineupStatus, MatchStatus, Prisma } from
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireActiveTeam, requireAppContext, requireCoachingStaffTeam } from "@/lib/app-context";
+import {
+  requireActiveSeason,
+  requireActiveTeam,
+  requireAppContext,
+  requirePermission,
+  type AppContext,
+} from "@/lib/app-context";
 import {
   isMatchStatsImportData,
   isRosterImportData,
@@ -106,6 +112,10 @@ function readRequiredImportType(formData: FormData) {
   return value === "MATCH_STATS" ? ImportType.MATCH_STATS : ImportType.ROSTER;
 }
 
+function requireImportPermission(context: AppContext, teamId: string, importType: ImportType) {
+  requirePermission(context, importType === "MATCH_STATS" ? "match.stats.manage" : "player.profile.manage", teamId);
+}
+
 async function readCsvInput(formData: FormData) {
   const pastedCsv = readString(formData, "csv");
   const file = formData.get("file");
@@ -126,7 +136,8 @@ async function readCsvInput(formData: FormData) {
 export async function createRosterTemplateImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  const activeSeason = requireActiveSeason(context);
+  requireImportPermission(context, activeTeam.id, ImportType.ROSTER);
   const csvInput = await readCsvInput(formData);
 
   if (!csvInput.text) {
@@ -141,7 +152,7 @@ export async function createRosterTemplateImportJob(formData: FormData) {
       fileName: csvInput.fileName,
       issues: toInputJson(parsed.issues),
       parsedData: toInputJson(parsed.data),
-      seasonId: context.activeSeason.id,
+      seasonId: activeSeason.id,
       sourceType: "TEMPLATE_CSV",
       status: "PARSED",
       teamId: activeTeam.id,
@@ -156,7 +167,8 @@ export async function createRosterTemplateImportJob(formData: FormData) {
 export async function createMatchStatsTemplateImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  const activeSeason = requireActiveSeason(context);
+  requireImportPermission(context, activeTeam.id, ImportType.MATCH_STATS);
   const csvInput = await readCsvInput(formData);
 
   if (!csvInput.text) {
@@ -171,7 +183,7 @@ export async function createMatchStatsTemplateImportJob(formData: FormData) {
       fileName: csvInput.fileName,
       issues: toInputJson(parsed.issues),
       parsedData: toInputJson(parsed.data),
-      seasonId: context.activeSeason.id,
+      seasonId: activeSeason.id,
       sourceType: "TEMPLATE_CSV",
       status: "PARSED",
       teamId: activeTeam.id,
@@ -186,9 +198,10 @@ export async function createMatchStatsTemplateImportJob(formData: FormData) {
 export async function createAiUrlImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
-  const sourceUrl = readString(formData, "sourceUrl");
+  const activeSeason = requireActiveSeason(context);
   const importType = readRequiredImportType(formData);
+  requireImportPermission(context, activeTeam.id, importType);
+  const sourceUrl = readString(formData, "sourceUrl");
 
   if (!sourceUrl) {
     redirect(importType === "ROSTER" ? "/importe/kader?error=missing-url" : "/importe/spieltage?error=missing-url");
@@ -204,7 +217,7 @@ export async function createAiUrlImportJob(formData: FormData) {
       createdByUserId: context.appUser.id,
       issues: toInputJson(parsed.issues),
       parsedData: parsed.data ? toInputJson(parsed.data) : Prisma.JsonNull,
-      seasonId: context.activeSeason.id,
+      seasonId: activeSeason.id,
       sourceType: "AI_URL",
       sourceUrl,
       status: parsed.data ? "PARSED" : "FAILED",
@@ -220,12 +233,13 @@ export async function createAiUrlImportJob(formData: FormData) {
 export async function saveImportReviewData(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
   const job = await findImportJob(readString(formData, "jobId"), context.club.id, activeTeam.id);
 
   if (!job) {
     redirect("/importe");
   }
+
+  requireImportPermission(context, activeTeam.id, job.type);
 
   const reviewData =
     job.type === "ROSTER" && isRosterImportData(job.parsedData)
@@ -257,7 +271,7 @@ export async function saveImportReviewData(formData: FormData) {
 export async function confirmRosterImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requireImportPermission(context, activeTeam.id, ImportType.ROSTER);
   const job = await findImportJob(readString(formData, "jobId"), context.club.id, activeTeam.id);
 
   if (!job || job.type !== "ROSTER" || !isRosterImportData(job.parsedData)) {
@@ -358,7 +372,7 @@ export async function confirmRosterImportJob(formData: FormData) {
 export async function confirmMatchStatsImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
-  requireCoachingStaffTeam(context, activeTeam.id);
+  requireImportPermission(context, activeTeam.id, ImportType.MATCH_STATS);
   const job = await findImportJob(readString(formData, "jobId"), context.club.id, activeTeam.id);
 
   if (!job || job.type !== "MATCH_STATS" || !isMatchStatsImportData(job.parsedData)) {

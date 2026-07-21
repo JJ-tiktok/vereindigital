@@ -31,6 +31,47 @@ Phase 2 soll die fachliche Grundlage fuer folgende Bereiche schaffen:
 - Spiele koennen zusaetzliche fachliche Daten haben und mit einem Kalendertermin verbunden sein.
 - Abwesenheiten werden als Zeitraum gespeichert und koennen Rueckmeldungen automatisch erzeugen.
 
+## Architektur-Entscheidungen (Stand Juli 2026)
+
+### Multi-Verein-Nutzer
+
+Die Vereinszugehoerigkeit eines Users wird ausschliesslich ueber `ClubMembership` abgeleitet.
+`User.clubId` wurde entfernt (Migration `20260720120000_multi_club_users`). Ein User kann damit
+Mitglied in mehreren Vereinen sein (z. B. Trainer in Verein A, Spieler in Verein B). Die UI zeigt
+aktuell den Verein der aeltesten aktiven `ClubMembership`; ein Club-Switcher ist Folgearbeit.
+`PlayerProfile` bleibt bewusst pro Verein.
+
+### Berechtigungen sind enforced
+
+Autorisierung laeuft ueber die `RolePermission`-Tabelle: `requireAppContext` laedt die effektiven
+Permission-Keys (vereinsweit aus `ClubMembership`, teambezogen aus `TeamMembership`), Guards sind
+`hasPermission`/`requirePermission` in `src/lib/app-context.ts` (pure Logik in `src/lib/authz.ts`).
+Neue Checks duerfen nicht mehr gegen `role.key`-Strings vergleichen.
+
+### Soft-Delete-Konvention
+
+Fachliche Entitaeten werden nicht hart geloescht. Loeschen bedeutet Status setzen bzw. archivieren:
+
+- `TeamMembership`/`ClubMembership`: `status = INACTIVE`
+- `CalendarEvent`: `status = CANCELLED`
+- `Invitation`: `status = REVOKED` bzw. `EXPIRED`
+- Kuenftige Loesch-Features fuer weitere Entitaeten (Team, PlayerProfile, Season) erhalten ein
+  `archivedAt DateTime?`-Feld statt `delete`.
+
+Einzige Ausnahme: `TrainingExerciseSketch` (reines Arbeitsartefakt) darf hart geloescht werden.
+
+### Saisonuebernahme
+
+Beim Anlegen einer Saison kann optional eine Quellsaison angegeben werden (`copyFromSeasonId`).
+Dabei werden Teams (Name, Altersklasse) und deren aktive `TeamMembership`s kopiert. `PlayerProfile`
+ist saisonunabhaengig, daher bleibt die Entwicklungs-Historie eines Spielers ueber Saisons erhalten.
+
+### Eingeladene Spieler
+
+`acceptInvitation` legt fuer die Spieler-Rolle ein `PlayerProfile` an (verknuepft ueber `userId`)
+und haengt es an die `TeamMembership`. Deshalb sind `PlayerProfile.birthDate` und `position`
+nullable: Diese Daten liegen bei Selbstregistrierung noch nicht vor.
+
 ## MVP-Kernmodelle
 
 ### Club

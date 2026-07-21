@@ -56,7 +56,7 @@ export async function createFeedbackItem(formData: FormData): Promise<FeedbackAc
     data: {
       clubId: context.club.id,
       context: {
-        activeSeason: context.activeSeason.name,
+        activeSeason: context.activeSeason?.name ?? null,
         activeTeamName: context.activeTeam?.name ?? null,
         clubName: context.club.name,
         roleKeys: context.isClubAdmin ? ["admin", ...roleKeys] : roleKeys,
@@ -67,7 +67,7 @@ export async function createFeedbackItem(formData: FormData): Promise<FeedbackAc
       priority,
       route: route || null,
       screenshotData: screenshot,
-      seasonId: context.activeSeason.id,
+      seasonId: context.activeSeason?.id ?? null,
       teamId: context.activeTeam?.id ?? null,
       title,
       type,

@@ -96,7 +96,8 @@ export default async function SeasonsPage({
                   </div>
                 ) : (
                   <p className="mt-3 text-sm text-muted">
-                    Noch keine Teams in dieser Saison. Die spaetere Saisonuebernahme wird hier neue Team-Saison-Kader erzeugen.
+                    Noch keine Teams in dieser Saison. Beim Anlegen einer neuen Saison kannst du Teams und Kader aus
+                    einer bestehenden Saison uebernehmen.
                   </p>
                 )}
               </div>
@@ -112,7 +113,8 @@ export default async function SeasonsPage({
                 <h2 className="text-xl font-bold text-slate-950">Neue Saison</h2>
               </div>
               <p className="mt-2 text-sm leading-6 text-muted">
-                Erstellt eine neue Spielzeit. Teams werden im naechsten Schritt separat uebernommen oder angelegt.
+                Erstellt eine neue Spielzeit. Optional kannst du Teams samt aktiver Kader aus einer bestehenden Saison
+                uebernehmen.
               </p>
 
               <label className="mt-5 block text-sm font-semibold text-slate-800" htmlFor="name">
@@ -155,6 +157,23 @@ export default async function SeasonsPage({
                 </div>
               </div>
 
+              <label className="mt-5 block text-sm font-semibold text-slate-800" htmlFor="copyFromSeasonId">
+                Teams und Kader uebernehmen aus
+              </label>
+              <select
+                className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                defaultValue=""
+                id="copyFromSeasonId"
+                name="copyFromSeasonId"
+              >
+                <option value="">Keine Uebernahme</option>
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.name} ({season.teams.length} Teams)
+                  </option>
+                ))}
+              </select>
+
               <label className="mt-5 flex items-center gap-3 text-sm font-semibold text-slate-800">
                 <input className="size-4 accent-blue-600" name="activate" type="checkbox" />
                 Direkt als aktive Saison setzen
@@ -190,6 +209,8 @@ function errorMessage(error: string) {
       return "Das Enddatum muss nach dem Startdatum liegen.";
     case "missing-season":
       return "Die ausgewaehlte Saison konnte nicht gefunden werden.";
+    case "invalid-fields":
+      return "Bitte pruefe deine Eingaben.";
     default:
       return "Bitte pruefe deine Eingaben.";
   }

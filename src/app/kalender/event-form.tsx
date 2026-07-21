@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
-import { createCalendarEvent } from "@/lib/actions";
+import { createCalendarEvent, type ActionState } from "@/lib/actions";
 
-export function EventForm({ error, selectedDate }: { error?: string; selectedDate?: string }) {
+export function EventForm({ selectedDate }: { selectedDate?: string }) {
   const [type, setType] = useState("TRAINING");
   const [clientError, setClientError] = useState<string | null>(null);
   const [startValue, setStartValue] = useState(() => `${selectedDate ?? todayInputValue()}T19:00`);
@@ -12,10 +12,14 @@ export function EventForm({ error, selectedDate }: { error?: string; selectedDat
   const [endTouched, setEndTouched] = useState(false);
   const defaultStart = useMemo(() => `${selectedDate ?? todayInputValue()}T19:00`, [selectedDate]);
   const defaultEnd = useMemo(() => `${selectedDate ?? todayInputValue()}T21:00`, [selectedDate]);
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(createCalendarEvent, null);
+  const fieldError =
+    state?.fieldErrors && Object.values(state.fieldErrors).find((messages) => messages.length > 0)?.[0];
+  const serverError = state?.error ? (fieldError ?? state.error) : null;
 
   return (
     <form
-      action={createCalendarEvent}
+      action={formAction}
       className="max-w-3xl rounded-lg border border-border bg-white p-6"
       onSubmit={(event) => {
         const form = event.currentTarget;
@@ -45,9 +49,9 @@ export function EventForm({ error, selectedDate }: { error?: string; selectedDat
         setClientError(null);
       }}
     >
-      {clientError || error ? (
+      {clientError || serverError ? (
         <p className="mb-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-          {clientError ?? errorMessage(error ?? "")}
+          {clientError ?? serverError}
         </p>
       ) : null}
       <div className="grid gap-5 sm:grid-cols-2">
@@ -127,8 +131,12 @@ export function EventForm({ error, selectedDate }: { error?: string; selectedDat
         <textarea className="mt-2 min-h-28 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100" id="description" name="description" />
       </div>
 
-      <button className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-strong" type="submit">
-        Termin erstellen
+      <button
+        className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={isPending}
+        type="submit"
+      >
+        {isPending ? "Wird erstellt..." : "Termin erstellen"}
       </button>
     </form>
   );
@@ -158,21 +166,6 @@ function todayInputValue() {
   const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
-}
-
-function errorMessage(error: string) {
-  switch (error) {
-    case "missing-opponent":
-      return "Bei einem Spiel muss ein Gegner angegeben werden.";
-    case "time-range":
-      return "Das Enddatum muss nach dem Startdatum liegen.";
-    case "missing-fields":
-      return "Bitte fuelle alle Pflichtfelder aus.";
-    case "invalid-date":
-      return "Bitte pruefe Start und Ende des Termins.";
-    default:
-      return "Bitte pruefe deine Angaben und versuche es erneut.";
-  }
 }
 
 function Field({
