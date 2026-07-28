@@ -129,6 +129,7 @@ enum PlayerFormTrend {
 enum ImportType {
   ROSTER
   MATCH_STATS
+  FIXTURES
 }
 
 enum ImportSourceType {

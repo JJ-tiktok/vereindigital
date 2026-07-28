@@ -1,4 +1,4 @@
-import { ArrowRight, FileSpreadsheet, Link2, Upload } from "lucide-react";
+import { ArrowRight, CalendarRange, FileSpreadsheet, Link2, Upload } from "lucide-react";
 import Link from "next/link";
 
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
@@ -28,23 +28,33 @@ export default async function ImportsPage() {
               <FileSpreadsheet className="size-4" aria-hidden="true" />
               Kader importieren
             </Link>
+            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-800" href="/importe/spielplan">
+              <CalendarRange className="size-4" aria-hidden="true" />
+              Spielplan importieren
+            </Link>
             <Link className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white" href="/importe/spieltage">
               <Upload className="size-4" aria-hidden="true" />
               Spieltag importieren
             </Link>
           </>
         }
-        description="Kaderlisten und Spieltagsstatistiken per CSV oder AI-URL vorbereiten, pruefen und erst danach bestaetigen."
+        description="Kaderlisten, Spielplaene und Spieltagsstatistiken per CSV oder AI-URL vorbereiten, pruefen und erst danach bestaetigen."
         eyebrow="Importe"
         title={`Importe ${activeTeam.name}`}
       />
 
-      <section className="grid gap-5 py-6 xl:grid-cols-2">
+      <section className="grid gap-5 py-6 xl:grid-cols-3">
         <ImportCard
           description="Spieler per CSV-Vorlage oder per URL-Extraktion vorbereiten. Bestehende Spieler werden vor dem Schreiben abgeglichen."
           href="/importe/kader"
           icon={<FileSpreadsheet className="size-5" aria-hidden="true" />}
           title="Kaderimport"
+        />
+        <ImportCard
+          description="Spielplan importieren: aus jeder Zeile entsteht ein Kalendertermin mit verknuepftem Spiel."
+          href="/importe/spielplan"
+          icon={<CalendarRange className="size-5" aria-hidden="true" />}
+          title="Spielplan"
         />
         <ImportCard
           description="Spielerstatistiken importieren, einem Spiel zuordnen und Tore, Vorlagen, Minuten, Karten und Bewertungen uebernehmen."
@@ -62,7 +72,7 @@ export default async function ImportsPage() {
               {jobs.map((job) => (
                 <Link className="grid gap-3 p-5 transition hover:bg-slate-50 md:grid-cols-[1fr_160px_180px_140px]" href={`/importe/${job.id}`} key={job.id}>
                   <div>
-                    <p className="font-semibold text-slate-950">{job.type === "ROSTER" ? "Kaderimport" : "Spieltagsimport"}</p>
+                    <p className="font-semibold text-slate-950">{jobTypeLabel(job.type)}</p>
                     <p className="mt-1 text-sm text-muted">{job.sourceUrl ?? job.fileName ?? sourceTypeLabel(job.sourceType)}</p>
                   </div>
                   <p className="text-sm text-muted">{sourceTypeLabel(job.sourceType)}</p>
@@ -104,6 +114,18 @@ function ImportCard({
       <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
     </Link>
   );
+}
+
+function jobTypeLabel(value: string) {
+  if (value === "ROSTER") {
+    return "Kaderimport";
+  }
+
+  if (value === "FIXTURES") {
+    return "Spielplanimport";
+  }
+
+  return "Spieltagsimport";
 }
 
 function sourceTypeLabel(value: string) {

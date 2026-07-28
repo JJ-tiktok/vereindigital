@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import type { Team } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -19,6 +19,7 @@ import type { PermissionKey } from "@/lib/rbac";
 export type AppTeam = Team;
 
 export const ACTIVE_TEAM_COOKIE = "activeTeamId";
+export const ACTIVE_CLUB_COOKIE = "activeClubId";
 
 const membershipInclude = {
   role: {
@@ -33,15 +34,15 @@ const membershipInclude = {
 } as const;
 
 async function loadAppContext() {
-  const clerkUser = await currentUser();
+  const { userId } = await auth();
 
-  if (!clerkUser) {
+  if (!userId) {
     redirect("/sign-in");
   }
 
   const appUser = await prisma.user.findUnique({
     where: {
-      clerkUserId: clerkUser.id,
+      clerkUserId: userId,
     },
     include: {
       clubMemberships: {
@@ -64,11 +65,17 @@ async function loadAppContext() {
     redirect("/onboarding");
   }
 
+  const cookieStore = await cookies();
+
   const activeClubMemberships = appUser.clubMemberships
     .filter((membership) => membership.status === "ACTIVE")
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-  const club = activeClubMemberships[0]?.club ?? null;
+  const preferredClubId = cookieStore.get(ACTIVE_CLUB_COOKIE)?.value;
+  const club =
+    activeClubMemberships.find((membership) => membership.clubId === preferredClubId)?.club ??
+    activeClubMemberships[0]?.club ??
+    null;
 
   if (!club) {
     redirect("/onboarding");
@@ -86,24 +93,15 @@ async function loadAppContext() {
 
   const isClubAdmin = clubPermissions.has("club.manage");
 
-  const activeSeason =
-    (await prisma.season.findFirst({
-      where: {
-        clubId: club.id,
-        isActive: true,
-      },
-      orderBy: {
-        startsAt: "desc",
-      },
-    })) ??
-    (await prisma.season.findFirst({
-      where: {
-        clubId: club.id,
-      },
-      orderBy: {
-        startsAt: "desc",
-      },
-    }));
+  const clubSeasons = await prisma.season.findMany({
+    where: {
+      clubId: club.id,
+    },
+    orderBy: {
+      startsAt: "desc",
+    },
+  });
+  const activeSeason = clubSeasons.find((season) => season.isActive) ?? clubSeasons[0] ?? null;
 
   const teams: AppTeam[] = !activeSeason
     ? []
@@ -121,14 +119,15 @@ async function loadAppContext() {
           .filter((team, index, all) => all.findIndex((entry) => entry.id === team.id) === index)
           .sort((a, b) => a.name.localeCompare(b.name));
 
-  const cookieStore = await cookies();
   const preferredTeamId = cookieStore.get(ACTIVE_TEAM_COOKIE)?.value;
   const activeTeam = resolveActiveTeam(teams, preferredTeamId);
 
   return {
-    clerkUser,
     appUser,
     club,
+    clubs: activeClubMemberships
+      .map((membership) => membership.club)
+      .filter((entry, index, all) => all.findIndex((candidate) => candidate.id === entry.id) === index),
     activeSeason,
     isClubAdmin,
     clubPermissions,

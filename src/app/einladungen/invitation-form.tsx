@@ -10,10 +10,12 @@ export function InvitationForm({
   teams,
   roles,
   created,
+  emailed,
 }: {
   teams: { id: string; name: string }[];
   roles: { id: string; name: string }[];
   created?: boolean;
+  emailed?: boolean;
 }) {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createInvitation, null);
 
@@ -26,7 +28,9 @@ export function InvitationForm({
 
       {created && !state ? (
         <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
-          Einladung wurde erstellt. Du kannst den Link jetzt kopieren.
+          {emailed
+            ? "Einladung wurde erstellt und per E-Mail verschickt."
+            : "Einladung wurde erstellt. Du kannst den Link jetzt kopieren."}
         </p>
       ) : null}
       {state?.error ? (

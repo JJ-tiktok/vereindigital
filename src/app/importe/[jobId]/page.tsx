@@ -2,10 +2,15 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { AppShell, PageHeader } from "@/components/app-shell";
-import { confirmMatchStatsImportJob, confirmRosterImportJob, saveImportReviewData } from "@/lib/import-actions";
+import {
+  confirmFixturesImportJob,
+  confirmMatchStatsImportJob,
+  confirmRosterImportJob,
+  saveImportReviewData,
+} from "@/lib/import-actions";
 import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime } from "@/lib/format";
-import { isMatchStatsImportData, isRosterImportData, type ImportIssue } from "@/lib/imports";
+import { isFixturesImportData, isMatchStatsImportData, isRosterImportData, type ImportIssue } from "@/lib/imports";
 import { prisma } from "@/lib/prisma";
 import { RowDeleteButton } from "./row-delete-button";
 
@@ -64,7 +69,13 @@ export default async function ImportReviewPage({
       <PageHeader
         description={`${sourceTypeLabel(job.sourceType)} / ${formatDateTime(job.createdAt)} / Status: ${statusLabel(job.status)}`}
         eyebrow="Import Review"
-        title={job.type === "ROSTER" ? "Kaderimport pruefen" : "Spieltagsimport pruefen"}
+        title={
+          job.type === "ROSTER"
+            ? "Kaderimport pruefen"
+            : job.type === "FIXTURES"
+              ? "Spielplan-Import pruefen"
+              : "Spieltagsimport pruefen"
+        }
       />
 
       <section className="space-y-6 py-6">
@@ -346,6 +357,103 @@ export default async function ImportReviewPage({
             </div>
           </form>
         ) : null}
+
+        {job.type === "FIXTURES" && isFixturesImportData(job.parsedData) ? (
+          <form action={confirmFixturesImportJob} className="overflow-hidden rounded-lg border border-border bg-white">
+            <input name="jobId" type="hidden" value={job.id} />
+            <div className="border-b border-border p-5">
+              <h2 className="text-xl font-bold text-slate-950">Spielplan</h2>
+              <p className="mt-1 text-sm text-muted">
+                Aus jeder nicht uebersprungenen Zeile entsteht ein neuer Kalendertermin mit verknuepftem Spiel.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-[840px] w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                  <tr>
+                    <th className="px-4 py-3">Zeile</th>
+                    <th className="px-4 py-3">Datum</th>
+                    <th className="px-4 py-3">Uhrzeit</th>
+                    <th className="px-4 py-3">Gegner</th>
+                    <th className="px-4 py-3">Heim/Auswaerts</th>
+                    <th className="px-4 py-3">Ort</th>
+                    <th className="px-4 py-3">
+                      <span className="sr-only">Entfernen</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {job.parsedData.rows.map((row, index) => (
+                    <tr key={`${row.sourceRow}-${row.opponent}`}>
+                      <td className="px-4 py-3 text-muted">
+                        <input id={`skip-fixture-${index}`} name={`skip-${index}`} type="hidden" value="false" />
+                        {row.sourceRow}
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          className={`h-10 w-full min-w-36 rounded-lg border px-2 text-sm ${
+                            row.date ? "border-border" : "border-amber-300 bg-amber-50"
+                          }`}
+                          defaultValue={row.date}
+                          name={`date-${index}`}
+                          type="date"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          className="h-10 w-24 rounded-lg border border-border px-2 text-sm"
+                          defaultValue={row.kickoffTime}
+                          name={`kickoffTime-${index}`}
+                          type="time"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          className="h-10 w-full min-w-44 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
+                          defaultValue={row.opponent}
+                          name={`opponent-${index}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          className="h-10 rounded-lg border border-border px-2 text-sm"
+                          defaultValue={row.isHomeGame ? "true" : "false"}
+                          name={`isHomeGame-${index}`}
+                        >
+                          <option value="true">Heimspiel</option>
+                          <option value="false">Auswaertsspiel</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm"
+                          defaultValue={row.location}
+                          name={`location-${index}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <RowDeleteButton skipInputId={`skip-fixture-${index}`} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
+              <button
+                className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-900"
+                formAction={saveImportReviewData}
+                formNoValidate
+                type="submit"
+              >
+                Aenderungen speichern
+              </button>
+              <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" formNoValidate type="submit">
+                {job.status === "CONFIRMED" ? "Spielplan erneut anwenden" : "Spielplan bestaetigen"}
+              </button>
+            </div>
+          </form>
+        ) : null}
       </section>
     </AppShell>
   );
@@ -446,6 +554,7 @@ function IssuePanel({ issues }: { issues: ImportIssue[] }) {
 
 function ErrorBanner({ error }: { error: string }) {
   const messages: Record<string, string> = {
+    "invalid-fixture-row": "Bitte ergaenze Datum und Gegner fuer jede Zeile oder ueberspringe die betroffene Zeile.",
     "invalid-match-row": "Bitte pruefe Ergebnis, Minuten, Karten und Bewertung. Eingesetzte Spieler brauchen eine Note zwischen 1.0 und 10.0; bei 0 Minuten kann sie leer bleiben.",
     "invalid-roster-row": "Bitte ergaenze Vorname, Nachname, Geburtsdatum und Position oder ueberspringe die betroffene Zeile.",
     "no-player-mapping": "Bitte ordne alle importierten Spieler einem Kaderspieler zu.",

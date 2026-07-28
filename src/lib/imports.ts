@@ -49,7 +49,20 @@ export type MatchStatsImportData = {
   rows: MatchStatsImportRow[];
 };
 
-export type ParsedImportData = RosterImportData | MatchStatsImportData;
+export type FixturesImportRow = {
+  date: string;
+  kickoffTime: string;
+  location: string;
+  opponent: string;
+  isHomeGame: boolean;
+  sourceRow: number;
+};
+
+export type FixturesImportData = {
+  rows: FixturesImportRow[];
+};
+
+export type ParsedImportData = RosterImportData | MatchStatsImportData | FixturesImportData;
 
 type CsvRow = Record<string, string>;
 
@@ -100,6 +113,55 @@ const matchHeaderMap = new Map([
   ["tore fur", "goalsFor"],
   ["tore gegen", "goalsAgainst"],
 ]);
+
+const fixturesHeaderMap = new Map([
+  ["datum", "date"],
+  ["date", "date"],
+  ["gegner", "opponent"],
+  ["opponent", "opponent"],
+  ["heim/auswaerts", "homeAway"],
+  ["heim/auswarts", "homeAway"],
+  ["heim auswaerts", "homeAway"],
+  ["heim auswarts", "homeAway"],
+  ["heim", "homeAway"],
+  ["uhrzeit", "kickoffTime"],
+  ["zeit", "kickoffTime"],
+  ["anstoss", "kickoffTime"],
+  ["time", "kickoffTime"],
+  ["ort", "location"],
+  ["location", "location"],
+]);
+
+const defaultKickoffTime = "15:00";
+
+export function parseFixturesCsv(csv: string) {
+  const { issues, rows } = parseCsv(csv, fixturesHeaderMap);
+  const parsedRows: FixturesImportRow[] = rows.map((row, index) => ({
+    date: normalizeDateString(row.date),
+    kickoffTime: normalizeTimeString(row.kickoffTime) || defaultKickoffTime,
+    location: row.location ?? "",
+    opponent: row.opponent ?? "",
+    isHomeGame: normalizeHomeAway(row.homeAway),
+    sourceRow: index + 2,
+  }));
+
+  parsedRows.forEach((row, index) => {
+    if (!row.opponent) {
+      issues.push(createIssue("missing-opponent", "Gegner fehlt.", index, "error"));
+    }
+
+    if (!row.date) {
+      issues.push(createIssue("missing-date", "Datum fehlt oder ist ungueltig.", index, "error"));
+    }
+  });
+
+  return {
+    data: {
+      rows: parsedRows,
+    } satisfies FixturesImportData,
+    issues,
+  };
+}
 
 export function parseRosterCsv(csv: string) {
   const { issues, rows } = parseCsv(csv, rosterHeaderMap);
@@ -235,6 +297,14 @@ export function isMatchStatsImportData(value: Prisma.JsonValue | null): value is
   return Boolean(candidate.match && Array.isArray(candidate.rows));
 }
 
+export function isFixturesImportData(value: Prisma.JsonValue | null): value is FixturesImportData {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  return Array.isArray((value as { rows?: unknown }).rows);
+}
+
 export function hasBlockingIssues(value: Prisma.JsonValue | null) {
   if (!Array.isArray(value)) {
     return false;
@@ -312,7 +382,15 @@ export async function parseImportUrl({
     };
   }
 
-  return importType === "ROSTER" ? normalizeAiRoster(aiResult) : normalizeAiMatchStats(aiResult);
+  if (importType === "ROSTER") {
+    return normalizeAiRoster(aiResult);
+  }
+
+  if (importType === "FIXTURES") {
+    return normalizeAiFixtures(aiResult);
+  }
+
+  return normalizeAiMatchStats(aiResult);
 }
 
 function parseCsv(csv: string, headerMap: Map<string, string>) {
@@ -463,6 +541,19 @@ function normalizeRating(value: number | null, minutesPlayed: number, lineupStat
   return value;
 }
 
+function normalizeTimeString(value?: string | null) {
+  const match = String(value ?? "").trim().match(/^(\d{1,2})[:.](\d{2})/);
+
+  if (!match) {
+    return "";
+  }
+
+  const hours = String(Math.min(23, Number(match[1]))).padStart(2, "0");
+  const minutes = match[2];
+
+  return `${hours}:${minutes}`;
+}
+
 function normalizeHomeAway(value?: string | null) {
   const normalized = String(value ?? "").trim().toLowerCase();
 
@@ -515,10 +606,7 @@ async function callOpenAiImporter(importType: ImportType, sourceText: string) {
     body: JSON.stringify({
       input: [
         {
-          content:
-            importType === "ROSTER"
-              ? "Extrahiere eine Fussball-Kaderliste. Antworte nur mit schema-konformen Daten."
-              : "Extrahiere Fussball-Spieldaten und Spielerstatistiken. Antworte nur mit schema-konformen Daten.",
+          content: openAiImportPrompts[importType],
           role: "system",
         },
         {
@@ -529,8 +617,8 @@ async function callOpenAiImporter(importType: ImportType, sourceText: string) {
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       text: {
         format: {
-          name: importType === "ROSTER" ? "roster_import" : "match_stats_import",
-          schema: importType === "ROSTER" ? rosterJsonSchema : matchStatsJsonSchema,
+          name: openAiImportSchemas[importType].name,
+          schema: openAiImportSchemas[importType].schema,
           strict: true,
           type: "json_schema",
         },
@@ -632,6 +720,21 @@ function normalizeAiMatchStats(value: unknown) {
   return parseMatchStatsCsv(csv);
 }
 
+function normalizeAiFixtures(value: unknown) {
+  const rows = Array.isArray((value as { rows?: unknown }).rows) ? (value as { rows: unknown[] }).rows : [];
+  const csv = [
+    "Datum;Gegner;Heim/Auswaerts;Uhrzeit;Ort",
+    ...rows.map((row) => {
+      const candidate = row as Partial<Record<"date" | "opponent" | "homeAway" | "kickoffTime" | "location", string>>;
+      return [candidate.date, candidate.opponent, candidate.homeAway, candidate.kickoffTime, candidate.location]
+        .map((entry) => entry ?? "")
+        .join(";");
+    }),
+  ].join("\n");
+
+  return parseFixturesCsv(csv);
+}
+
 type OpenAiResponsePayload = {
   output?: {
     content?: {
@@ -710,4 +813,40 @@ const matchStatsJsonSchema = {
   },
   required: ["match", "rows"],
   type: "object",
+};
+
+const fixturesJsonSchema = {
+  additionalProperties: false,
+  properties: {
+    rows: {
+      items: {
+        additionalProperties: false,
+        properties: {
+          date: { type: "string" },
+          homeAway: { type: "string" },
+          kickoffTime: { type: "string" },
+          location: { type: "string" },
+          opponent: { type: "string" },
+        },
+        required: ["date", "opponent", "homeAway", "kickoffTime", "location"],
+        type: "object",
+      },
+      type: "array",
+    },
+  },
+  required: ["rows"],
+  type: "object",
+};
+
+const openAiImportPrompts: Record<ImportType, string> = {
+  ROSTER: "Extrahiere eine Fussball-Kaderliste. Antworte nur mit schema-konformen Daten.",
+  MATCH_STATS: "Extrahiere Fussball-Spieldaten und Spielerstatistiken. Antworte nur mit schema-konformen Daten.",
+  FIXTURES:
+    "Extrahiere einen Fussball-Spielplan (Datum, Gegner, Heim/Auswaerts, Uhrzeit). Antworte nur mit schema-konformen Daten.",
+};
+
+const openAiImportSchemas: Record<ImportType, { name: string; schema: object }> = {
+  ROSTER: { name: "roster_import", schema: rosterJsonSchema },
+  MATCH_STATS: { name: "match_stats_import", schema: matchStatsJsonSchema },
+  FIXTURES: { name: "fixtures_import", schema: fixturesJsonSchema },
 };

@@ -15,7 +15,7 @@ type TeamOption = {
 export default async function InvitationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; error?: string }>;
+  searchParams: Promise<{ created?: string; emailed?: string; error?: string }>;
 }) {
   const context = await requireAppContext();
   const query = await searchParams;
@@ -70,6 +70,7 @@ export default async function InvitationsPage({
       <div className="grid gap-6 py-6 xl:grid-cols-[380px_1fr]">
         <InvitationForm
           created={Boolean(query.created)}
+          emailed={Boolean(query.emailed)}
           roles={roles.map((role) => ({ id: role.id, name: role.name }))}
           teams={teams}
         />

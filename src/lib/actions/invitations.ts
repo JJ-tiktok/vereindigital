@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireAppContext, requirePermission } from "@/lib/app-context";
+import { sendInvitationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
 import { parseForm, zIntWithFallback, zOptionalString, zRequiredString, type ActionState } from "./helpers";
@@ -39,6 +40,7 @@ export async function createInvitation(_prevState: ActionState, formData: FormDa
       },
       select: {
         id: true,
+        name: true,
       },
     }),
     prisma.role.findFirst({
@@ -51,6 +53,7 @@ export async function createInvitation(_prevState: ActionState, formData: FormDa
       },
       select: {
         id: true,
+        name: true,
       },
     }),
   ]);
@@ -59,20 +62,40 @@ export async function createInvitation(_prevState: ActionState, formData: FormDa
     return { error: "Team oder Rolle ist ungueltig." };
   }
 
+  const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+  const token = randomBytes(24).toString("base64url");
+
   await prisma.invitation.create({
     data: {
       clubId: context.club.id,
       teamId,
       roleId,
       email,
-      token: randomBytes(24).toString("base64url"),
-      expiresAt: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000),
+      token,
+      expiresAt,
       createdByUserId: context.appUser.id,
     },
   });
 
   revalidatePath("/einladungen");
-  redirect("/einladungen?created=1");
+
+  let emailed = false;
+
+  if (email) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const inviteUrl = `${appUrl.replace(/\/$/, "")}/invite/${token}`;
+    const result = await sendInvitationEmail({
+      to: email,
+      clubName: context.club.name,
+      teamName: team.name,
+      roleName: role.name,
+      inviteUrl,
+      expiresAt,
+    });
+    emailed = result.sent;
+  }
+
+  redirect(`/einladungen?created=1${emailed ? "&emailed=1" : ""}`);
 }
 
 export async function revokeInvitation(formData: FormData) {
