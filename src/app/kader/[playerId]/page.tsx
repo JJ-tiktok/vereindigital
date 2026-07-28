@@ -8,7 +8,12 @@ import { RemovePlayerButton } from "@/app/kader/[playerId]/remove-player-button"
 import { createPlayerAttributeSnapshot, createPlayerFileEntry, removePlayerFromActiveTeam } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { formatDate, toDateInputValue } from "@/lib/format";
-import { attributeCategoryLabel, fileEntryTypeLabel, getPlayerSeasonHistory } from "@/lib/player-development";
+import {
+  attributeCategoryLabel,
+  ensureDefaultAttributeDefinitions,
+  fileEntryTypeLabel,
+  getPlayerSeasonHistory,
+} from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
 
 export default async function PlayerDetailPage({
@@ -23,6 +28,7 @@ export default async function PlayerDetailPage({
   requirePermission(context, "player.profile.manage", activeTeam.id);
   const { playerId } = await params;
   const query = await searchParams;
+  await ensureDefaultAttributeDefinitions(context.club.id);
   const player = await prisma.playerProfile.findFirst({
     where: {
       id: playerId,

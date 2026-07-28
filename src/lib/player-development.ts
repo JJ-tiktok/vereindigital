@@ -33,6 +33,16 @@ export async function ensureDefaultAttributeDefinitions(
   clubId: string,
   client: AttributeDefinitionWriter = prisma,
 ) {
+  const existingCount = await client.playerAttributeDefinition.count({
+    where: {
+      clubId,
+    },
+  });
+
+  if (existingCount > 0) {
+    return;
+  }
+
   await client.playerAttributeDefinition.createMany({
     data: defaultAttributes.map(([key, name, category, positionGroup, sortOrder]) => ({
       clubId,
