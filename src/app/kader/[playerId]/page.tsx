@@ -13,8 +13,13 @@ import {
   ensureDefaultAttributeDefinitions,
   fileEntryTypeLabel,
   getPlayerSeasonHistory,
+  goalkeeperDetailSections,
+  goalkeeperOverviewGroups,
+  mapPositionToGroup,
 } from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
+import { GoalkeeperAnalysis, type GoalkeeperSnapshotTarget } from "@/components/goalkeeper-analysis";
+import { PlayerTabs } from "@/components/player-tabs";
 
 export default async function PlayerDetailPage({
   params,
@@ -112,9 +117,13 @@ export default async function PlayerDetailPage({
   }
 
   const seasonHistory = await getPlayerSeasonHistory(player.id);
+  const positionGroup = mapPositionToGroup(player.position);
   const attributeDefinitions = await prisma.playerAttributeDefinition.findMany({
     where: {
       clubId: context.club.id,
+      positionGroup: {
+        in: ["ALL", positionGroup],
+      },
     },
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
   });
@@ -144,6 +153,61 @@ export default async function PlayerDetailPage({
   const overallSkill = average(latestRatings.map((rating) => rating.value));
   const technicalSkill = average(technicalRatings.map((rating) => rating.value));
   const physicalSkill = average(physicalRatings.map((rating) => rating.value));
+
+  const isGoalkeeper = positionGroup === "GOALKEEPER";
+
+  const goalkeeperComparisonPlayers = isGoalkeeper
+    ? await prisma.playerProfile.findMany({
+        where: {
+          clubId: context.club.id,
+          position: "TW",
+          memberships: {
+            some: {
+              teamId: activeTeam.id,
+              status: "ACTIVE",
+            },
+          },
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          attributeSnapshots: {
+            where: {
+              teamId: activeTeam.id,
+            },
+            select: {
+              id: true,
+              title: true,
+              ratedAt: true,
+              ratings: {
+                select: {
+                  attributeDefinitionId: true,
+                  value: true,
+                },
+              },
+            },
+            orderBy: {
+              ratedAt: "desc",
+            },
+          },
+        },
+      })
+    : [];
+
+  const goalkeeperTargets: GoalkeeperSnapshotTarget[] = goalkeeperComparisonPlayers.flatMap((gkPlayer) =>
+    gkPlayer.attributeSnapshots.map((snapshot) => ({
+      id: snapshot.id,
+      playerId: gkPlayer.id,
+      playerName: `${gkPlayer.firstName} ${gkPlayer.lastName}`,
+      title: snapshot.title,
+      ratedAt: snapshot.ratedAt.toISOString(),
+      ratings: snapshot.ratings,
+    })),
+  );
+  const goalkeeperDefinitions = attributeDefinitions
+    .filter((definition) => definition.subgroup)
+    .map((definition) => ({ id: definition.id, name: definition.name, subgroup: definition.subgroup }));
 
   return (
     <AppShell context={context} activePath="/kader">
@@ -192,187 +256,233 @@ export default async function PlayerDetailPage({
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[390px_1fr_360px]">
-          <article className="rounded-lg border border-border bg-white">
-            <SectionHeader title="Faehigkeiten" description="Top-Werte aus dem letzten Bewertungsstand." />
-            {highlightedRatings.length > 0 ? (
-              <div className="space-y-2 p-5">
-                {highlightedRatings.map((rating) => {
-                  const previousValue = previousRatings.get(rating.attributeDefinitionId);
-                  const diff = previousValue ? rating.value - previousValue : null;
+        <PlayerTabs
+          tabs={[
+            {
+              id: "uebersicht",
+              label: "Uebersicht",
+              content: (
+                <>
+                  <section className="grid gap-6 xl:grid-cols-[390px_1fr_360px]">
+                    <article className="rounded-lg border border-border bg-white">
+                      <SectionHeader title="Faehigkeiten" description="Top-Werte aus dem letzten Bewertungsstand." />
+                      {highlightedRatings.length > 0 ? (
+                        <div className="space-y-2 p-5">
+                          {highlightedRatings.map((rating) => {
+                            const previousValue = previousRatings.get(rating.attributeDefinitionId) ?? null;
 
-                  return (
-                    <AttributeRow
-                      key={rating.id}
-                      label={rating.attributeDefinition.name}
-                      meta={attributeCategoryLabel(rating.attributeDefinition.category)}
-                      trend={diff}
-                      value={rating.value}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="p-5 text-sm text-muted">Noch keine Faehigkeiten bewertet.</p>
-            )}
-          </article>
+                            return (
+                              <AttributeRow
+                                key={rating.id}
+                                label={rating.attributeDefinition.name}
+                                meta={attributeCategoryLabel(rating.attributeDefinition.category)}
+                                previousValue={previousValue}
+                                value={rating.value}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="p-5 text-sm text-muted">Noch keine Faehigkeiten bewertet.</p>
+                      )}
+                    </article>
 
-          <div className="space-y-6">
-            <PitchCard position={player.position} />
+                    <div className="space-y-6">
+                      <PitchCard position={player.position} />
 
-            <article className="rounded-lg border border-border bg-white">
-              <SectionHeader
-                action={<FileText className="size-5 text-muted" aria-hidden="true" />}
-                title="Spielerakte & Notizen"
-                description="Letzte interne Eintraege aus dem Trainerteam."
-              />
-              <NotesList entries={player.fileEntries.slice(0, 4)} />
-              <form action={createPlayerFileEntry} className="grid gap-3 border-t border-border p-5">
-                <input name="playerProfileId" type="hidden" value={player.id} />
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Titel" name="title" required />
-                  <label className="text-sm font-semibold text-slate-800">
-                    Typ
-                    <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="type">
-                      <option value="PLAYER_TALK">Spielergespraech</option>
-                      <option value="GOAL_AGREEMENT">Zielvereinbarung</option>
-                      <option value="FEEDBACK">Feedback</option>
-                      <option value="TRAINING_OBSERVATION">Trainingsbeobachtung</option>
-                      <option value="MATCH_OBSERVATION">Spielbeobachtung</option>
-                      <option value="DISCIPLINE">Verhalten / Disziplin</option>
-                      <option value="LOAD_INJURY">Verletzung / Belastung</option>
-                      <option value="OTHER">Sonstige Notiz</option>
-                    </select>
-                  </label>
-                  <Field defaultValue={today} label="Datum" name="occurredAt" type="date" required />
-                  <Field label="Wiedervorlage" name="followUpAt" type="date" />
-                </div>
-                <label className="text-sm font-semibold text-slate-800">
-                  Notiz
-                  <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" name="body" required />
-                </label>
-                <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-slate-800 md:w-max" type="submit">
-                  <ClipboardEdit className="size-4" aria-hidden="true" />
-                  Eintrag hinzufuegen
-                </button>
-              </form>
-            </article>
-          </div>
-
-          <aside className="space-y-6">
-            <article className="rounded-lg border border-border bg-white">
-              <SectionHeader title="Form" description="Getrennt nach Spiel- und Trainingsleistung." />
-              <div className="space-y-4 p-5">
-                <RatingBar label="Spielform" value={matchForm} />
-                <RatingBar label="Trainingsform" value={trainingForm} />
-                <div className="rounded-lg bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Eindruck</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-950">{formLabel(matchForm, trainingForm)}</p>
-                </div>
-              </div>
-            </article>
-
-            <article className="rounded-lg border border-border bg-white">
-              <SectionHeader action={<Shield className="size-5 text-muted" aria-hidden="true" />} title="Stammdaten" description="Basisdaten bearbeiten." />
-              <div className="p-5">
-                <PlayerForm player={player} embedded />
-              </div>
-            </article>
-
-            <article className="rounded-lg border border-rose-100 bg-rose-50/40 p-5">
-              <h2 className="text-lg font-bold text-rose-950">Kader entfernen</h2>
-              <p className="mt-2 text-sm leading-6 text-rose-800">
-                Entfernt den Spieler aus dem aktuellen Teamkader. Bereits erfasste Statistiken und Akteneintraege bleiben erhalten.
-              </p>
-              <form action={removePlayerFromActiveTeam} className="mt-4">
-                <input name="playerId" type="hidden" value={player.id} />
-                <RemovePlayerButton />
-              </form>
-            </article>
-          </aside>
-        </section>
-
-        {seasonHistory.length > 0 ? (
-          <section className="overflow-hidden rounded-lg border border-border bg-white">
-            <SectionHeader
-              title="Saisonverlauf"
-              description="Spiel- und Trainingsdaten ueber alle Saisons und Teams des Spielers hinweg."
-            />
-            <div className="overflow-x-auto">
-              <table className="min-w-[720px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase text-muted">
-                  <tr>
-                    <th className="px-5 py-3">Saison</th>
-                    <th className="px-5 py-3">Spiele</th>
-                    <th className="px-5 py-3">Minuten</th>
-                    <th className="px-5 py-3">Tore</th>
-                    <th className="px-5 py-3">Vorlagen</th>
-                    <th className="px-5 py-3">Spielbewertung</th>
-                    <th className="px-5 py-3">Trainingsbewertung</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {seasonHistory.map((season) => (
-                    <tr key={season.seasonId}>
-                      <td className="px-5 py-4 font-semibold text-slate-950">{season.name}</td>
-                      <td className="px-5 py-4 text-slate-700">{season.matchCount}</td>
-                      <td className="px-5 py-4 text-slate-700">{season.minutesPlayed}</td>
-                      <td className="px-5 py-4 text-slate-700">{season.goals}</td>
-                      <td className="px-5 py-4 text-slate-700">{season.assists}</td>
-                      <td className="px-5 py-4 text-slate-700">{formatRating(season.averageMatchRating)}</td>
-                      <td className="px-5 py-4 text-slate-700">{formatRating(season.averageTrainingRating)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="rounded-lg border border-border bg-white">
-          <SectionHeader title="Neuer Bewertungsstand" description="Faehigkeiten auf einer Skala von 1 bis 20 erfassen." />
-          {query.error === "attribute-values" ? (
-            <p className="mx-5 mt-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-              Bitte mindestens einen Wert zwischen 1 und 20 erfassen.
-            </p>
-          ) : null}
-          <form action={createPlayerAttributeSnapshot} className="grid gap-4 p-5">
-            <input name="playerProfileId" type="hidden" value={player.id} />
-            <div className="grid gap-3 md:grid-cols-3">
-              <Field defaultValue="Trainerbewertung" label="Titel" name="title" required />
-              <Field defaultValue={today} label="Bewertungsdatum" name="ratedAt" type="date" required />
-              <label className="text-sm font-semibold text-slate-800 md:col-span-1">
-                Notiz
-                <input className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="notes" />
-              </label>
-            </div>
-            <div className="grid gap-4 xl:grid-cols-3">
-              {[...definitionsByCategory.entries()].map(([category, definitions]) => (
-                <div className="rounded-lg border border-border p-4" key={category}>
-                  <p className="text-sm font-semibold text-slate-950">{attributeCategoryLabel(category)}</p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                    {definitions.map((definition) => (
-                      <label className="text-xs font-semibold uppercase text-muted" key={definition.id}>
-                        {definition.name}
-                        <input
-                          className="mt-1 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900"
-                          max={20}
-                          min={1}
-                          name={`attribute-${definition.id}`}
-                          placeholder="1-20"
-                          type="number"
+                      <article className="rounded-lg border border-border bg-white">
+                        <SectionHeader
+                          action={<FileText className="size-5 text-muted" aria-hidden="true" />}
+                          title="Spielerakte & Notizen"
+                          description="Letzte interne Eintraege aus dem Trainerteam."
                         />
+                        <NotesList entries={player.fileEntries.slice(0, 4)} />
+                        <form action={createPlayerFileEntry} className="grid gap-3 border-t border-border p-5">
+                          <input name="playerProfileId" type="hidden" value={player.id} />
+                          <div className="grid gap-3 md:grid-cols-2">
+                            <Field label="Titel" name="title" required />
+                            <label className="text-sm font-semibold text-slate-800">
+                              Typ
+                              <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="type">
+                                <option value="PLAYER_TALK">Spielergespraech</option>
+                                <option value="GOAL_AGREEMENT">Zielvereinbarung</option>
+                                <option value="FEEDBACK">Feedback</option>
+                                <option value="TRAINING_OBSERVATION">Trainingsbeobachtung</option>
+                                <option value="MATCH_OBSERVATION">Spielbeobachtung</option>
+                                <option value="DISCIPLINE">Verhalten / Disziplin</option>
+                                <option value="LOAD_INJURY">Verletzung / Belastung</option>
+                                <option value="OTHER">Sonstige Notiz</option>
+                              </select>
+                            </label>
+                            <Field defaultValue={today} label="Datum" name="occurredAt" type="date" required />
+                            <Field label="Wiedervorlage" name="followUpAt" type="date" />
+                          </div>
+                          <label className="text-sm font-semibold text-slate-800">
+                            Notiz
+                            <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" name="body" required />
+                          </label>
+                          <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-slate-800 md:w-max" type="submit">
+                            <ClipboardEdit className="size-4" aria-hidden="true" />
+                            Eintrag hinzufuegen
+                          </button>
+                        </form>
+                      </article>
+                    </div>
+
+                    <aside className="space-y-6">
+                      <article className="rounded-lg border border-border bg-white">
+                        <SectionHeader title="Form" description="Getrennt nach Spiel- und Trainingsleistung." />
+                        <div className="space-y-4 p-5">
+                          <RatingBar label="Spielform" value={matchForm} />
+                          <RatingBar label="Trainingsform" value={trainingForm} />
+                          <div className="rounded-lg bg-slate-50 p-4">
+                            <p className="text-xs font-semibold uppercase text-muted">Eindruck</p>
+                            <p className="mt-2 text-2xl font-bold text-slate-950">{formLabel(matchForm, trainingForm)}</p>
+                          </div>
+                        </div>
+                      </article>
+                    </aside>
+                  </section>
+
+                  {seasonHistory.length > 0 ? (
+                    <section className="overflow-hidden rounded-lg border border-border bg-white">
+                      <SectionHeader
+                        title="Saisonverlauf"
+                        description="Spiel- und Trainingsdaten ueber alle Saisons und Teams des Spielers hinweg."
+                      />
+                      <div className="overflow-x-auto">
+                        <table className="min-w-[720px] w-full text-left text-sm">
+                          <thead className="bg-slate-50 text-xs font-semibold uppercase text-muted">
+                            <tr>
+                              <th className="px-5 py-3">Saison</th>
+                              <th className="px-5 py-3">Spiele</th>
+                              <th className="px-5 py-3">Minuten</th>
+                              <th className="px-5 py-3">Tore</th>
+                              <th className="px-5 py-3">Vorlagen</th>
+                              <th className="px-5 py-3">Spielbewertung</th>
+                              <th className="px-5 py-3">Trainingsbewertung</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border">
+                            {seasonHistory.map((season) => (
+                              <tr key={season.seasonId}>
+                                <td className="px-5 py-4 font-semibold text-slate-950">{season.name}</td>
+                                <td className="px-5 py-4 text-slate-700">{season.matchCount}</td>
+                                <td className="px-5 py-4 text-slate-700">{season.minutesPlayed}</td>
+                                <td className="px-5 py-4 text-slate-700">{season.goals}</td>
+                                <td className="px-5 py-4 text-slate-700">{season.assists}</td>
+                                <td className="px-5 py-4 text-slate-700">{formatRating(season.averageMatchRating)}</td>
+                                <td className="px-5 py-4 text-slate-700">{formatRating(season.averageTrainingRating)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  ) : null}
+                </>
+              ),
+            },
+            ...(isGoalkeeper
+              ? [
+                  {
+                    id: "torwart-analyse",
+                    label: "Torwart-Analyse",
+                    content: (
+                      <section className="rounded-lg border border-border bg-white">
+                        <SectionHeader
+                          title="Torwart-Analyse"
+                          description="Zwei Bewertungsstaende auswaehlen und im Radar vergleichen – auch spielerübergreifend unter Torwaertern."
+                        />
+                        <GoalkeeperAnalysis
+                          currentPlayerId={player.id}
+                          definitions={goalkeeperDefinitions}
+                          detailSections={goalkeeperDetailSections}
+                          overviewGroups={goalkeeperOverviewGroups}
+                          targets={goalkeeperTargets}
+                        />
+                      </section>
+                    ),
+                  },
+                ]
+              : []),
+            {
+              id: "bewertung",
+              label: "Neue Bewertung",
+              content: (
+                <section className="rounded-lg border border-border bg-white">
+                  <SectionHeader title="Neuer Bewertungsstand" description="Faehigkeiten auf einer Skala von 1 bis 20 erfassen." />
+                  {query.error === "attribute-values" ? (
+                    <p className="mx-5 mt-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                      Bitte mindestens einen Wert zwischen 1 und 20 erfassen.
+                    </p>
+                  ) : null}
+                  <form action={createPlayerAttributeSnapshot} className="grid gap-4 p-5">
+                    <input name="playerProfileId" type="hidden" value={player.id} />
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <Field defaultValue="Trainerbewertung" label="Titel" name="title" required />
+                      <Field defaultValue={today} label="Bewertungsdatum" name="ratedAt" type="date" required />
+                      <label className="text-sm font-semibold text-slate-800 md:col-span-1">
+                        Notiz
+                        <input className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="notes" />
                       </label>
-                    ))}
-                  </div>
+                    </div>
+                    <div className="grid gap-4 xl:grid-cols-3">
+                      {[...definitionsByCategory.entries()].map(([category, definitions]) => (
+                        <div className="rounded-lg border border-border p-4" key={category}>
+                          <p className="text-sm font-semibold text-slate-950">{attributeCategoryLabel(category)}</p>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                            {definitions.map((definition) => (
+                              <label className="min-w-0 break-words text-xs font-semibold uppercase leading-snug text-muted" key={definition.id}>
+                                {definition.name}
+                                <input
+                                  className="mt-1 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900"
+                                  max={20}
+                                  min={1}
+                                  name={`attribute-${definition.id}`}
+                                  placeholder="1-20"
+                                  type="number"
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white md:w-max" type="submit">
+                      Bewertungsstand speichern
+                    </button>
+                  </form>
+                </section>
+              ),
+            },
+            {
+              id: "stammdaten",
+              label: "Stammdaten",
+              content: (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <article className="rounded-lg border border-border bg-white">
+                    <SectionHeader action={<Shield className="size-5 text-muted" aria-hidden="true" />} title="Stammdaten" description="Basisdaten bearbeiten." />
+                    <div className="p-5">
+                      <PlayerForm player={player} embedded />
+                    </div>
+                  </article>
+
+                  <article className="rounded-lg border border-rose-100 bg-rose-50/40 p-5">
+                    <h2 className="text-lg font-bold text-rose-950">Kader entfernen</h2>
+                    <p className="mt-2 text-sm leading-6 text-rose-800">
+                      Entfernt den Spieler aus dem aktuellen Teamkader. Bereits erfasste Statistiken und Akteneintraege bleiben erhalten.
+                    </p>
+                    <form action={removePlayerFromActiveTeam} className="mt-4">
+                      <input name="playerId" type="hidden" value={player.id} />
+                      <RemovePlayerButton />
+                    </form>
+                  </article>
                 </div>
-              ))}
-            </div>
-            <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white md:w-max" type="submit">
-              Bewertungsstand speichern
-            </button>
-          </form>
-        </section>
+              ),
+            },
+          ]}
+        />
       </div>
     </AppShell>
   );
@@ -420,14 +530,16 @@ function MetricCard({ label, value, helper }: { label: string; value: string; he
 function AttributeRow({
   label,
   meta,
-  trend,
+  previousValue,
   value,
 }: {
   label: string;
   meta: string;
-  trend: number | null;
+  previousValue: number | null;
   value: number;
 }) {
+  const trend = previousValue !== null ? value - previousValue : null;
+
   return (
     <div className="rounded-lg px-3 py-2 odd:bg-slate-50">
       <div className="flex items-center justify-between gap-4">
@@ -435,7 +547,7 @@ function AttributeRow({
           <p className="font-semibold text-slate-900">{label}</p>
           <p className="mt-1 text-xs text-muted">
             {meta}
-            {trend !== null ? ` / Trend ${trend > 0 ? "+" : ""}${trend}` : ""}
+            {previousValue !== null ? ` · Vorher ${previousValue} (${trend! > 0 ? "+" : ""}${trend})` : ""}
           </p>
         </div>
         <p className="text-lg font-bold tabular-nums text-primary">{value}</p>

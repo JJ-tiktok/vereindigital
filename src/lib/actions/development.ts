@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireActiveSeason, requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
+import { mapPositionToGroup } from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
 
 import { ensurePlayerInTeam } from "./guards";
@@ -145,9 +146,23 @@ export async function createPlayerAttributeSnapshot(formData: FormData) {
 
   await ensurePlayerInTeam(playerProfileId, activeTeam.id, context.club.id);
 
+  const player = await prisma.playerProfile.findFirst({
+    where: {
+      id: playerProfileId,
+      clubId: context.club.id,
+    },
+    select: {
+      position: true,
+    },
+  });
+  const positionGroup = mapPositionToGroup(player?.position);
+
   const definitions = await prisma.playerAttributeDefinition.findMany({
     where: {
       clubId: context.club.id,
+      positionGroup: {
+        in: ["ALL", positionGroup],
+      },
     },
     select: {
       id: true,

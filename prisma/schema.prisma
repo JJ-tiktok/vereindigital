@@ -513,6 +513,7 @@ model PlayerAttributeDefinition {
   name            String
   category        PlayerAttributeCategory
   positionGroup   PlayerPositionGroup     @default(ALL)
+  subgroup        String?
   description     String?
   sortOrder       Int                     @default(0)
   isSystemDefault Boolean                 @default(false)

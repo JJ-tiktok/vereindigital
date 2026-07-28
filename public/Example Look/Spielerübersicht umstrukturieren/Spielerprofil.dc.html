@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-170128c6-b1d5-467e-91cd-500e031153cb/styles.css">
+<script src="_ds/nocturne-170128c6-b1d5-467e-91cd-500e031153cb/_ds_bundle.js"></script>
+<style>
+body { margin: 0; background: var(--color-bg); }
+.sb-item { display: block; padding: 8px 12px; border-radius: var(--radius-md); color: var(--color-neutral-300); text-decoration: none; font-size: 13px; }
+.sb-item:hover { background: var(--color-neutral-800); color: var(--color-text); }
+.field-num .input { width: 100%; }
+</style>
+</helmet>
+<div style="display:flex; min-height:100vh; font-family: var(--font-body); color: var(--color-text); background: var(--color-bg);">
+
+  <aside style="width:220px; flex-shrink:0; background: var(--color-neutral-900); border-right:1px solid var(--color-neutral-800); padding: var(--space-4) var(--space-3); display:flex; flex-direction:column; gap: var(--space-5);">
+    <div style="display:flex; align-items:center; gap:8px; padding:0 8px;">
+      <div style="width:22px; height:22px; border-radius:6px; background: var(--color-accent-700); border:1px solid var(--color-accent);"></div>
+      <div style="font-size:14px; font-weight:500;">VereinDigital<div style="font-size:11px; color:var(--color-neutral-400); font-weight:400;">SG Ruwertal</div></div>
+    </div>
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <a class="sb-item" href="#">Dashboard</a>
+      <a class="sb-item" href="#" style="background: var(--color-accent-800); color: var(--color-text); border-left:2px solid var(--color-accent);">Kader</a>
+      <a class="sb-item" href="#">Mitglieder</a>
+      <a class="sb-item" href="#">Kalender</a>
+      <a class="sb-item" href="#">Saisons</a>
+      <a class="sb-item" href="#">Rollen</a>
+      <a class="sb-item" href="#">Training</a>
+      <a class="sb-item" href="#">Spieltage</a>
+      <a class="sb-item" href="#">Statistiken</a>
+      <a class="sb-item" href="#">Importe</a>
+      <a class="sb-item" href="#">Abwesenheiten</a>
+      <a class="sb-item" href="#">Einladungen</a>
+      <a class="sb-item" href="#">Feedback</a>
+    </nav>
+    <div style="margin-top:auto; padding: var(--space-3); background: var(--color-neutral-800); border-radius: var(--radius-md); font-size:11px; color: var(--color-neutral-400);">
+      <div style="text-transform:uppercase; letter-spacing:0.06em;">Aktive Saison</div>
+      <div style="color: var(--color-text); font-size:13px; margin: 2px 0 8px;">2026/27</div>
+      <div style="text-transform:uppercase; letter-spacing:0.06em;">Aktives Team</div>
+      <div style="color: var(--color-text); font-size:13px; margin-top:2px;">1. Mannschaft</div>
+    </div>
+  </aside>
+
+  <main style="flex:1; min-width:0;">
+    <div style="position:sticky; top:0; z-index:10; background: var(--color-bg); border-bottom:1px solid var(--color-neutral-800);">
+      <div style="padding: var(--space-3) var(--space-5) 0;">
+        <a href="#" style="font-size:12px; color: var(--color-accent-300); text-decoration:none;">&larr; Zurueck zum Kader</a>
+      </div>
+      <div style="display:flex; align-items:center; gap: var(--space-4); padding: var(--space-3) var(--space-5);">
+        <div style="width:56px; height:56px; border-radius: var(--radius-md); background: var(--color-neutral-800); border:1px solid var(--color-neutral-700); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:500; flex-shrink:0;">MK</div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h1 style="margin:0; font-size:20px; font-weight:500; font-family:var(--font-heading);">Mike Kirchen</h1>
+            <span class="tag tag-accent">TW</span>
+          </div>
+          <div style="font-size:12px; color: var(--color-neutral-400); margin-top:2px;">0 Jahre &middot; Geboren am 28.07.2026 &middot; 1. Mannschaft</div>
+        </div>
+        <div style="display:flex; gap: var(--space-5); padding: 0 var(--space-4); border-left:1px solid var(--color-neutral-800); border-right:1px solid var(--color-neutral-800);">
+          <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400);">Spielform</div><div style="font-size:16px; font-weight:500;">-</div></div>
+          <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400);">Trainingsform</div><div style="font-size:16px; font-weight:500;">-</div></div>
+          <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400);">Gesamt-Skill</div><div style="font-size:16px; font-weight:500; color: var(--color-accent-300);">8</div></div>
+          <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400);">Akte</div><div style="font-size:16px; font-weight:500;">0</div></div>
+        </div>
+        <div style="display:flex; gap: var(--space-2); flex-shrink:0;">
+          <button type="button" class="btn btn-ghost">Feedback</button>
+          <button type="button" class="btn btn-secondary" style="border-color: var(--color-neutral-600); color: #e78a9a;" onclick="{{ onRemove }}">Aus Kader entfernen</button>
+        </div>
+      </div>
+      <div style="display:flex; gap: var(--space-1); padding: 0 var(--space-5);">
+        <button type="button" style="{{ overviewTabStyle }}" onclick="{{ onClickOverview }}">Uebersicht</button>
+        <button type="button" style="{{ analysisTabStyle }}" onclick="{{ onClickAnalysis }}">Torwart-Analyse</button>
+        <button type="button" style="{{ ratingTabStyle }}" onclick="{{ onClickRating }}">Neue Bewertung</button>
+        <button type="button" style="{{ stammdatenTabStyle }}" onclick="{{ onClickStammdaten }}">Stammdaten</button>
+      </div>
+    </div>
+
+    <div style="padding: var(--space-5);">
+
+      <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid; grid-template-columns: 1.1fr 0.9fr 1fr; gap: var(--space-4); align-items:start;">
+          <div class="card">
+            <div class="card-title">Faehigkeiten</div>
+            <p class="card-body" style="margin-top:-4px;">Top-Werte aus dem letzten Bewertungsstand.</p>
+            <div style="display:flex; flex-direction:column; margin-top: var(--space-2);">
+              <sc-for list="{{ skills }}" as="s" hint-placeholder-count="5">
+                <div style="display:flex; justify-content:space-between; align-items:baseline; padding: 8px 0; border-bottom:1px solid var(--color-neutral-800);">
+                  <div><div style="font-size:13px;">{{ s.label }}</div><div style="font-size:11px; color: var(--color-neutral-500);">{{ s.sub }}</div></div>
+                  <div style="font-size:15px; font-weight:500; color: var(--color-accent-300);">{{ s.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap: var(--space-4);">
+            <div class="card">
+              <div class="card-title">Position</div>
+              <svg viewBox="0 0 200 240" width="100%" style="margin-top:8px;">
+                <rect x="10" y="10" width="180" height="220" fill="none" stroke="var(--color-neutral-700)" stroke-width="1.5" rx="4"></rect>
+                <rect x="55" y="10" width="90" height="34" fill="none" stroke="var(--color-neutral-700)" stroke-width="1.5"></rect>
+                <path d="M 55 10 A 45 45 0 0 0 145 10" fill="none" stroke="var(--color-neutral-700)" stroke-width="1.5"></path>
+                <circle cx="100" cy="130" r="7" fill="var(--color-accent)"></circle>
+              </svg>
+              <div style="text-align:center; margin-top:4px;">
+                <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400);">Position</div>
+                <div style="font-size:14px; font-weight:500;">Torhueter</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Spielerakte &amp; Notizen</div>
+              <p class="card-body" style="margin-top:-4px;">Letzte interne Eintraege aus dem Trainerteam.</p>
+              <p style="font-size:12px; color: var(--color-neutral-500); margin: var(--space-2) 0;">Noch keine Akteneintraege vorhanden.</p>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <div class="field"><label>Titel</label><input class="input" placeholder="z.B. Spielergespraech"></div>
+                <div class="field"><label>Typ</label>
+                  <select class="input"><option>Spielergespraech</option><option>Verletzung</option><option>Sonstiges</option></select>
+                </div>
+                <div class="field"><label>Datum</label><input class="input" type="date" value="2026-07-28"></div>
+                <div class="field"><label>Wiedervorlage</label><input class="input" type="date" placeholder="tt.mm.jjjj"></div>
+              </div>
+              <div class="field" style="margin-top: var(--space-2);"><label>Notiz</label><textarea class="input" rows="3"></textarea></div>
+              <button type="button" class="btn btn-secondary btn-block" style="margin-top: var(--space-2);">+ Eintrag hinzufuegen</button>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap: var(--space-4);">
+            <div class="card">
+              <div class="card-title">Form</div>
+              <p class="card-body" style="margin-top:-4px;">Getrennt nach Spiel- und Trainingsleistung.</p>
+              <div class="field"><label>Spielform</label><div style="font-size:14px; font-weight:500;">-</div></div>
+              <div class="field"><label>Trainingsform</label><div style="font-size:14px; font-weight:500;">-</div></div>
+              <div class="field"><label>Eindruck</label><div style="font-size:15px; font-weight:500;">Noch offen</div></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Technik &amp; Physis</div>
+              <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom:1px solid var(--color-neutral-800);">
+                <span style="font-size:13px; color: var(--color-neutral-400);">Technik</span><span style="font-size:13px;">- (aktueller Snapshot)</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding: 6px 0;">
+                <span style="font-size:13px; color: var(--color-neutral-400);">Physis</span><span style="font-size:13px;">- (aktueller Snapshot)</span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Bewertungsstand</div>
+              <div style="font-size:20px; font-weight:500; margin-top:4px;">28.07.2026</div>
+              <div style="font-size:12px; color: var(--color-neutral-500);">Trainerbewertung</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isAnalysis }}" hint-placeholder-val="{{ false }}">
+        <div class="card" style="margin-bottom: var(--space-4);">
+          <div class="card-title">Torwart-Analyse</div>
+          <p class="card-body" style="margin-top:-4px;">Zwei Bewertungsstaende auswaehlen und im Radar vergleichen &ndash; auch spieleruebergreifend unter Torwarten.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-4); margin-top: var(--space-2);">
+            <div class="field"><label>Vergleich A</label><select class="input"><option>Trainerbewertung (28.07.2026)</option></select></div>
+            <div class="field"><label>Vergleich B (optional)</label><select class="input"><option>Kein Vergleich</option></select></div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-4);">
+          <div class="card">
+            <div class="card-title">Uebersicht</div>
+            <svg viewBox="0 0 220 220" width="100%">
+              <sc-for list="{{ chart1.gridRings }}" as="ring" hint-placeholder-count="4"><polygon points="{{ ring }}" fill="none" stroke="var(--color-neutral-700)" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ chart1.axisLines }}" as="ax" hint-placeholder-count="5"><line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="var(--color-neutral-700)" stroke-width="1"></line></sc-for>
+              <polygon points="{{ chart1.points }}" fill="var(--color-accent-700)" fill-opacity="0.45" stroke="var(--color-accent)" stroke-width="2"></polygon>
+              <sc-for list="{{ chart1.labelPos }}" as="lb" hint-placeholder-count="5"><text x="{{ lb.x }}" y="{{ lb.y }}" font-size="9" fill="var(--color-neutral-300)" text-anchor="{{ lb.anchor }}">{{ lb.text }}</text></sc-for>
+            </svg>
+            <div style="font-size:11px; color: var(--color-neutral-500); margin-top:4px;">&#9679; Mike Kirchen &middot; Trainerbewertung (28.07.2026)</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Spieleroeffnung</div>
+            <svg viewBox="0 0 220 220" width="100%">
+              <sc-for list="{{ chart2.gridRings }}" as="ring" hint-placeholder-count="4"><polygon points="{{ ring }}" fill="none" stroke="var(--color-neutral-700)" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ chart2.axisLines }}" as="ax" hint-placeholder-count="7"><line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="var(--color-neutral-700)" stroke-width="1"></line></sc-for>
+              <polygon points="{{ chart2.points }}" fill="var(--color-accent-700)" fill-opacity="0.45" stroke="var(--color-accent)" stroke-width="2"></polygon>
+              <sc-for list="{{ chart2.labelPos }}" as="lb" hint-placeholder-count="7"><text x="{{ lb.x }}" y="{{ lb.y }}" font-size="9" fill="var(--color-neutral-300)" text-anchor="{{ lb.anchor }}">{{ lb.text }}</text></sc-for>
+            </svg>
+            <div style="font-size:11px; color: var(--color-neutral-500); margin-top:4px;">&#9679; Mike Kirchen &middot; Trainerbewertung (28.07.2026)</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Zielverteidigung</div>
+            <svg viewBox="0 0 220 220" width="100%">
+              <sc-for list="{{ chart3.gridRings }}" as="ring" hint-placeholder-count="4"><polygon points="{{ ring }}" fill="none" stroke="var(--color-neutral-700)" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ chart3.axisLines }}" as="ax" hint-placeholder-count="12"><line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="var(--color-neutral-700)" stroke-width="1"></line></sc-for>
+              <polygon points="{{ chart3.points }}" fill="var(--color-accent-700)" fill-opacity="0.45" stroke="var(--color-accent)" stroke-width="2"></polygon>
+              <sc-for list="{{ chart3.labelPos }}" as="lb" hint-placeholder-count="12"><text x="{{ lb.x }}" y="{{ lb.y }}" font-size="8" fill="var(--color-neutral-300)" text-anchor="{{ lb.anchor }}">{{ lb.text }}</text></sc-for>
+            </svg>
+            <div style="font-size:11px; color: var(--color-neutral-500); margin-top:4px;">&#9679; Mike Kirchen &middot; Trainerbewertung (28.07.2026)</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Raumverteidigung</div>
+            <svg viewBox="0 0 220 220" width="100%">
+              <sc-for list="{{ chart4.gridRings }}" as="ring" hint-placeholder-count="4"><polygon points="{{ ring }}" fill="none" stroke="var(--color-neutral-700)" stroke-width="1"></polygon></sc-for>
+              <sc-for list="{{ chart4.axisLines }}" as="ax" hint-placeholder-count="4"><line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="var(--color-neutral-700)" stroke-width="1"></line></sc-for>
+              <polygon points="{{ chart4.points }}" fill="var(--color-accent-700)" fill-opacity="0.45" stroke="var(--color-accent)" stroke-width="2"></polygon>
+              <sc-for list="{{ chart4.labelPos }}" as="lb" hint-placeholder-count="4"><text x="{{ lb.x }}" y="{{ lb.y }}" font-size="9" fill="var(--color-neutral-300)" text-anchor="{{ lb.anchor }}">{{ lb.text }}</text></sc-for>
+            </svg>
+            <div style="font-size:11px; color: var(--color-neutral-500); margin-top:4px;">&#9679; Mike Kirchen &middot; Trainerbewertung (28.07.2026)</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top: var(--space-4); max-width:50%;">
+          <div class="card-title">Taktik</div>
+          <svg viewBox="0 0 220 220" width="100%">
+            <sc-for list="{{ chart5.gridRings }}" as="ring" hint-placeholder-count="4"><polygon points="{{ ring }}" fill="none" stroke="var(--color-neutral-700)" stroke-width="1"></polygon></sc-for>
+            <sc-for list="{{ chart5.axisLines }}" as="ax" hint-placeholder-count="7"><line x1="{{ ax.x1 }}" y1="{{ ax.y1 }}" x2="{{ ax.x2 }}" y2="{{ ax.y2 }}" stroke="var(--color-neutral-700)" stroke-width="1"></line></sc-for>
+            <polygon points="{{ chart5.points }}" fill="var(--color-accent-700)" fill-opacity="0.45" stroke="var(--color-accent)" stroke-width="2"></polygon>
+            <sc-for list="{{ chart5.labelPos }}" as="lb" hint-placeholder-count="7"><text x="{{ lb.x }}" y="{{ lb.y }}" font-size="9" fill="var(--color-neutral-300)" text-anchor="{{ lb.anchor }}">{{ lb.text }}</text></sc-for>
+          </svg>
+          <div style="font-size:11px; color: var(--color-neutral-500); margin-top:4px;">&#9679; Mike Kirchen &middot; Trainerbewertung (28.07.2026)</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isRating }}" hint-placeholder-val="{{ false }}">
+        <div class="card">
+          <div class="card-title">Neuer Bewertungsstand</div>
+          <p class="card-body" style="margin-top:-4px;">Faehigkeiten auf einer Skala von 1 bis 20 erfassen.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap: var(--space-4); margin: var(--space-3) 0;">
+            <div class="field"><label>Titel</label><input class="input" value="Trainerbewertung"></div>
+            <div class="field"><label>Bewertungsdatum</label><input class="input" type="date" value="2026-07-28"></div>
+            <div class="field"><label>Notiz</label><input class="input" placeholder="Optional"></div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap: var(--space-4);">
+            <div>
+              <div style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-accent-300); margin-bottom:8px;">Technik</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <sc-for list="{{ technikFields }}" as="f" hint-placeholder-count="5">
+                  <div class="field field-num"><label>{{ f }}</label><input class="input" type="number" min="1" max="20" placeholder="1-20"></div>
+                </sc-for>
+              </div>
+              <div style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-accent-300); margin:16px 0 8px;">Mentalitaet</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <sc-for list="{{ mentalitaetFields }}" as="f" hint-placeholder-count="4">
+                  <div class="field field-num"><label>{{ f }}</label><input class="input" type="number" min="1" max="20" placeholder="1-20"></div>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-accent-300); margin-bottom:8px;">Taktik</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <sc-for list="{{ taktikFields }}" as="f" hint-placeholder-count="11">
+                  <div class="field field-num"><label>{{ f }}</label><input class="input" type="number" min="1" max="20" placeholder="1-20"></div>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-accent-300); margin-bottom:8px;">Physis</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <sc-for list="{{ physisFields }}" as="f" hint-placeholder-count="4">
+                  <div class="field field-num"><label>{{ f }}</label><input class="input" type="number" min="1" max="20" placeholder="1-20"></div>
+                </sc-for>
+              </div>
+              <div style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-accent-300); margin:16px 0 8px;">Torwart</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-2);">
+                <sc-for list="{{ torwartRatingFields }}" as="f" hint-placeholder-count="22">
+                  <div class="field field-num"><label>{{ f }}</label><input class="input" type="number" min="1" max="20" placeholder="1-20"></div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" style="margin-top: var(--space-4);">Bewertungsstand speichern</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isStammdaten }}" hint-placeholder-val="{{ false }}">
+        <div class="card" style="max-width:520px;">
+          <div class="card-title">Stammdaten</div>
+          <p class="card-body" style="margin-top:-4px;">Basisdaten bearbeiten.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap: var(--space-3); margin-top: var(--space-2);">
+            <div class="field"><label>Vorname</label><input class="input" value="Mike"></div>
+            <div class="field"><label>Nachname</label><input class="input" value="Kirchen"></div>
+            <div class="field"><label>Rueckennummer</label><input class="input" value="1"></div>
+            <div class="field"><label>Geburtsdatum</label><input class="input" type="date" value="2026-07-28"></div>
+            <div class="field" style="grid-column: span 2;"><label>Position</label>
+              <select class="input"><option>TW</option><option>IV</option><option>AV</option><option>ZM</option><option>ST</option></select>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" style="margin-top: var(--space-4);">Spieler speichern</button>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { activeTab: 'overview' };
+
+  buildRadar(labels, values, max) {
+    const n = labels.length;
+    const center = 110, radius = 78;
+    const angle = i => -Math.PI / 2 + i * (2 * Math.PI / n);
+    const gridRings = [0.25, 0.5, 0.75, 1].map(level => {
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const a = angle(i), r = radius * level;
+        pts.push((center + r * Math.cos(a)).toFixed(1) + ',' + (center + r * Math.sin(a)).toFixed(1));
+      }
+      return pts.join(' ');
+    });
+    const axisLines = labels.map((_, i) => {
+      const a = angle(i);
+      return { x1: center, y1: center, x2: center + radius * Math.cos(a), y2: center + radius * Math.sin(a) };
+    });
+    const points = values.map((v, i) => {
+      const a = angle(i), r = radius * Math.min(v, max) / max;
+      return (center + r * Math.cos(a)).toFixed(1) + ',' + (center + r * Math.sin(a)).toFixed(1);
+    }).join(' ');
+    const labelPos = labels.map((text, i) => {
+      const a = angle(i), r = radius + 16;
+      const x = center + r * Math.cos(a), y = center + r * Math.sin(a);
+      let anchor = 'middle';
+      if (x < center - 8) anchor = 'end'; else if (x > center + 8) anchor = 'start';
+      return { x: x.toFixed(1), y: y.toFixed(1), text, anchor };
+    });
+    return { gridRings, axisLines, points, labelPos };
+  }
+
+  renderVals() {
+    const tab = this.state.activeTab;
+    const activeStyle = { padding: '8px 14px', border: 'none', background: 'none', borderBottom: '2px solid var(--color-accent)', color: 'var(--color-text)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' };
+    const inactiveStyle = { padding: '8px 14px', border: 'none', background: 'none', borderBottom: '2px solid transparent', color: 'var(--color-neutral-400)', fontSize: '13px', cursor: 'pointer' };
+
+    const skills = [
+      { label: 'Abwurf', sub: 'Torhueter', value: 5 },
+      { label: 'Passspiel', sub: 'Torhueter', value: 10 },
+      { label: 'Ballan-/mitnahme', sub: 'Torhueter', value: 10 },
+      { label: 'Flugball direkt', sub: 'Torhueter', value: 10 },
+      { label: 'Flugball indirekt', sub: 'Torhueter', value: 10 },
+      { label: 'Abschlag Dropkick', sub: 'Torhueter', value: 10 },
+      { label: 'Abschlag Hueftdrehstoss', sub: 'Torhueter', value: 10 },
+      { label: 'Fangen halbhoch', sub: 'Torhueter', value: 10 },
+      { label: 'Fangen flach zentral', sub: 'Torhueter', value: 10 },
+      { label: 'Abkippen flach', sub: 'Torhueter', value: 10 },
+      { label: 'Abkippen halbhoch', sub: 'Torhueter', value: 10 },
+      { label: 'Abdruck flach', sub: 'Torhueter', value: 10 },
+    ];
+
+    return {
+      activeTab: tab,
+      isOverview: tab === 'overview',
+      isAnalysis: tab === 'analysis',
+      isRating: tab === 'rating',
+      isStammdaten: tab === 'stammdaten',
+      overviewTabStyle: tab === 'overview' ? activeStyle : inactiveStyle,
+      analysisTabStyle: tab === 'analysis' ? activeStyle : inactiveStyle,
+      ratingTabStyle: tab === 'rating' ? activeStyle : inactiveStyle,
+      stammdatenTabStyle: tab === 'stammdaten' ? activeStyle : inactiveStyle,
+      onClickOverview: () => this.setState({ activeTab: 'overview' }),
+      onClickAnalysis: () => this.setState({ activeTab: 'analysis' }),
+      onClickRating: () => this.setState({ activeTab: 'rating' }),
+      onClickStammdaten: () => this.setState({ activeTab: 'stammdaten' }),
+      onRemove: () => {},
+      skills,
+      technikFields: ['Ballkontrolle', 'Erster Kontakt', 'Passspiel', 'Abschluss', 'Dribbling'],
+      taktikFields: ['Spielverstaendnis', 'Stellungsspiel', 'Entscheidungsverhalten', 'Pressingverhalten', 'Stellungsspiel Zielverteidigung', 'Stellungsspiel Raumverteidigung', 'Querpassverteidigung', 'Verhalten bei Steilpaessen', 'Verhalten 1vsTW', 'Mitspielen / Spieleroeffnung', 'Umschaltspiel / Kontereinleitung'],
+      physisFields: ['Schnelligkeit', 'Ausdauer', 'Kraft', 'Beweglichkeit'],
+      mentalitaetFields: ['Einsatzbereitschaft', 'Konzentration', 'Teamfaehigkeit', 'Fuehrungsverhalten'],
+      torwartRatingFields: ['Abwurf', 'Passspiel', 'Ballan-/mitnahme', 'Flugball direkt', 'Flugball indirekt', 'Abschlag Dropkick', 'Abschlag Hueftdrehstoss', 'Fangen halbhoch', 'Fangen flach zentral', 'Abkippen flach', 'Abkippen halbhoch', 'Abdruck flach', 'Abdruck halbhoch', 'Uebergreifen', 'Lob-Abwehr', 'Abtauchen', 'Block kurz', 'Block lang', 'Ballangriff', 'Zentral', '1. Pfosten', 'Fausten'],
+      chart1: this.buildRadar(['Spieleroeffnung', 'Zielzone', 'Raumverteidigung', 'Taktik Defensiv', 'Taktik Offensiv'], [9, 10, 8, 7, 8], 20),
+      chart2: this.buildRadar(['Abwurf', 'Passspiel', 'Ballan-/mitnahme', 'Flugball direkt', 'Flugball indirekt', 'Abschlag Dropkick', 'Abschlag Hueftdrehstoss'], [5, 10, 10, 10, 10, 10, 10], 20),
+      chart3: this.buildRadar(['Fangen halbhoch', 'Fangen flach zentral', 'Abkippen flach', 'Abkippen halbhoch', 'Abdruck flach', 'Abdruck halbhoch', 'Uebergreifen', 'Lob-Abwehr', 'Abtauchen', 'Block kurz', 'Block lang', 'Beinangriff'], [10, 10, 10, 10, 10, 6, 2, 3, 0, 0, 0, 0], 20),
+      chart4: this.buildRadar(['1. Pfosten', 'Zentral', '2. Pfosten', 'Fausten'], [1, 1, 1, 1], 20),
+      chart5: this.buildRadar(['Stellungsspiel Zielverteidigung', 'Stellungsspiel Raumverteidigung', 'Querpass', 'Verhalten bei Steilpaessen', 'Verhalten 1vsTW', 'Spielen/Oeffnung', 'Mannschaftsspiel'], [0, 0, 0, 0, 0, 0, 0], 20),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
