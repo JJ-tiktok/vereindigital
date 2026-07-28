@@ -1,4 +1,9 @@
-import { createAiUrlImportJob, createMatchStatsTemplateImportJob, createRosterTemplateImportJob } from "@/lib/import-actions";
+import {
+  createAiUrlImportJob,
+  createFixturesTemplateImportJob,
+  createMatchStatsTemplateImportJob,
+  createRosterTemplateImportJob,
+} from "@/lib/import-actions";
 
 const rosterSample = `Vorname;Nachname;Geburtsdatum;Position
 Max;Mustermann;15.03.2001;ST
@@ -8,19 +13,39 @@ const matchSample = `Spiel;Datum;Gegner;Heim/Auswaerts;Spieler;Tore;Vorlagen;Gel
 2:1;04.05.2026;FC Beispiel;Heim;Max Mustermann;1;0;0;0;90;Startelf;8.2
 2:1;04.05.2026;FC Beispiel;Heim;Jan Beispiel;0;1;1;0;70;Einwechslung;7.1`;
 
+const fixturesSample = `Datum;Gegner;Heim/Auswaerts;Uhrzeit;Ort
+10.08.2026;FC Beispiel;Heim;15:00;Sportplatz Musterstadt
+17.08.2026;SV Nachbarort;Auswaerts;14:30;`;
+
+const importTitles: Record<"MATCH_STATS" | "ROSTER" | "FIXTURES", string> = {
+  FIXTURES: "Spielplan",
+  MATCH_STATS: "Spieltage",
+  ROSTER: "Kader",
+};
+
+const importActions: Record<"MATCH_STATS" | "ROSTER" | "FIXTURES", (formData: FormData) => void | Promise<void>> = {
+  FIXTURES: createFixturesTemplateImportJob,
+  MATCH_STATS: createMatchStatsTemplateImportJob,
+  ROSTER: createRosterTemplateImportJob,
+};
+
+const importSamples: Record<"MATCH_STATS" | "ROSTER" | "FIXTURES", string> = {
+  FIXTURES: fixturesSample,
+  MATCH_STATS: matchSample,
+  ROSTER: rosterSample,
+};
+
 export function ImportForm({
   error,
   importType,
 }: {
   error?: string;
-  importType: "MATCH_STATS" | "ROSTER";
+  importType: "MATCH_STATS" | "ROSTER" | "FIXTURES";
 }) {
-  const isRoster = importType === "ROSTER";
-
   return (
     <div className="grid gap-6 py-6 xl:grid-cols-[1fr_420px]">
       <section className="space-y-6">
-        <form action={isRoster ? createRosterTemplateImportJob : createMatchStatsTemplateImportJob} className="rounded-lg border border-border bg-white p-5">
+        <form action={importActions[importType]} className="rounded-lg border border-border bg-white p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Variante 1</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-950">CSV-Vorlage importieren</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
@@ -41,7 +66,7 @@ export function ImportForm({
             </label>
             <textarea
               className="mt-2 min-h-56 w-full rounded-lg border border-border px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
-              defaultValue={isRoster ? rosterSample : matchSample}
+              defaultValue={importSamples[importType]}
               id="csv"
               name="csv"
             />
@@ -81,7 +106,7 @@ export function ImportForm({
 
       <aside className="rounded-lg border border-border bg-slate-950 p-5 text-white xl:sticky xl:top-6 xl:self-start">
         <p className="text-xs font-bold uppercase tracking-wide text-blue-200">Import-Regeln</p>
-        <h2 className="mt-2 text-2xl font-bold">{isRoster ? "Kader" : "Spieltage"}</h2>
+        <h2 className="mt-2 text-2xl font-bold">{importTitles[importType]}</h2>
         <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-200">
           <li>Alle Daten werden zuerst nur als Importjob gespeichert.</li>
           <li>Konflikte muessen auf der Review-Seite aufgeloest werden.</li>

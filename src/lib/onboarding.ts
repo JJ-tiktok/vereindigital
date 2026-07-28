@@ -3,6 +3,7 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { ensureDefaultAttributeDefinitions } from "@/lib/player-development";
 import { defaultRoles, permissionDefinitions } from "@/lib/rbac";
 import { createSlug } from "@/lib/slug";
 import { prisma } from "@/lib/prisma";
@@ -58,6 +59,8 @@ export async function completeClubOnboarding(formData: FormData) {
         slug: clubSlug,
       },
     });
+
+    await ensureDefaultAttributeDefinitions(club.id, tx);
 
     const user = await tx.user.create({
       data: {

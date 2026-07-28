@@ -8,7 +8,8 @@ import { z } from "zod";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
-import { availabilityReason, parseForm, zDate, zOptionalString, zRequiredString, type ActionState } from "./helpers";
+import { applyAvailabilityDeclines } from "./guards";
+import { parseForm, zDate, zOptionalString, zRequiredString, type ActionState } from "./helpers";
 
 function revalidateCalendar(eventId?: string) {
   revalidatePath("/dashboard");
@@ -91,45 +92,13 @@ export async function createCalendarEvent(_prevState: ActionState, formData: For
       });
     }
 
-    const overlappingAvailabilities = await tx.playerAvailability.findMany({
-      where: {
-        startsAt: {
-          lte: endsAt,
-        },
-        endsAt: {
-          gte: startsAt,
-        },
-        playerProfile: {
-          memberships: {
-            some: {
-              teamId: activeTeam.id,
-              status: "ACTIVE",
-              role: {
-                key: "player",
-              },
-            },
-          },
-        },
-      },
-      select: {
-        playerProfileId: true,
-        type: true,
-        note: true,
-      },
+    await applyAvailabilityDeclines(tx, {
+      teamId: activeTeam.id,
+      startsAt,
+      endsAt,
+      calendarEventId: calendarEvent.id,
+      setByUserId: context.appUser.id,
     });
-
-    if (overlappingAvailabilities.length > 0) {
-      await tx.eventAttendance.createMany({
-        data: overlappingAvailabilities.map((availability) => ({
-          calendarEventId: calendarEvent.id,
-          playerProfileId: availability.playerProfileId,
-          status: "DECLINED" as const,
-          reason: availability.note || availabilityReason(availability.type),
-          setByUserId: context.appUser.id,
-        })),
-        skipDuplicates: true,
-      });
-    }
 
     return calendarEvent;
   });

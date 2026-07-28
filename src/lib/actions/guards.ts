@@ -1,9 +1,11 @@
 import "server-only";
 
-import { CalendarEventType } from "@prisma/client";
+import { CalendarEventType, type Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+
+import { availabilityReason } from "./helpers";
 
 export async function ensurePlayerInTeam(playerProfileId: string, teamId: string, clubId: string) {
   const player = await prisma.playerProfile.findFirst({
@@ -41,6 +43,57 @@ export async function ensureTrainingExerciseAccess(exerciseId: string, clubId: s
 
   if (!exercise) {
     redirect("/training");
+  }
+}
+
+export async function applyAvailabilityDeclines(
+  tx: Prisma.TransactionClient,
+  params: {
+    teamId: string;
+    startsAt: Date;
+    endsAt: Date;
+    calendarEventId: string;
+    setByUserId: string;
+  },
+) {
+  const overlappingAvailabilities = await tx.playerAvailability.findMany({
+    where: {
+      startsAt: {
+        lte: params.endsAt,
+      },
+      endsAt: {
+        gte: params.startsAt,
+      },
+      playerProfile: {
+        memberships: {
+          some: {
+            teamId: params.teamId,
+            status: "ACTIVE",
+            role: {
+              key: "player",
+            },
+          },
+        },
+      },
+    },
+    select: {
+      playerProfileId: true,
+      type: true,
+      note: true,
+    },
+  });
+
+  if (overlappingAvailabilities.length > 0) {
+    await tx.eventAttendance.createMany({
+      data: overlappingAvailabilities.map((availability) => ({
+        calendarEventId: params.calendarEventId,
+        playerProfileId: availability.playerProfileId,
+        status: "DECLINED" as const,
+        reason: availability.note || availabilityReason(availability.type),
+        setByUserId: params.setByUserId,
+      })),
+      skipDuplicates: true,
+    });
   }
 }
 

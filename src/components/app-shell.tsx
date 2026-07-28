@@ -9,15 +9,17 @@ import {
   LayoutDashboard,
   MessageSquare,
   Shield,
+  ShieldCheck,
   Trophy,
   Users,
   UserCog,
 } from "lucide-react";
 import Link from "next/link";
 
+import { ClubSwitcher } from "@/components/club-switcher";
 import { FeedbackWidget } from "@/components/feedback-widget";
 import { TeamSwitcher } from "@/components/team-switcher";
-import type { AppContext } from "@/lib/app-context";
+import { hasPermission, type AppContext } from "@/lib/app-context";
 import { canUseFeedback } from "@/lib/feedback-permissions";
 
 const navItems = [
@@ -26,6 +28,7 @@ const navItems = [
   { label: "Mitglieder", href: "/mitglieder", icon: UserCog },
   { label: "Kalender", href: "/kalender", icon: CalendarDays },
   { label: "Saisons", href: "/saisons", icon: CalendarRange },
+  { label: "Rollen", href: "/rollen", icon: ShieldCheck },
   { label: "Training", href: "/training", icon: Dumbbell },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
   { label: "Statistiken", href: "/statistiken", icon: BarChart3 },
@@ -45,7 +48,18 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const showFeedback = canUseFeedback(context);
-  const visibleNavItems = showFeedback ? navItems : navItems.filter((item) => item.href !== "/feedback");
+  const showRoles = hasPermission(context, "roles.manage");
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.href === "/feedback") {
+      return showFeedback;
+    }
+
+    if (item.href === "/rollen") {
+      return showRoles;
+    }
+
+    return true;
+  });
 
   return (
     <main className="min-h-screen bg-background text-slate-950">
@@ -60,6 +74,16 @@ export function AppShell({
               <p className="text-sm text-muted">{context.club.name}</p>
             </div>
           </div>
+
+          {context.clubs.length > 1 ? (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase text-muted">Aktiver Verein</p>
+              <ClubSwitcher
+                activeClubId={context.club.id}
+                clubs={context.clubs.map((club) => ({ id: club.id, name: club.name }))}
+              />
+            </div>
+          ) : null}
 
           <nav className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
             {visibleNavItems.map((item) => {

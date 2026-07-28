@@ -1,5 +1,7 @@
 export { createSeason, setActiveSeason } from "./seasons";
 export { setActiveTeam } from "./team";
+export { setActiveClub } from "./club";
+export { createRole, deleteRole, updateRolePermissions } from "./roles";
 export { acceptInvitation, createInvitation, revokeInvitation } from "./invitations";
 export {
   createPlayerAvailability,

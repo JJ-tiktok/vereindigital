@@ -11,13 +11,17 @@ import {
   requirePermission,
   type AppContext,
 } from "@/lib/app-context";
+import { applyAvailabilityDeclines } from "@/lib/actions/guards";
 import {
+  isFixturesImportData,
   isMatchStatsImportData,
   isRosterImportData,
+  parseFixturesCsv,
   parseImportUrl,
   parseMatchStatsCsv,
   parseRosterCsv,
   toInputJson,
+  type FixturesImportData,
   type ImportIssue,
   type MatchStatsImportData,
   type RosterImportData,
@@ -109,11 +113,34 @@ function readMatchRating(formData: FormData, key: string, fallback: number | nul
 function readRequiredImportType(formData: FormData) {
   const value = readString(formData, "importType");
 
-  return value === "MATCH_STATS" ? ImportType.MATCH_STATS : ImportType.ROSTER;
+  if (value === "MATCH_STATS") {
+    return ImportType.MATCH_STATS;
+  }
+
+  if (value === "FIXTURES") {
+    return ImportType.FIXTURES;
+  }
+
+  return ImportType.ROSTER;
 }
 
 function requireImportPermission(context: AppContext, teamId: string, importType: ImportType) {
-  requirePermission(context, importType === "MATCH_STATS" ? "match.stats.manage" : "player.profile.manage", teamId);
+  const permission =
+    importType === "MATCH_STATS" ? "match.stats.manage" : importType === "FIXTURES" ? "match.manage" : "player.profile.manage";
+
+  requirePermission(context, permission, teamId);
+}
+
+function importErrorRedirectPath(importType: ImportType) {
+  if (importType === "MATCH_STATS") {
+    return "/importe/spieltage";
+  }
+
+  if (importType === "FIXTURES") {
+    return "/importe/spielplan";
+  }
+
+  return "/importe/kader";
 }
 
 async function readCsvInput(formData: FormData) {
@@ -195,6 +222,37 @@ export async function createMatchStatsTemplateImportJob(formData: FormData) {
   redirect(`/importe/${job.id}`);
 }
 
+export async function createFixturesTemplateImportJob(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  const activeSeason = requireActiveSeason(context);
+  requireImportPermission(context, activeTeam.id, ImportType.FIXTURES);
+  const csvInput = await readCsvInput(formData);
+
+  if (!csvInput.text) {
+    redirect("/importe/spielplan?error=missing-csv");
+  }
+
+  const parsed = parseFixturesCsv(csvInput.text);
+  const job = await prisma.importJob.create({
+    data: {
+      clubId: context.club.id,
+      createdByUserId: context.appUser.id,
+      fileName: csvInput.fileName,
+      issues: toInputJson(parsed.issues),
+      parsedData: toInputJson(parsed.data),
+      seasonId: activeSeason.id,
+      sourceType: "TEMPLATE_CSV",
+      status: "PARSED",
+      teamId: activeTeam.id,
+      type: "FIXTURES",
+    },
+  });
+
+  revalidatePath("/importe");
+  redirect(`/importe/${job.id}`);
+}
+
 export async function createAiUrlImportJob(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
@@ -204,7 +262,7 @@ export async function createAiUrlImportJob(formData: FormData) {
   const sourceUrl = readString(formData, "sourceUrl");
 
   if (!sourceUrl) {
-    redirect(importType === "ROSTER" ? "/importe/kader?error=missing-url" : "/importe/spieltage?error=missing-url");
+    redirect(`${importErrorRedirectPath(importType)}?error=missing-url`);
   }
 
   const parsed = await parseImportUrl({
@@ -246,7 +304,9 @@ export async function saveImportReviewData(formData: FormData) {
       ? buildRosterReviewData(formData, job.parsedData)
       : job.type === "MATCH_STATS" && isMatchStatsImportData(job.parsedData)
         ? buildMatchStatsReviewData(formData, job.parsedData)
-        : null;
+        : job.type === "FIXTURES" && isFixturesImportData(job.parsedData)
+          ? buildFixturesReviewData(formData, job.parsedData)
+          : null;
 
   if (!reviewData) {
     redirect(`/importe/${job.id}?error=unresolved`);
@@ -495,6 +555,91 @@ export async function confirmMatchStatsImportJob(formData: FormData) {
   redirect(`/spiele/${matchId}?imported=1`);
 }
 
+export async function confirmFixturesImportJob(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requireImportPermission(context, activeTeam.id, ImportType.FIXTURES);
+  const job = await findImportJob(readString(formData, "jobId"), context.club.id, activeTeam.id);
+
+  if (!job || job.type !== "FIXTURES" || !isFixturesImportData(job.parsedData)) {
+    redirect(job ? `/importe/${job.id}?error=unresolved` : "/importe");
+  }
+
+  const reviewData = buildFixturesReviewData(formData, job.parsedData);
+  const preparedRows = reviewData.data.rows.map((row) => ({
+    ...row,
+    startsAt: combineDateAndTime(row.date, row.kickoffTime),
+  }));
+
+  if (preparedRows.length === 0 || preparedRows.some((row) => !row.startsAt || !row.opponent)) {
+    redirect(`/importe/${job.id}?error=invalid-fixture-row`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (const row of preparedRows) {
+      const startsAt = row.startsAt as Date;
+      const endsAt = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
+
+      const calendarEvent = await tx.calendarEvent.create({
+        data: {
+          createdByUserId: context.appUser.id,
+          endsAt,
+          location: row.location || null,
+          startsAt,
+          teamId: activeTeam.id,
+          title: `Spiel gegen ${row.opponent}`,
+          type: CalendarEventType.MATCH,
+        },
+      });
+
+      await tx.match.create({
+        data: {
+          calendarEventId: calendarEvent.id,
+          isHomeGame: row.isHomeGame,
+          opponent: row.opponent,
+          teamId: activeTeam.id,
+        },
+      });
+
+      await applyAvailabilityDeclines(tx, {
+        teamId: activeTeam.id,
+        startsAt,
+        endsAt,
+        calendarEventId: calendarEvent.id,
+        setByUserId: context.appUser.id,
+      });
+    }
+
+    await tx.importJob.update({
+      where: {
+        id: job.id,
+      },
+      data: {
+        issues: toInputJson(reviewData.issues),
+        parsedData: toInputJson(reviewData.data),
+        status: "CONFIRMED",
+      },
+    });
+  });
+
+  revalidatePath("/importe");
+  revalidatePath("/kalender");
+  revalidatePath("/spiele");
+  revalidatePath("/dashboard");
+  redirect("/kalender?imported=1");
+}
+
+function combineDateAndTime(date: string, kickoffTime: string) {
+  if (!date) {
+    return null;
+  }
+
+  const time = /^\d{2}:\d{2}$/.test(kickoffTime) ? kickoffTime : "15:00";
+  const combined = new Date(`${date}T${time}:00`);
+
+  return Number.isNaN(combined.getTime()) ? null : combined;
+}
+
 function buildRosterReviewData(formData: FormData, importData: RosterImportData) {
   const issues: ImportIssue[] = [];
   const rows = importData.rows
@@ -631,6 +776,56 @@ function buildMatchStatsReviewData(formData: FormData, importData: MatchStatsImp
       match,
       rows,
     } satisfies MatchStatsImportData,
+    issues,
+  };
+}
+
+function buildFixturesReviewData(formData: FormData, importData: FixturesImportData) {
+  const issues: ImportIssue[] = [];
+  const rows = importData.rows
+    .map((row, index) => {
+      const date = readDateInputValue(readString(formData, `date-${index}`) || row.date);
+      const opponent = readString(formData, `opponent-${index}`) || row.opponent;
+      const kickoffTime = readString(formData, `kickoffTime-${index}`) || row.kickoffTime;
+      const location = readString(formData, `location-${index}`) || row.location;
+      const isHomeGameValue = readString(formData, `isHomeGame-${index}`);
+      const isHomeGame = isHomeGameValue ? isHomeGameValue !== "false" : row.isHomeGame;
+      const skipRow = readString(formData, `skip-${index}`) === "true";
+
+      if (!skipRow) {
+        if (!opponent) {
+          issues.push(createIssue("missing-opponent", "Gegner fehlt.", index, "error"));
+        }
+
+        if (!date) {
+          issues.push(createIssue("missing-date", "Datum fehlt oder ist ungueltig.", index, "error"));
+        }
+      }
+
+      return {
+        date,
+        kickoffTime,
+        location,
+        opponent,
+        isHomeGame,
+        skipRow,
+        sourceRow: row.sourceRow,
+      };
+    })
+    .filter((row) => !row.skipRow)
+    .map((row) => ({
+      date: row.date,
+      kickoffTime: row.kickoffTime,
+      location: row.location,
+      opponent: row.opponent,
+      isHomeGame: row.isHomeGame,
+      sourceRow: row.sourceRow,
+    }));
+
+  return {
+    data: {
+      rows,
+    } satisfies FixturesImportData,
     issues,
   };
 }

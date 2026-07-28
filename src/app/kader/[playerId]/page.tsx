@@ -8,11 +8,7 @@ import { RemovePlayerButton } from "@/app/kader/[playerId]/remove-player-button"
 import { createPlayerAttributeSnapshot, createPlayerFileEntry, removePlayerFromActiveTeam } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { formatDate, toDateInputValue } from "@/lib/format";
-import {
-  attributeCategoryLabel,
-  ensureDefaultAttributeDefinitions,
-  fileEntryTypeLabel,
-} from "@/lib/player-development";
+import { attributeCategoryLabel, fileEntryTypeLabel, getPlayerSeasonHistory } from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
 
 export default async function PlayerDetailPage({
@@ -27,7 +23,6 @@ export default async function PlayerDetailPage({
   requirePermission(context, "player.profile.manage", activeTeam.id);
   const { playerId } = await params;
   const query = await searchParams;
-  await ensureDefaultAttributeDefinitions(context.club.id);
   const player = await prisma.playerProfile.findFirst({
     where: {
       id: playerId,
@@ -110,6 +105,7 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
+  const seasonHistory = await getPlayerSeasonHistory(player.id);
   const attributeDefinitions = await prisma.playerAttributeDefinition.findMany({
     where: {
       clubId: context.club.id,
@@ -289,6 +285,43 @@ export default async function PlayerDetailPage({
             </article>
           </aside>
         </section>
+
+        {seasonHistory.length > 0 ? (
+          <section className="overflow-hidden rounded-lg border border-border bg-white">
+            <SectionHeader
+              title="Saisonverlauf"
+              description="Spiel- und Trainingsdaten ueber alle Saisons und Teams des Spielers hinweg."
+            />
+            <div className="overflow-x-auto">
+              <table className="min-w-[720px] w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs font-semibold uppercase text-muted">
+                  <tr>
+                    <th className="px-5 py-3">Saison</th>
+                    <th className="px-5 py-3">Spiele</th>
+                    <th className="px-5 py-3">Minuten</th>
+                    <th className="px-5 py-3">Tore</th>
+                    <th className="px-5 py-3">Vorlagen</th>
+                    <th className="px-5 py-3">Spielbewertung</th>
+                    <th className="px-5 py-3">Trainingsbewertung</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {seasonHistory.map((season) => (
+                    <tr key={season.seasonId}>
+                      <td className="px-5 py-4 font-semibold text-slate-950">{season.name}</td>
+                      <td className="px-5 py-4 text-slate-700">{season.matchCount}</td>
+                      <td className="px-5 py-4 text-slate-700">{season.minutesPlayed}</td>
+                      <td className="px-5 py-4 text-slate-700">{season.goals}</td>
+                      <td className="px-5 py-4 text-slate-700">{season.assists}</td>
+                      <td className="px-5 py-4 text-slate-700">{formatRating(season.averageMatchRating)}</td>
+                      <td className="px-5 py-4 text-slate-700">{formatRating(season.averageTrainingRating)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         <section className="rounded-lg border border-border bg-white">
           <SectionHeader title="Neuer Bewertungsstand" description="Faehigkeiten auf einer Skala von 1 bis 20 erfassen." />
