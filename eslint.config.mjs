@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Static assets / design references, not app source.
+    "public/**",
   ]),
 ]);
 

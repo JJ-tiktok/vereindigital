@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
 
 import { updateTrainingExerciseSketch } from "@/lib/actions";
 
@@ -146,6 +146,11 @@ const toolGroups: Array<{
   },
 ];
 
+const categoryTabs: Array<{ id: string; label: string }> = [
+  { id: "feldvorlage", label: "Feldvorlage" },
+  ...toolGroups.map((group) => ({ id: group.title.toLowerCase(), label: group.title })),
+];
+
 const pointToolTypes = new Set<Tool>([
   "PLAYER_BLUE",
   "PLAYER_RED",
@@ -164,11 +169,59 @@ const pointToolTypes = new Set<Tool>([
 const pathToolTypes = new Set<Tool>(["ARROW", "LINE", "DRIBBLE", "CURVED_ARROW"]);
 const areaToolTypes = new Set<Tool>(["ZONE_RECT", "ZONE_CIRCLE"]);
 
-export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch, initialSketch }: SketchEditorProps) {
+type SketchEditorContextValue = {
+  exerciseId: string;
+  sketchId: string | null;
+  initialTitle: string;
+  pitch: PitchType;
+  elements: SketchElement[];
+  tool: Tool;
+  toolCategory: string;
+  selectedId: string | null;
+  selectedElement: SketchElement | null | undefined;
+  pathStart: { x: number; y: number } | null;
+  sketchData: string;
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  selectPitch: (value: PitchType) => void;
+  selectTool: (value: Tool) => void;
+  setToolCategory: (value: string) => void;
+  handleCanvasPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
+  handlePointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+  handlePointerUp: () => void;
+  handleElementPointerDown: (element: SketchElement, event: PointerEvent<SVGGElement>) => void;
+  undo: () => void;
+  deleteSelected: () => void;
+  duplicateSelected: () => void;
+  editSelectedText: () => void;
+  clearSketch: () => void;
+  downloadSketchImage: () => void;
+};
+
+const SketchEditorContext = createContext<SketchEditorContextValue | null>(null);
+
+function useSketchEditorContext() {
+  const value = useContext(SketchEditorContext);
+
+  if (!value) {
+    throw new Error("SketchToolPanel/SketchCanvasPanel must be used within a SketchEditorProvider");
+  }
+
+  return value;
+}
+
+export function SketchEditorProvider({
+  exerciseId,
+  sketchId,
+  initialTitle,
+  initialPitch,
+  initialSketch,
+  children,
+}: SketchEditorProps & { children: ReactNode }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [pitch, setPitch] = useState<PitchType>(() => normalizePitch(initialSketch?.pitch ?? initialPitch));
   const [elements, setElements] = useState<SketchElement[]>(() => normalizeElements(initialSketch?.elements ?? []));
   const [tool, setTool] = useState<Tool>("SELECT");
+  const [toolCategory, setToolCategory] = useState<string>("feldvorlage");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [pathStart, setPathStart] = useState<{ x: number; y: number } | null>(null);
@@ -196,6 +249,16 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
     pushHistory();
     setElements((currentElements) => [...currentElements, element]);
     setSelectedId(element.id);
+  }
+
+  function selectPitch(value: PitchType) {
+    setPitch(value);
+    setPathStart(null);
+  }
+
+  function selectTool(value: Tool) {
+    setTool(value);
+    setPathStart(null);
   }
 
   function handleCanvasPointerDown(event: PointerEvent<SVGSVGElement>) {
@@ -467,169 +530,237 @@ export function SketchEditor({ exerciseId, sketchId, initialTitle, initialPitch,
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[280px_1fr]">
-      <aside className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">Feldvorlage</p>
-          <div className="mt-3 grid gap-2">
-            {pitchOptions.map((option) => (
-              <button
-                className={`rounded-xl border p-3 text-left transition ${
-                  pitch === option.value
-                    ? "border-blue-500 bg-blue-50 text-blue-950"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
-                }`}
-                key={option.value}
-                onClick={() => {
-                  setPitch(option.value);
-                  setPathStart(null);
-                }}
-                type="button"
-              >
-                <span className="block text-sm font-bold">{option.label}</span>
-                <span className="mt-1 block text-xs text-slate-500">{option.description}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+    <SketchEditorContext.Provider
+      value={{
+        exerciseId,
+        sketchId,
+        initialTitle,
+        pitch,
+        elements,
+        tool,
+        toolCategory,
+        selectedId,
+        selectedElement,
+        pathStart,
+        sketchData,
+        svgRef,
+        selectPitch,
+        selectTool,
+        setToolCategory,
+        handleCanvasPointerDown,
+        handlePointerMove,
+        handlePointerUp,
+        handleElementPointerDown,
+        undo,
+        deleteSelected,
+        duplicateSelected,
+        editSelectedText,
+        clearSketch,
+        downloadSketchImage,
+      }}
+    >
+      {children}
+    </SketchEditorContext.Provider>
+  );
+}
 
-        <div className="space-y-4">
-          {toolGroups.map((group) => (
-            <div key={group.title}>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{group.title}</p>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {group.tools.map((item) => (
-                  <button
-                    className={`min-h-12 rounded-xl border px-3 py-2 text-left text-xs font-semibold transition ${
-                      tool === item.value
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-white"
-                    }`}
-                    key={item.value}
-                    onClick={() => {
-                      setTool(item.value);
-                      setPathStart(null);
-                    }}
-                    title={item.hint}
-                    type="button"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+export function SketchToolPanel() {
+  const { pitch, tool, toolCategory, selectPitch, selectTool, setToolCategory } = useSketchEditorContext();
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="flex flex-wrap gap-1 border-b border-slate-200 pb-2">
+        {categoryTabs.map((tab) => (
+          <button
+            className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
+              toolCategory === tab.id ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+            }`}
+            key={tab.id}
+            onClick={() => setToolCategory(tab.id)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {toolCategory === "feldvorlage" ? (
+        <div className="grid gap-1.5">
+          {pitchOptions.map((option) => (
+            <button
+              className={`rounded-lg border p-2 text-left transition ${
+                pitch === option.value
+                  ? "border-blue-500 bg-blue-50 text-blue-950"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
+              }`}
+              key={option.value}
+              onClick={() => selectPitch(option.value)}
+              type="button"
+            >
+              <span className="block text-sm font-bold">{option.label}</span>
+              <span className="mt-0.5 block text-xs text-slate-500">{option.description}</span>
+            </button>
           ))}
         </div>
-      </aside>
+      ) : (
+        toolGroups
+          .filter((group) => group.title.toLowerCase() === toolCategory)
+          .map((group) => (
+            <div className="grid grid-cols-2 gap-1.5" key={group.title}>
+              {group.tools.map((item) => (
+                <button
+                  className={`min-h-10 rounded-lg border px-2.5 py-1.5 text-left text-xs font-semibold transition ${
+                    tool === item.value
+                      ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-white"
+                  }`}
+                  key={item.value}
+                  onClick={() => selectTool(item.value)}
+                  title={item.hint}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))
+      )}
+    </div>
+  );
+}
 
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div>
-            <p className="text-sm font-bold text-slate-950">Trainingsgrafik</p>
-            <p className="text-sm text-slate-500">
-              {pathStart
-                ? "Zweiten Punkt setzen, um das Element abzuschliessen."
-                : selectedElement
-                  ? `Ausgewaehlt: ${elementLabel(selectedElement.type)}`
-                  : "Werkzeug waehlen, ins Feld klicken und Elemente verschieben."}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={undo} type="button">
-              Rueckgaengig
-            </button>
-            <button
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
-              disabled={!selectedElement}
-              onClick={duplicateSelected}
-              type="button"
-            >
-              Duplizieren
-            </button>
-            <button
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
-              disabled={!selectedElement || !isPointElement(selectedElement)}
-              onClick={editSelectedText}
-              type="button"
-            >
-              Label
-            </button>
-            <button
-              className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40"
-              disabled={!selectedElement}
-              onClick={deleteSelected}
-              type="button"
-            >
-              Loeschen
-            </button>
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={clearSketch} type="button">
-              Leeren
-            </button>
-            <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={downloadSketchImage} type="button">
-              Bild exportieren
-            </button>
-          </div>
+export function SketchCanvasPanel() {
+  const {
+    exerciseId,
+    sketchId,
+    initialTitle,
+    pitch,
+    elements,
+    selectedId,
+    selectedElement,
+    pathStart,
+    sketchData,
+    svgRef,
+    handleCanvasPointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handleElementPointerDown,
+    undo,
+    deleteSelected,
+    duplicateSelected,
+    editSelectedText,
+    clearSketch,
+    downloadSketchImage,
+  } = useSketchEditorContext();
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div>
+          <p className="text-sm font-bold text-slate-950">Trainingsgrafik</p>
+          <p className="text-sm text-slate-500">
+            {pathStart
+              ? "Zweiten Punkt setzen, um das Element abzuschliessen."
+              : selectedElement
+                ? `Ausgewaehlt: ${elementLabel(selectedElement.type)}`
+                : "Werkzeug waehlen, ins Feld klicken und Elemente verschieben."}
+          </p>
         </div>
-
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
-          <svg
-            aria-label="Trainingsskizze Editor"
-            className="block aspect-[4/3] w-full touch-none bg-slate-100"
-            onPointerDown={handleCanvasPointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            ref={svgRef}
-            role="img"
-            viewBox="0 0 100 100"
-          >
-            <defs>
-              <marker id="sketch-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
-                <path d="M0,0 L4,2 L0,4 Z" fill="#0f172a" />
-              </marker>
-              <marker id="sketch-blue-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
-                <path d="M0,0 L4,2 L0,4 Z" fill="#0b63ce" />
-              </marker>
-              <pattern height="8" id="grid-pattern" patternUnits="userSpaceOnUse" width="8">
-                <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" strokeWidth="0.2" />
-              </pattern>
-            </defs>
-
-            <PitchTemplate pitch={pitch} />
-            {pathStart ? <circle cx={pathStart.x} cy={pathStart.y} fill="#0b63ce" r="1.2" /> : null}
-            {elements.map((element) => (
-              <SketchElementView
-                element={element}
-                key={element.id}
-                onPointerDown={(event) => handleElementPointerDown(element, event)}
-                selected={element.id === selectedId}
-              />
-            ))}
-          </svg>
-        </div>
-
-        <form action={updateTrainingExerciseSketch} className="flex flex-wrap justify-end gap-3">
-          <input name="exerciseId" type="hidden" value={exerciseId} />
-          <input name="sketchId" type="hidden" value={sketchId ?? ""} />
-          <input name="pitchType" type="hidden" value={pitch} />
-          <input name="sketchData" type="hidden" value={sketchData} />
-          <label className="mr-auto w-full sm:max-w-xs">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Skizzentitel</span>
-            <input
-              className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              defaultValue={initialTitle}
-              name="title"
-              placeholder="z.B. Phase 1: Aufbau"
-            />
-          </label>
-          <button className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700" type="button" onClick={undo}>
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={undo} type="button">
             Rueckgaengig
           </button>
-          <button className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700" type="submit">
-            Skizze speichern
+          <button
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
+            disabled={!selectedElement}
+            onClick={duplicateSelected}
+            type="button"
+          >
+            Duplizieren
           </button>
-        </form>
-      </section>
-    </div>
+          <button
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 disabled:opacity-40"
+            disabled={!selectedElement || !isPointElement(selectedElement)}
+            onClick={editSelectedText}
+            type="button"
+          >
+            Label
+          </button>
+          <button
+            className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40"
+            disabled={!selectedElement}
+            onClick={deleteSelected}
+            type="button"
+          >
+            Loeschen
+          </button>
+          <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={clearSketch} type="button">
+            Leeren
+          </button>
+          <button className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" onClick={downloadSketchImage} type="button">
+            Bild exportieren
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
+        <svg
+          aria-label="Trainingsskizze Editor"
+          className="block aspect-[4/3] w-full touch-none bg-slate-100"
+          onPointerDown={handleCanvasPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          ref={svgRef}
+          role="img"
+          viewBox="0 0 100 100"
+        >
+          <defs>
+            <marker id="sketch-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
+              <path d="M0,0 L4,2 L0,4 Z" fill="#0f172a" />
+            </marker>
+            <marker id="sketch-blue-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
+              <path d="M0,0 L4,2 L0,4 Z" fill="#0b63ce" />
+            </marker>
+            <pattern height="8" id="grid-pattern" patternUnits="userSpaceOnUse" width="8">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" strokeWidth="0.2" />
+            </pattern>
+          </defs>
+
+          <PitchTemplate pitch={pitch} />
+          {pathStart ? <circle cx={pathStart.x} cy={pathStart.y} fill="#0b63ce" r="1.2" /> : null}
+          {elements.map((element) => (
+            <SketchElementView
+              element={element}
+              key={element.id}
+              onPointerDown={(event) => handleElementPointerDown(element, event)}
+              selected={element.id === selectedId}
+            />
+          ))}
+        </svg>
+      </div>
+
+      <form action={updateTrainingExerciseSketch} className="flex flex-wrap justify-end gap-3">
+        <input name="exerciseId" type="hidden" value={exerciseId} />
+        <input name="sketchId" type="hidden" value={sketchId ?? ""} />
+        <input name="pitchType" type="hidden" value={pitch} />
+        <input name="sketchData" type="hidden" value={sketchData} />
+        <label className="mr-auto w-full sm:max-w-xs">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Skizzentitel</span>
+          <input
+            className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            defaultValue={initialTitle}
+            name="title"
+            placeholder="z.B. Phase 1: Aufbau"
+          />
+        </label>
+        <button className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700" type="button" onClick={undo}>
+          Rueckgaengig
+        </button>
+        <button className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700" type="submit">
+          Skizze speichern
+        </button>
+      </form>
+    </section>
   );
 }
 
