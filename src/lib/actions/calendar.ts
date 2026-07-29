@@ -51,6 +51,86 @@ const createEventSchema = z
     }
   });
 
+const updateEventSchema = z
+  .object({
+    calendarEventId: zRequiredString,
+    title: zRequiredString,
+    description: zOptionalString,
+    location: zOptionalString,
+    opponent: zOptionalString,
+    isHomeGame: zOptionalString,
+    startsAt: zDate,
+    endsAt: zDate,
+  })
+  .check((ctx) => {
+    if (ctx.value.endsAt <= ctx.value.startsAt) {
+      ctx.issues.push({
+        code: "custom",
+        message: "Das Ende muss nach dem Beginn liegen.",
+        path: ["endsAt"],
+        input: ctx.value.endsAt,
+      });
+    }
+  });
+
+export async function updateCalendarEvent(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+
+  if (!hasPermission(context, "calendar.events.manage", activeTeam.id)) {
+    return { error: "Keine Berechtigung, Termine zu bearbeiten." };
+  }
+
+  const parsed = parseForm(formData, updateEventSchema);
+
+  if (!parsed.success) {
+    return parsed.state;
+  }
+
+  const { calendarEventId, title, description, location, opponent, startsAt, endsAt } = parsed.data;
+
+  const event = await prisma.calendarEvent.findFirst({
+    where: {
+      id: calendarEventId,
+      teamId: activeTeam.id,
+    },
+    include: {
+      match: true,
+    },
+  });
+
+  if (!event) {
+    return { error: "Termin wurde nicht gefunden." };
+  }
+
+  if (event.type === "MATCH" && !opponent) {
+    return {
+      error: "Fuer ein Spiel wird ein Gegner benoetigt.",
+      fieldErrors: { opponent: ["Fuer ein Spiel wird ein Gegner benoetigt."] },
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.calendarEvent.update({
+      where: { id: event.id },
+      data: { title, description, location, startsAt, endsAt },
+    });
+
+    if (event.match) {
+      await tx.match.update({
+        where: { id: event.match.id },
+        data: {
+          opponent: opponent ?? event.match.opponent,
+          isHomeGame: parsed.data.isHomeGame !== "false",
+        },
+      });
+    }
+  });
+
+  revalidateCalendar(event.id);
+  redirect(`/kalender/${event.id}`);
+}
+
 export async function createCalendarEvent(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);
@@ -191,6 +271,87 @@ export async function updateEventAttendance(formData: FormData) {
       setByUserId: context.appUser.id,
     },
   });
+
+  revalidateCalendar(event.id);
+}
+
+export async function bulkAcceptEventAttendance(formData: FormData) {
+  const context = await requireAppContext();
+  const calendarEventId = String(formData.get("calendarEventId") ?? "");
+
+  if (!calendarEventId) {
+    redirect("/kalender");
+  }
+
+  const event = await prisma.calendarEvent.findFirst({
+    where: {
+      id: calendarEventId,
+      team: {
+        clubId: context.club.id,
+      },
+    },
+    select: {
+      id: true,
+      teamId: true,
+    },
+  });
+
+  if (!event) {
+    redirect("/kalender");
+  }
+
+  if (!hasPermission(context, "attendance.manage", event.teamId)) {
+    redirect(`/kalender/${event.id}`);
+  }
+
+  const openPlayerIds = formData
+    .getAll("openPlayerProfileId")
+    .map((value) => String(value))
+    .filter(Boolean);
+
+  if (openPlayerIds.length === 0) {
+    return;
+  }
+
+  const players = await prisma.playerProfile.findMany({
+    where: {
+      id: { in: openPlayerIds },
+      clubId: context.club.id,
+      memberships: {
+        some: {
+          teamId: event.teamId,
+          status: "ACTIVE",
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  // Only ever touches players that had no attendance record at page-render time
+  // (guaranteed by the caller passing openPlayerProfileId) - existing decisions
+  // (Zusage/Vielleicht/Absage) are never silently overwritten by the bulk action.
+  await prisma.$transaction(
+    players.map((player) =>
+      prisma.eventAttendance.upsert({
+        where: {
+          calendarEventId_playerProfileId: {
+            calendarEventId: event.id,
+            playerProfileId: player.id,
+          },
+        },
+        create: {
+          calendarEventId: event.id,
+          playerProfileId: player.id,
+          status: "ACCEPTED",
+          setByUserId: context.appUser.id,
+        },
+        update: {
+          status: "ACCEPTED",
+          setByUserId: context.appUser.id,
+        },
+      }),
+    ),
+  );
 
   revalidateCalendar(event.id);
 }

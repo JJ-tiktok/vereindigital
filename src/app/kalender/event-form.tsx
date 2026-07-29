@@ -2,17 +2,37 @@
 
 import { useActionState, useMemo, useState } from "react";
 
-import { createCalendarEvent, type ActionState } from "@/lib/actions";
+import { createCalendarEvent, updateCalendarEvent, type ActionState } from "@/lib/actions";
+import { toDateTimeLocalValue } from "@/lib/format";
 
-export function EventForm({ selectedDate }: { selectedDate?: string }) {
-  const [type, setType] = useState("TRAINING");
+type EditableEvent = {
+  id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  match: { opponent: string; isHomeGame: boolean } | null;
+};
+
+export function EventForm({ selectedDate, event }: { selectedDate?: string; event?: EditableEvent }) {
+  const isEdit = Boolean(event);
+  const [type, setType] = useState(event?.type ?? "TRAINING");
   const [clientError, setClientError] = useState<string | null>(null);
-  const [startValue, setStartValue] = useState(() => `${selectedDate ?? todayInputValue()}T19:00`);
-  const [endValue, setEndValue] = useState(() => `${selectedDate ?? todayInputValue()}T21:00`);
-  const [endTouched, setEndTouched] = useState(false);
+  const [startValue, setStartValue] = useState(() =>
+    event ? toDateTimeLocalValue(event.startsAt) : `${selectedDate ?? todayInputValue()}T19:00`,
+  );
+  const [endValue, setEndValue] = useState(() =>
+    event ? toDateTimeLocalValue(event.endsAt) : `${selectedDate ?? todayInputValue()}T21:00`,
+  );
+  const [endTouched, setEndTouched] = useState(isEdit);
   const defaultStart = useMemo(() => `${selectedDate ?? todayInputValue()}T19:00`, [selectedDate]);
   const defaultEnd = useMemo(() => `${selectedDate ?? todayInputValue()}T21:00`, [selectedDate]);
-  const [state, formAction, isPending] = useActionState<ActionState, FormData>(createCalendarEvent, null);
+  const [state, formAction, isPending] = useActionState<ActionState, FormData>(
+    isEdit ? updateCalendarEvent : createCalendarEvent,
+    null,
+  );
   const fieldError =
     state?.fieldErrors && Object.values(state.fieldErrors).find((messages) => messages.length > 0)?.[0];
   const serverError = state?.error ? (fieldError ?? state.error) : null;
@@ -49,6 +69,7 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
         setClientError(null);
       }}
     >
+      {event ? <input name="calendarEventId" type="hidden" value={event.id} /> : null}
       {clientError || serverError ? (
         <p className="mb-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
           {clientError ?? serverError}
@@ -59,22 +80,36 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
           <label className="text-sm font-semibold text-foreground" htmlFor="type">
             Typ
           </label>
-          <select
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-            id="type"
-            name="type"
-            onChange={(event) => setType(event.target.value)}
-            value={type}
-          >
-            <option value="TRAINING">Training</option>
-            <option value="MATCH">Spiel</option>
-            <option value="TEAM_EVENT">Mannschaftsabend</option>
-            <option value="OTHER">Sonstiges</option>
-          </select>
+          {isEdit ? (
+            <>
+              <input name="type" type="hidden" value={type} />
+              <p className="mt-2 flex h-11 items-center rounded-lg border border-border bg-surface-muted px-3 text-sm text-muted">
+                {typeLabel(type)} <span className="ml-2 text-xs">(nicht aenderbar)</span>
+              </p>
+            </>
+          ) : (
+            <select
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+              id="type"
+              name="type"
+              onChange={(event) => setType(event.target.value)}
+              value={type}
+            >
+              <option value="TRAINING">Training</option>
+              <option value="MATCH">Spiel</option>
+              <option value="TEAM_EVENT">Mannschaftsabend</option>
+              <option value="OTHER">Sonstiges</option>
+            </select>
+          )}
         </div>
-        <Field label="Titel" name="title" required />
-        <Field label="Ort" name="location" />
-        <Field label="Gegner bei Spiel" name="opponent" required={type === "MATCH"} />
+        <Field defaultValue={event?.title} label="Titel" name="title" required />
+        <Field defaultValue={event?.location ?? undefined} label="Ort" name="location" />
+        <Field
+          defaultValue={event?.match?.opponent}
+          label="Gegner bei Spiel"
+          name="opponent"
+          required={type === "MATCH"}
+        />
         <div>
           <label className="text-sm font-semibold text-foreground" htmlFor="startsAt">
             Start
@@ -113,22 +148,34 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
             value={endValue || defaultEnd}
           />
         </div>
-        <div>
-          <label className="text-sm font-semibold text-foreground" htmlFor="isHomeGame">
-            Heim/Auswaerts
-          </label>
-          <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id="isHomeGame" name="isHomeGame">
-            <option value="true">Heimspiel</option>
-            <option value="false">Auswaertsspiel</option>
-          </select>
-        </div>
+        {type === "MATCH" ? (
+          <div>
+            <label className="text-sm font-semibold text-foreground" htmlFor="isHomeGame">
+              Heim/Auswaerts
+            </label>
+            <select
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+              defaultValue={event?.match ? String(event.match.isHomeGame) : "true"}
+              id="isHomeGame"
+              name="isHomeGame"
+            >
+              <option value="true">Heimspiel</option>
+              <option value="false">Auswaertsspiel</option>
+            </select>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5">
         <label className="text-sm font-semibold text-foreground" htmlFor="description">
           Beschreibung
         </label>
-        <textarea className="mt-2 min-h-28 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id="description" name="description" />
+        <textarea
+          className="mt-2 min-h-28 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+          defaultValue={event?.description ?? undefined}
+          id="description"
+          name="description"
+        />
       </div>
 
       <button
@@ -136,10 +183,23 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
         disabled={isPending}
         type="submit"
       >
-        {isPending ? "Wird erstellt..." : "Termin erstellen"}
+        {isPending ? "Wird gespeichert..." : isEdit ? "Aenderungen speichern" : "Termin erstellen"}
       </button>
     </form>
   );
+}
+
+function typeLabel(type: string) {
+  switch (type) {
+    case "TRAINING":
+      return "Training";
+    case "MATCH":
+      return "Spiel";
+    case "TEAM_EVENT":
+      return "Mannschaftsabend";
+    default:
+      return "Sonstiges";
+  }
 }
 
 function addHours(dateTimeLocal: string, hours: number) {
@@ -172,17 +232,25 @@ function Field({
   label,
   name,
   required,
+  defaultValue,
 }: {
   label: string;
   name: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <div>
       <label className="text-sm font-semibold text-foreground" htmlFor={name}>
         {label}
       </label>
-      <input className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id={name} name={name} required={required} />
+      <input
+        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+        defaultValue={defaultValue}
+        id={name}
+        name={name}
+        required={required}
+      />
     </div>
   );
 }

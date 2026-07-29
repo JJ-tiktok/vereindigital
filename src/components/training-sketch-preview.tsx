@@ -10,12 +10,11 @@ type PointTool =
   | "CONE"
   | "PYLON"
   | "DUMMY"
-  | "GOAL"
-  | "MINI_GOAL"
   | "TACTIC_CIRCLE"
   | "TACTIC_TRIANGLE"
   | "TEXT";
-type PathTool = "ARROW" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
+type GoalTool = "GOAL" | "MINI_GOAL";
+type PathTool = "ARROW" | "SHOT" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
 type AreaTool = "ZONE_RECT" | "ZONE_CIRCLE";
 
 type PointElement = {
@@ -44,7 +43,21 @@ type AreaElement = {
   height: number;
 };
 
-type SketchElement = PointElement | PathElement | AreaElement;
+type GoalElement = {
+  id: string;
+  type: GoalTool;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type SketchElement = PointElement | PathElement | AreaElement | GoalElement;
+
+const goalDefaults: Record<GoalTool, { width: number; height: number }> = {
+  GOAL: { width: 7, height: 5 },
+  MINI_GOAL: { width: 5, height: 3.5 },
+};
 
 const pitchTypes = new Set<PitchType>(["FULL_FIELD", "HALF_FIELD", "PENALTY_AREA", "SMALL_FIELD", "FREE_AREA"]);
 const pointTypes = new Set<string>([
@@ -56,14 +69,13 @@ const pointTypes = new Set<string>([
   "CONE",
   "PYLON",
   "DUMMY",
-  "GOAL",
-  "MINI_GOAL",
   "TACTIC_CIRCLE",
   "TACTIC_TRIANGLE",
   "TEXT",
 ]);
-const pathTypes = new Set<string>(["ARROW", "LINE", "DRIBBLE", "CURVED_ARROW"]);
+const pathTypes = new Set<string>(["ARROW", "SHOT", "LINE", "DRIBBLE", "CURVED_ARROW"]);
 const areaTypes = new Set<string>(["ZONE_RECT", "ZONE_CIRCLE"]);
+const goalTypes = new Set<string>(["GOAL", "MINI_GOAL"]);
 
 export function TrainingSketchPreview({
   sketchData,
@@ -88,6 +100,9 @@ export function TrainingSketchPreview({
         <defs>
           <marker id="preview-arrow" markerHeight="4" markerWidth="4" orient="auto" refX="3" refY="2" viewBox="0 0 4 4">
             <path d="M0,0 L4,2 L0,4 Z" fill="#0f172a" />
+          </marker>
+          <marker id="preview-arrow-shot" markerHeight="5" markerWidth="5" orient="auto" refX="3.6" refY="2.5" viewBox="0 0 5 5">
+            <path d="M0,0 L5,2.5 L0,5 Z" fill="#dc2626" />
           </marker>
           <pattern height="8" id="preview-grid" patternUnits="userSpaceOnUse" width="8">
             <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#cbd5e1" strokeWidth="0.2" />
@@ -158,6 +173,25 @@ function normalizeElements(elements: unknown[]): SketchElement[] {
       };
     }
 
+    if (goalTypes.has(type) && hasNumber(value, "x") && hasNumber(value, "y")) {
+      // Older saved sketches stored GOAL/MINI_GOAL as a fixed-size point (x/y only) -
+      // fall back to the default size and re-center it on the saved point.
+      const goalType = type as GoalTool;
+      const defaults = goalDefaults[goalType];
+      const hasSize = hasNumber(value, "width") && hasNumber(value, "height");
+      const width = hasSize ? Number(value.width) : defaults.width;
+      const height = hasSize ? Number(value.height) : defaults.height;
+
+      return {
+        id,
+        type: goalType,
+        x: hasSize ? Number(value.x) : Number(value.x) - width / 2,
+        y: hasSize ? Number(value.y) : Number(value.y) - height / 2,
+        width,
+        height,
+      };
+    }
+
     if (pointTypes.has(type) && hasNumber(value, "x") && hasNumber(value, "y")) {
       return {
         id,
@@ -204,7 +238,7 @@ function PitchTemplate({ pitch }: { pitch: PitchType }) {
         <rect fill="none" height="23" stroke="#fff" strokeWidth="0.75" width="52" x="24" y="9" />
         <rect fill="none" height="10" stroke="#fff" strokeWidth="0.75" width="24" x="38" y="9" />
         <path d="M37 32 A13 13 0 0 0 63 32" fill="none" stroke="#fff" strokeWidth="0.75" />
-        <circle cx="50" cy="50" fill="none" r="8.5" stroke="#fff" strokeWidth="0.75" />
+        <path d="M38 91 A12 12 0 0 1 62 91" fill="none" stroke="#fff" strokeWidth="0.75" />
       </FieldBase>
     );
   }
@@ -250,16 +284,31 @@ function FieldBase({ children }: { children: ReactNode }) {
 
 function PreviewElement({ element }: { element: SketchElement }) {
   if (isPathElement(element)) {
+    const isShot = element.type === "SHOT";
     return (
       <path
         d={pathData(element)}
         fill="none"
-        markerEnd={element.type === "LINE" ? undefined : "url(#preview-arrow)"}
-        stroke={element.type === "DRIBBLE" ? "#f97316" : "#0f172a"}
+        markerEnd={element.type === "LINE" ? undefined : isShot ? "url(#preview-arrow-shot)" : "url(#preview-arrow)"}
+        stroke={element.type === "DRIBBLE" ? "#f97316" : isShot ? "#dc2626" : "#0f172a"}
         strokeDasharray={element.type === "DRIBBLE" ? "1.3 1" : undefined}
         strokeLinecap="round"
-        strokeWidth="1.1"
+        strokeWidth={isShot ? "1.7" : "1.1"}
       />
+    );
+  }
+
+  if (isGoalElement(element)) {
+    const postWidth = Math.max(0.3, 0.05 * Math.min(element.width, element.height));
+    return (
+      <g>
+        <rect fill="#f8fafc" height={element.height} stroke="#334155" strokeWidth={postWidth} width={element.width} x={element.x} y={element.y} />
+        <path
+          d={`M${element.x + element.width * 0.07} ${element.y} V${element.y + element.height} M${element.x + element.width / 2} ${element.y} V${element.y + element.height} M${element.x + element.width * 0.93} ${element.y} V${element.y + element.height} M${element.x} ${element.y + element.height / 2} H${element.x + element.width}`}
+          stroke="#cbd5e1"
+          strokeWidth={postWidth * 0.5}
+        />
+      </g>
     );
   }
 
@@ -305,13 +354,6 @@ function PointSymbol({ element }: { element: PointElement }) {
         <path d="M-1.2 -1.2 Q0 -2 1.2 -1.2 L1.55 3 H-1.55 Z" fill="#f97316" stroke="#111827" strokeWidth="0.25" />
       </g>
     );
-  }
-
-  if (element.type === "GOAL" || element.type === "MINI_GOAL") {
-    const width = element.type === "GOAL" ? 10 : 7;
-    const height = element.type === "GOAL" ? 5 : 3.5;
-
-    return <rect fill="#f8fafc" height={height} stroke="#334155" strokeWidth="0.5" width={width} x={-width / 2} y={-height / 2} />;
   }
 
   if (element.type === "TACTIC_CIRCLE") {
@@ -395,6 +437,10 @@ function isPathElement(element: SketchElement): element is PathElement {
 
 function isAreaElement(element: SketchElement): element is AreaElement {
   return areaTypes.has(element.type);
+}
+
+function isGoalElement(element: SketchElement): element is GoalElement {
+  return goalTypes.has(element.type);
 }
 
 function normalizePitch(value: string): PitchType {

@@ -176,6 +176,25 @@ enum TacticPhase {
   DEFENSE
 }
 
+enum ScoutingStatus {
+  WATCHING
+  CONTACTED
+  TRIAL
+  OFFER_MADE
+  SIGNED
+  REJECTED
+  ARCHIVED
+}
+
+enum ScoutingEventType {
+  PHONE_CALL
+  MATCH_OBSERVED
+  TRAINING_TRIAL
+  MEETING
+  VIDEO_REVIEW
+  OTHER
+}
+
 model Club {
   id        String   @id @default(cuid())
   name      String
@@ -194,6 +213,7 @@ model Club {
   importJobs        ImportJob[]
   feedbackItems     FeedbackItem[]
   tactics           Tactic[]
+  scoutingProspects ScoutingProspect[]
 
   @@map("clubs")
 }
@@ -269,6 +289,10 @@ model User {
   importJobsCreated ImportJob[] @relation("ImportJobCreatedBy")
   feedbackItemsCreated FeedbackItem[] @relation("FeedbackItemCreatedBy")
   tacticsCreated    Tactic[] @relation("TacticCreatedBy")
+  scoutingProspectsCreated ScoutingProspect[] @relation("ScoutingProspectCreatedBy")
+  scoutingEventsCreated ScoutingEvent[] @relation("ScoutingEventCreatedBy")
+  scoutingEventsUpdated ScoutingEvent[] @relation("ScoutingEventUpdatedBy")
+  scoutingAttributeSnapshotsCreated ScoutingAttributeSnapshot[] @relation("ScoutingAttributeSnapshotCreatedBy")
 
   @@index([email])
   @@map("users")
@@ -297,6 +321,7 @@ model PlayerProfile {
   fileEntries   PlayerFileEntry[]
   trainingPerformances PlayerTrainingPerformance[]
   tacticSlots   TacticSlot[]
+  scoutedFrom   ScoutingProspect?
 
   @@index([clubId])
   @@index([userId])
@@ -437,6 +462,7 @@ model CalendarEvent {
   match         Match?
   trainingPlan  TrainingPlan?
   trainingPerformances PlayerTrainingPerformance[]
+  scoutingEvents ScoutingEvent[]
 
   @@index([teamId, startsAt])
   @@index([type])
@@ -537,6 +563,7 @@ model PlayerAttributeDefinition {
 
   club    Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   ratings PlayerAttributeRating[]
+  scoutingRatings ScoutingAttributeRating[]
 
   @@unique([clubId, key])
   @@index([clubId, category])
@@ -843,6 +870,92 @@ model TacticSlot {
   @@index([tacticId])
   @@index([playerProfileId])
   @@map("tactic_slots")
+}
+
+model ScoutingProspect {
+  id                       String         @id @default(cuid())
+  clubId                   String
+  firstName                String
+  lastName                 String
+  birthDate                DateTime?
+  position                 String?
+  currentClub              String?
+  phone                    String?
+  email                    String?
+  source                   String?
+  interestLevel            Int?
+  status                   ScoutingStatus @default(WATCHING)
+  notes                    String?
+  convertedPlayerProfileId String?        @unique
+  createdByUserId          String?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  club                   Club                        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdByUser          User?                       @relation("ScoutingProspectCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  convertedPlayerProfile PlayerProfile?              @relation(fields: [convertedPlayerProfileId], references: [id], onDelete: SetNull)
+  events                 ScoutingEvent[]
+  attributeSnapshots     ScoutingAttributeSnapshot[]
+
+  @@index([clubId, status])
+  @@map("scouting_prospects")
+}
+
+model ScoutingEvent {
+  id              String            @id @default(cuid())
+  prospectId      String
+  type            ScoutingEventType
+  title           String
+  body            String
+  occurredAt      DateTime
+  followUpAt      DateTime?
+  calendarEventId String?
+  createdByUserId String?
+  updatedByUserId String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  prospect      ScoutingProspect @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  calendarEvent CalendarEvent?   @relation(fields: [calendarEventId], references: [id], onDelete: SetNull)
+  createdByUser User?            @relation("ScoutingEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser User?            @relation("ScoutingEventUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([prospectId, occurredAt])
+  @@index([calendarEventId])
+  @@map("scouting_events")
+}
+
+model ScoutingAttributeSnapshot {
+  id              String   @id @default(cuid())
+  prospectId      String
+  title           String
+  notes           String?
+  ratedAt         DateTime @default(now())
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  prospect      ScoutingProspect          @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  createdByUser User?                     @relation("ScoutingAttributeSnapshotCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  ratings       ScoutingAttributeRating[]
+
+  @@index([prospectId, ratedAt])
+  @@map("scouting_attribute_snapshots")
+}
+
+model ScoutingAttributeRating {
+  id                    String  @id @default(cuid())
+  snapshotId            String
+  attributeDefinitionId String
+  value                 Int
+  note                  String?
+
+  snapshot            ScoutingAttributeSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  attributeDefinition PlayerAttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, attributeDefinitionId])
+  @@index([attributeDefinitionId])
+  @@map("scouting_attribute_ratings")
 }
 
 model TacticArrow {

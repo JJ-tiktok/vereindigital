@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Binoculars,
   CalendarDays,
   CalendarRange,
   ClipboardList,
@@ -30,6 +31,7 @@ const primaryNavItems = [
   { label: "Training", href: "/training", icon: Dumbbell },
   { label: "Taktik", href: "/taktik", icon: LayoutGrid },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
+  { label: "Scouting", href: "/scouting", icon: Binoculars },
 ];
 
 const managementNavItems = [

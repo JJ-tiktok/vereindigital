@@ -1,4 +1,4 @@
-import { Clock, Copy, Edit, Flag, PencilRuler, Users } from "lucide-react";
+import { Clock, Copy, Edit, Flag, PencilRuler, Printer, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -70,6 +70,13 @@ export default async function TrainingExerciseDetailPage({
             >
               <PencilRuler className="size-4" aria-hidden="true" />
               Skizze
+            </Link>
+            <Link
+              className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
+              href={`/training/${exercise.id}/druck`}
+            >
+              <Printer className="size-4" aria-hidden="true" />
+              Drucken
             </Link>
             <Link
               className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white"

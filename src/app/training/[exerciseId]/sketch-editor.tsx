@@ -34,15 +34,14 @@ type PointTool =
   | "CONE"
   | "PYLON"
   | "DUMMY"
-  | "GOAL"
-  | "MINI_GOAL"
   | "TACTIC_CIRCLE"
   | "TACTIC_TRIANGLE"
   | "TEXT";
 
-type PathTool = "ARROW" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
+type GoalTool = "GOAL" | "MINI_GOAL";
+type PathTool = "ARROW" | "SHOT" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
 type AreaTool = "ZONE_RECT" | "ZONE_CIRCLE";
-type Tool = PointTool | PathTool | AreaTool | "SELECT";
+type Tool = PointTool | GoalTool | PathTool | AreaTool | "SELECT";
 
 type BaseElement = {
   id: string;
@@ -72,7 +71,20 @@ type AreaElement = BaseElement & {
   height: number;
 };
 
-type SketchElement = PointElement | PathElement | AreaElement;
+type GoalElement = BaseElement & {
+  type: GoalTool;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type SketchElement = PointElement | PathElement | AreaElement | GoalElement;
+
+const goalDefaults: Record<GoalTool, { width: number; height: number }> = {
+  GOAL: { width: 7, height: 5 },
+  MINI_GOAL: { width: 5, height: 3.5 },
+};
 
 type SketchData = {
   pitch: string;
@@ -119,8 +131,8 @@ const toolGroups: Array<{
       { value: "CONE", label: "Huetchen", hint: "Flaches Huetchen platzieren" },
       { value: "PYLON", label: "Pylon", hint: "Pylon platzieren" },
       { value: "DUMMY", label: "Dummy", hint: "Trainingsdummy platzieren" },
-      { value: "GOAL", label: "Tor", hint: "Grosses Tor platzieren" },
-      { value: "MINI_GOAL", label: "Minitor", hint: "Minitor platzieren" },
+      { value: "GOAL", label: "Tor", hint: "Grosses Tor platzieren, per Eckpunkt in der Groesse anpassbar" },
+      { value: "MINI_GOAL", label: "Minitor", hint: "Minitor platzieren, per Eckpunkt in der Groesse anpassbar" },
     ],
   },
   {
@@ -136,6 +148,7 @@ const toolGroups: Array<{
     title: "Ablauf",
     tools: [
       { value: "ARROW", label: "Pfeil", hint: "Ziehen fuer Lauf-/Passweg, Vorschau live sichtbar" },
+      { value: "SHOT", label: "Torschuss", hint: "Ziehen fuer einen Torschuss, kraeftiger roter Pfeil" },
       { value: "LINE", label: "Linie", hint: "Gerade Verbindung ziehen" },
       { value: "DRIBBLE", label: "Dribbling", hint: "Gewellte Linie ziehen" },
       { value: "CURVED_ARROW", label: "Bogen", hint: "Gebogenen Laufweg ziehen" },
@@ -158,14 +171,13 @@ const pointToolTypes = new Set<Tool>([
   "CONE",
   "PYLON",
   "DUMMY",
-  "GOAL",
-  "MINI_GOAL",
   "TACTIC_CIRCLE",
   "TACTIC_TRIANGLE",
   "TEXT",
 ]);
-const pathToolTypes = new Set<Tool>(["ARROW", "LINE", "DRIBBLE", "CURVED_ARROW"]);
+const pathToolTypes = new Set<Tool>(["ARROW", "SHOT", "LINE", "DRIBBLE", "CURVED_ARROW"]);
 const areaToolTypes = new Set<Tool>(["ZONE_RECT", "ZONE_CIRCLE"]);
+const goalToolTypes = new Set<Tool>(["GOAL", "MINI_GOAL"]);
 
 type SketchEditorContextValue = {
   exerciseId: string;
@@ -516,7 +528,7 @@ export function SketchCanvasPanel() {
     const selected = elements.find((element) => element.id === selectedId);
     const node = selectedId ? shapeRefs.current[selectedId] : null;
 
-    if (node && selected && isAreaElement(selected)) {
+    if (node && selected && isResizableElement(selected)) {
       transformer.nodes([node]);
     } else {
       transformer.nodes([]);
@@ -609,6 +621,19 @@ export function SketchCanvasPanel() {
         y: clamp(point.y - 7, 2, 84),
         width: tool === "ZONE_RECT" ? 20 : 16,
         height: tool === "ZONE_RECT" ? 14 : 16,
+      });
+      return;
+    }
+
+    if (goalToolTypes.has(tool)) {
+      const { width, height } = goalDefaults[tool as GoalTool];
+      addElement({
+        id: createId(),
+        type: tool as GoalTool,
+        x: clamp(point.x - width / 2, 1, 99 - width),
+        y: clamp(point.y - height / 2, 1, 99 - height),
+        width,
+        height,
       });
       return;
     }
@@ -851,9 +876,11 @@ function ElementNode({
     const dx = toStageX(element.x2) - x1px;
     const dy = toStageY(element.y2) - y1px;
     const points = pathPoints(element.type, dx, dy, unitScale);
-    const stroke = element.type === "DRIBBLE" ? "#f97316" : element.type === "LINE" ? "#334155" : "#0f172a";
+    const stroke =
+      element.type === "DRIBBLE" ? "#f97316" : element.type === "LINE" ? "#334155" : element.type === "SHOT" ? "#dc2626" : "#0f172a";
     const showArrowHead = element.type !== "LINE";
-    const strokeWidth = Math.max(1, 0.7 * unitScale);
+    const strokeWidth = element.type === "SHOT" ? Math.max(1.6, 1.2 * unitScale) : Math.max(1, 0.7 * unitScale);
+    const arrowHeadSize = element.type === "SHOT" ? Math.max(7, 4.2 * unitScale) : Math.max(5, 3 * unitScale);
     const hitStrokeWidth = Math.max(18, 6 * unitScale);
 
     return (
@@ -885,8 +912,8 @@ function ElementNode({
           lineCap="round"
           listening={false}
           points={points}
-          pointerLength={showArrowHead ? Math.max(5, 3 * unitScale) : 0}
-          pointerWidth={showArrowHead ? Math.max(5, 3 * unitScale) : 0}
+          pointerLength={showArrowHead ? arrowHeadSize : 0}
+          pointerWidth={showArrowHead ? arrowHeadSize : 0}
           stroke={stroke}
           strokeWidth={strokeWidth}
           tension={element.type === "CURVED_ARROW" ? 0.5 : 0}
@@ -951,6 +978,49 @@ function ElementNode({
   const yPx = toStageY(element.y);
   const widthPx = toStageX(element.width);
   const heightPx = toStageY(element.height);
+
+  if (isGoalElement(element)) {
+    const postWidth = Math.max(1, 0.05 * Math.min(widthPx, heightPx));
+
+    return (
+      <Group
+        draggable
+        onClick={onSelect}
+        onDragEnd={(event) => onDragEnd({ x: toPercentX(event.target.x()), y: toPercentY(event.target.y()) })}
+        onDragStart={onSelect}
+        onMouseEnter={() => onHover(true)}
+        onMouseLeave={() => onHover(false)}
+        onTap={onSelect}
+        onTransformEnd={(event) => {
+          const node = event.target;
+          const newWidthPx = widthPx * node.scaleX();
+          const newHeightPx = heightPx * node.scaleY();
+          node.scaleX(1);
+          node.scaleY(1);
+          onTransformEnd({
+            x: toPercentX(node.x()),
+            y: toPercentY(node.y()),
+            width: clamp(toPercentX(newWidthPx), 2, 100),
+            height: clamp(toPercentY(newHeightPx), 2, 100),
+          });
+        }}
+        ref={registerRef}
+        x={xPx}
+        y={yPx}
+      >
+        <Rect fill="#f8fafc" height={heightPx} stroke="#334155" strokeWidth={postWidth} width={widthPx} />
+        <Path
+          data={`M${widthPx * 0.07} 0 V${heightPx} M${widthPx / 2} 0 V${heightPx} M${widthPx * 0.93} 0 V${heightPx} M0 ${heightPx / 2} H${widthPx}`}
+          stroke="#cbd5e1"
+          strokeWidth={postWidth * 0.5}
+        />
+        {selected ? (
+          <Rect dash={[3, 3]} fill="transparent" height={heightPx} listening={false} stroke="#0b63ce" strokeWidth={Math.max(1, 0.35 * unitScale)} width={widthPx} />
+        ) : null}
+      </Group>
+    );
+  }
+
   const isCircle = element.type === "ZONE_CIRCLE";
   const fill = isCircle ? "#f9731622" : "#0b63ce22";
   const stroke = isCircle ? "#f97316" : "#0b63ce";
@@ -1025,18 +1095,19 @@ function PreviewPath({
   const dy = toStageY(end.y) - y1px;
   const points = pathPoints(type, dx, dy, unitScale);
   const showArrowHead = type !== "LINE";
+  const color = type === "SHOT" ? "#dc2626" : "#0b63ce";
 
   return (
     <Arrow
       dash={type === "DRIBBLE" ? [1.1 * unitScale, 0.9 * unitScale] : [2, 2]}
-      fill="#0b63ce"
+      fill={color}
       lineCap="round"
       listening={false}
       opacity={0.6}
       points={points}
       pointerLength={showArrowHead ? Math.max(5, 3 * unitScale) : 0}
       pointerWidth={showArrowHead ? Math.max(5, 3 * unitScale) : 0}
-      stroke="#0b63ce"
+      stroke={color}
       strokeWidth={Math.max(1, 0.9 * unitScale)}
       tension={type === "CURVED_ARROW" ? 0.5 : 0}
       x={x1px}
@@ -1104,22 +1175,6 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
         <Circle fill="#f97316" radius={1} x={0} y={-2.3} />
         <Path data="M-1.1 -1.3 Q0 -2 1.1 -1.3 L1.6 2.9 L-1.6 2.9 Z" fill="#f97316" stroke="#111827" strokeWidth={0.2} />
       </>
-    );
-  }
-
-  if (element.type === "GOAL" || element.type === "MINI_GOAL") {
-    const width = element.type === "GOAL" ? 10 : 7;
-    const height = element.type === "GOAL" ? 5 : 3.5;
-
-    return (
-      <Group x={-width / 2} y={-height / 2}>
-        <Rect fill="#f8fafc" height={height} stroke="#334155" strokeWidth={0.45} width={width} />
-        <Path
-          data={`M1 0 V${height} M${width / 2} 0 V${height} M${width - 1} 0 V${height} M0 ${height / 2} H${width}`}
-          stroke="#cbd5e1"
-          strokeWidth={0.25}
-        />
-      </Group>
     );
   }
 
@@ -1211,14 +1266,18 @@ function pitchSvgMarkup(pitch: PitchType): string {
       <path d="M63 14 V10 H87 V14" fill="none" stroke="#fff" stroke-width="0.65" />
     `;
   } else if (pitch === "HALF_FIELD") {
+    // The centre circle only ever shows as a half-circle sitting ON the halfway line
+    // (y=91), bulging up into the field - not a full circle floating mid-height, which
+    // used to overlap the penalty box's D-arc (box bottom edge at y=32, D bulges down
+    // to y=51.5; a circle centred at y=50 collided with that).
     inner = `${fieldStripesMarkup()}
       <rect fill="none" width="132" height="82" x="9" y="9" stroke="#fff" stroke-width="0.65" />
       <line x1="9" x2="141" y1="91" y2="91" stroke="#fff" stroke-width="0.65" />
       <rect fill="none" width="78" height="23" x="36" y="9" stroke="#fff" stroke-width="0.65" />
       <rect fill="none" width="36" height="10" x="57" y="9" stroke="#fff" stroke-width="0.65" />
       <path d="M55.5 32 A19.5 19.5 0 0 0 94.5 32" fill="none" stroke="#fff" stroke-width="0.65" />
-      <circle cx="75" cy="50" r="8.5" fill="none" stroke="#fff" stroke-width="0.65" />
-      <circle cx="75" cy="50" r="0.55" fill="#fff" />
+      <path d="M61 91 A14 14 0 0 1 89 91" fill="none" stroke="#fff" stroke-width="0.65" />
+      <circle cx="75" cy="91" r="0.55" fill="#fff" />
       <path d="M63 9 V5 H87 V9" fill="none" stroke="#fff" stroke-width="0.65" />
     `;
   } else if (pitch === "SMALL_FIELD") {
@@ -1287,6 +1346,26 @@ function normalizeElements(elements: unknown[]): SketchElement[] {
       };
     }
 
+    if (goalToolTypes.has(value.type as Tool) && hasNumber(value, "x") && hasNumber(value, "y")) {
+      // Older saved sketches stored GOAL/MINI_GOAL as a fixed-size point (x/y only, no
+      // width/height) - fall back to the type's default size and re-center that box on
+      // the saved point so existing sketches keep rendering in the same spot.
+      const goalType = value.type as GoalTool;
+      const defaults = goalDefaults[goalType];
+      const hasSize = hasNumber(value, "width") && hasNumber(value, "height");
+      const width = hasSize ? Number(value.width) : defaults.width;
+      const height = hasSize ? Number(value.height) : defaults.height;
+
+      return {
+        id: value.id,
+        type: goalType,
+        x: hasSize ? Number(value.x) : clamp(Number(value.x) - width / 2, 0, 100 - width),
+        y: hasSize ? Number(value.y) : clamp(Number(value.y) - height / 2, 0, 100 - height),
+        width,
+        height,
+      };
+    }
+
     if (pointToolTypes.has(value.type as Tool) && hasNumber(value, "x") && hasNumber(value, "y")) {
       return {
         id: value.id,
@@ -1315,7 +1394,7 @@ function duplicateElement(element: SketchElement): SketchElement {
     };
   }
 
-  if (isAreaElement(element)) {
+  if (isAreaElement(element) || isGoalElement(element)) {
     return {
       ...element,
       id: createId(),
@@ -1361,6 +1440,14 @@ function isPathElement(element: SketchElement): element is PathElement {
 
 function isAreaElement(element: SketchElement): element is AreaElement {
   return areaToolTypes.has(element.type);
+}
+
+function isGoalElement(element: SketchElement): element is GoalElement {
+  return goalToolTypes.has(element.type);
+}
+
+function isResizableElement(element: SketchElement): element is AreaElement | GoalElement {
+  return isAreaElement(element) || isGoalElement(element);
 }
 
 function hasNumber(value: object, key: string) {
