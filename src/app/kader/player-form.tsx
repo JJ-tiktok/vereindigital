@@ -27,11 +27,11 @@ export function PlayerForm({
   );
 
   return (
-    <form action={formAction} className={embedded ? "" : "max-w-2xl rounded-lg border border-border bg-white p-6"}>
+    <form action={formAction} className={embedded ? "" : "max-w-2xl rounded-lg border border-border bg-surface p-6"}>
       {player ? <input name="playerId" type="hidden" value={player.id} /> : null}
 
       {state?.error ? (
-        <p className="mb-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{state.error}</p>
+        <p className="mb-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">{state.error}</p>
       ) : null}
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -48,11 +48,11 @@ export function PlayerForm({
           name="lastName"
         />
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="jerseyNumber">
+          <label className="text-sm font-semibold text-foreground" htmlFor="jerseyNumber">
             Rueckennummer
           </label>
           <input
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             defaultValue={player?.jerseyNumber ?? ""}
             id="jerseyNumber"
             min={1}
@@ -61,11 +61,11 @@ export function PlayerForm({
           />
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="birthDate">
+          <label className="text-sm font-semibold text-foreground" htmlFor="birthDate">
             Geburtsdatum
           </label>
           <input
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             defaultValue={player?.birthDate ? toDateTimeLocalValue(player.birthDate).slice(0, 10) : undefined}
             id="birthDate"
             name="birthDate"
@@ -73,15 +73,15 @@ export function PlayerForm({
             type="date"
           />
           {state?.fieldErrors?.birthDate?.[0] ? (
-            <p className="mt-1 text-xs font-semibold text-rose-700">{state.fieldErrors.birthDate[0]}</p>
+            <p className="mt-1 text-xs font-semibold text-danger">{state.fieldErrors.birthDate[0]}</p>
           ) : null}
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="position">
+          <label className="text-sm font-semibold text-foreground" htmlFor="position">
             Position
           </label>
           <select
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             defaultValue={player?.position ?? "ST"}
             id="position"
             name="position"
@@ -119,17 +119,17 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-slate-800" htmlFor={name}>
+      <label className="text-sm font-semibold text-foreground" htmlFor={name}>
         {label}
       </label>
       <input
-        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
         defaultValue={defaultValue}
         id={name}
         name={name}
         required
       />
-      {error ? <p className="mt-1 text-xs font-semibold text-rose-700">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs font-semibold text-danger">{error}</p> : null}
     </div>
   );
 }

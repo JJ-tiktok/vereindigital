@@ -24,11 +24,11 @@ export default async function ImportsPage() {
       <PageHeader
         action={
           <>
-            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-800" href="/importe/kader">
+            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" href="/importe/kader">
               <FileSpreadsheet className="size-4" aria-hidden="true" />
               Kader importieren
             </Link>
-            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-800" href="/importe/spielplan">
+            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" href="/importe/spielplan">
               <CalendarRange className="size-4" aria-hidden="true" />
               Spielplan importieren
             </Link>
@@ -65,14 +65,14 @@ export default async function ImportsPage() {
       </section>
 
       <section className="pb-6">
-        <h2 className="text-xl font-bold text-slate-950">Letzte Importjobs</h2>
+        <h2 className="text-xl font-bold text-foreground">Letzte Importjobs</h2>
         {jobs.length > 0 ? (
-          <div className="mt-4 overflow-hidden rounded-lg border border-border bg-white">
+          <div className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
             <div className="divide-y divide-border">
               {jobs.map((job) => (
-                <Link className="grid gap-3 p-5 transition hover:bg-slate-50 md:grid-cols-[1fr_160px_180px_140px]" href={`/importe/${job.id}`} key={job.id}>
+                <Link className="grid gap-3 p-5 transition hover:bg-surface-muted md:grid-cols-[1fr_160px_180px_140px]" href={`/importe/${job.id}`} key={job.id}>
                   <div>
-                    <p className="font-semibold text-slate-950">{jobTypeLabel(job.type)}</p>
+                    <p className="font-semibold text-foreground">{jobTypeLabel(job.type)}</p>
                     <p className="mt-1 text-sm text-muted">{job.sourceUrl ?? job.fileName ?? sourceTypeLabel(job.sourceType)}</p>
                   </div>
                   <p className="text-sm text-muted">{sourceTypeLabel(job.sourceType)}</p>
@@ -105,12 +105,12 @@ function ImportCard({
   title: string;
 }) {
   return (
-    <Link className="group rounded-lg border border-border bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-sm" href={href}>
+    <Link className="group rounded-lg border border-border bg-surface p-6 transition hover:-translate-y-0.5 hover:shadow-sm" href={href}>
       <div className="flex items-start justify-between gap-4">
-        <span className="flex size-11 items-center justify-center rounded-lg bg-blue-50 text-primary">{icon}</span>
+        <span className="flex size-11 items-center justify-center rounded-lg bg-primary-soft text-primary">{icon}</span>
         <ArrowRight className="size-5 text-muted transition group-hover:translate-x-1 group-hover:text-primary" aria-hidden="true" />
       </div>
-      <h2 className="mt-6 text-2xl font-bold text-slate-950">{title}</h2>
+      <h2 className="mt-6 text-2xl font-bold text-foreground">{title}</h2>
       <p className="mt-3 text-sm leading-6 text-muted">{description}</p>
     </Link>
   );
@@ -145,12 +145,12 @@ function statusLabel(value: string) {
 
 function statusClass(value: string) {
   if (value === "CONFIRMED") {
-    return "bg-emerald-50 text-emerald-700";
+    return "bg-success-soft text-success";
   }
 
   if (value === "FAILED") {
-    return "bg-rose-50 text-rose-700";
+    return "bg-danger-soft text-danger";
   }
 
-  return "bg-blue-50 text-primary";
+  return "bg-primary-soft text-primary";
 }

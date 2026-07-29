@@ -9,9 +9,57 @@
   --muted: #64748b;
   --primary: #3b82f6;
   --primary-strong: #0058be;
+  --primary-soft: #eff6ff;
   --success: #10b981;
+  --success-soft: #ecfdf5;
   --warning: #f59e0b;
+  --warning-soft: #fffbeb;
   --danger: #ef4444;
+  --danger-soft: #fef2f2;
+  --danger-strong: #dc2626;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0b1220;
+    --foreground: #e5eaf2;
+    --surface: #111a2b;
+    --surface-muted: #1a2537;
+    --border: #26334a;
+    --muted: #8b98ad;
+    --primary: #5b9bf7;
+    --primary-strong: #79b1ff;
+    --primary-soft: #16283f;
+    --success: #34d399;
+    --success-soft: #113328;
+    --warning: #fbbf24;
+    --warning-soft: #3a2c0e;
+    --danger: #f87171;
+    --danger-soft: #3a1620;
+    --danger-strong: #ef4444;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #0b1220;
+  --foreground: #e5eaf2;
+  --surface: #111a2b;
+  --surface-muted: #1a2537;
+  --border: #26334a;
+  --muted: #8b98ad;
+  --primary: #5b9bf7;
+  --primary-strong: #79b1ff;
+  --primary-soft: #16283f;
+  --success: #34d399;
+  --success-soft: #113328;
+  --warning: #fbbf24;
+  --warning-soft: #3a2c0e;
+  --danger: #f87171;
+  --danger-soft: #3a1620;
+  --danger-strong: #ef4444;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -23,9 +71,14 @@
   --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
   --font-sans: var(--font-lexend);
 }
 
@@ -33,10 +86,15 @@
   box-sizing: border-box;
 }
 
+html {
+  background: var(--background);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-lexend), Arial, Helvetica, sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 button,

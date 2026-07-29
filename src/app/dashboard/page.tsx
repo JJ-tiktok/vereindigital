@@ -172,13 +172,13 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-4 border-b border-border pb-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase text-primary">Performance Dashboard</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-normal text-slate-950 sm:text-5xl">Saisonueberblick</h1>
+            <h1 className="mt-2 text-4xl font-bold tracking-normal text-foreground sm:text-5xl">Saisonueberblick</h1>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <input
-                className="h-11 w-full rounded-full border border-transparent bg-slate-100 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-blue-100 sm:w-80"
+                className="h-11 w-full rounded-full border border-transparent bg-surface-muted pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:bg-surface focus:ring-2 focus:ring-primary-soft sm:w-80"
                 placeholder="Suchen..."
                 type="search"
               />
@@ -190,21 +190,21 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <section className="rounded-lg border border-border bg-white p-5 sm:p-7">
+        <section className="rounded-lg border border-border bg-surface p-5 sm:p-7">
           <div className="grid gap-5 lg:grid-cols-[1fr_330px] lg:items-center">
             <div>
-              <h2 className="text-4xl font-bold tracking-normal text-slate-950 sm:text-5xl">
+              <h2 className="text-4xl font-bold tracking-normal text-foreground sm:text-5xl">
                 Willkommen zurueck, Coach
               </h2>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-700">
+              <p className="mt-4 max-w-3xl text-lg leading-8 text-foreground">
                 {players.length > 0
                   ? `${activeTeam.name} hat ${fitCount} einsatzbereite Spieler. Die naechsten Termine und Leistungsdaten sind bereit fuer deine Analyse.`
                   : "Lege deinen ersten Kader an, damit das Dashboard mit echten Leistungsdaten arbeitet."}
               </p>
             </div>
-            <article className="rounded-lg border border-border bg-slate-50 p-5">
+            <article className="rounded-lg border border-border bg-surface-muted p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-primary">Naechstes Training</p>
-              <h3 className="mt-3 text-2xl font-bold text-slate-950">
+              <h3 className="mt-3 text-2xl font-bold text-foreground">
                 {nextTraining ? formatDashboardTime(nextTraining.startsAt) : "Noch nicht geplant"}
               </h3>
               <p className="mt-3 text-sm leading-6 text-muted">
@@ -246,11 +246,11 @@ export default async function DashboardPage() {
           />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <section>
               <div className="flex items-center justify-between border-b border-border pb-3">
-                <h2 className="text-2xl font-bold text-slate-950">Schnellzugriff</h2>
+                <h2 className="text-2xl font-bold text-foreground">Schnellzugriff</h2>
               </div>
               <div className="mt-5 grid gap-4 md:grid-cols-3">
                 <QuickAction href="/training" icon={<CalendarDays className="size-5" />} label="Training planen" />
@@ -259,16 +259,16 @@ export default async function DashboardPage() {
               </div>
             </section>
 
-            <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
-              <article className="rounded-lg border border-border bg-white p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Spielanalyse</h2>
+            <section className="grid gap-6 lg:grid-cols-[1fr_320px]">
+              <article className="rounded-lg border border-border bg-surface p-5">
+                <h2 className="text-2xl font-bold text-foreground">Spielanalyse</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <ResultBar color="blue" label="Siege" total={finishedMatches.length} value={wins} />
                   <ResultBar color="slate" label="Unentschieden" total={finishedMatches.length} value={draws} />
                   <ResultBar color="red" label="Niederlagen" total={finishedMatches.length} value={losses} />
                 </div>
                 <div className="mt-8 border-t border-border pt-5">
-                  <h3 className="text-xl font-bold text-slate-950">Saisonkennzahlen</h3>
+                  <h3 className="text-xl font-bold text-foreground">Saisonkennzahlen</h3>
                   <div className="mt-5 grid gap-4 sm:grid-cols-3">
                     <MiniMetric label="Punkte" value={points.toString()} />
                     <MiniMetric label="Tordifferenz" value={formatSigned(goalDifference)} />
@@ -278,20 +278,20 @@ export default async function DashboardPage() {
                 </div>
               </article>
 
-              <article className="rounded-lg border border-border bg-white p-5">
+              <article className="rounded-lg border border-border bg-surface p-5">
                 <div className="flex items-center justify-between border-b border-border pb-4">
-                  <h2 className="text-2xl font-bold text-slate-950">Top Performer</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Top Performer</h2>
                   <Shield className="size-5 text-muted" aria-hidden="true" />
                 </div>
                 {topPerformers.length > 0 ? (
                   <div className="mt-5 space-y-5">
                     {topPerformers.map((performer) => (
                       <Link className="flex items-center gap-3" href={`/kader/${performer.id}`} key={performer.id}>
-                        <div className="flex size-11 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-primary">
+                        <div className="flex size-11 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
                           {performer.initials}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-slate-950">{performer.name}</p>
+                          <p className="truncate font-semibold text-foreground">{performer.name}</p>
                           <p className="text-sm text-muted">Tore & Vorlagen</p>
                         </div>
                         <p className="text-2xl font-bold tabular-nums text-primary">{performer.score}</p>
@@ -304,9 +304,9 @@ export default async function DashboardPage() {
               </article>
             </section>
 
-            <section className="overflow-hidden rounded-lg border border-border bg-white">
+            <section className="overflow-hidden rounded-lg border border-border bg-surface">
               <div className="flex items-center justify-between border-b border-border p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Letzte Spiele</h2>
+                <h2 className="text-2xl font-bold text-foreground">Letzte Spiele</h2>
                 <Link className="text-sm font-semibold text-primary" href="/spiele">
                   Alle anzeigen
                 </Link>
@@ -314,7 +314,7 @@ export default async function DashboardPage() {
               {lastMatches.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-[760px] w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                    <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                       <tr>
                         <th className="px-5 py-3">Datum</th>
                         <th className="px-5 py-3">Gegner</th>
@@ -326,17 +326,17 @@ export default async function DashboardPage() {
                     <tbody className="divide-y divide-border">
                       {lastMatches.map((match) => (
                         <tr key={match.id}>
-                          <td className="px-5 py-4 text-slate-700">
+                          <td className="px-5 py-4 text-foreground">
                             {match.calendarEvent ? formatDate(match.calendarEvent.startsAt) : "-"}
                           </td>
-                          <td className="px-5 py-4 font-semibold text-slate-950">{match.opponent}</td>
-                          <td className="px-5 py-4 font-bold tabular-nums text-slate-950">
+                          <td className="px-5 py-4 font-semibold text-foreground">{match.opponent}</td>
+                          <td className="px-5 py-4 font-bold tabular-nums text-foreground">
                             {match.goalsFor} - {match.goalsAgainst}
                           </td>
                           <td className="px-5 py-4">
                             <ResultPill goalsFor={match.goalsFor ?? 0} goalsAgainst={match.goalsAgainst ?? 0} />
                           </td>
-                          <td className="px-5 py-4 text-slate-700">{match.playerStats.length} Eintraege</td>
+                          <td className="px-5 py-4 text-foreground">{match.playerStats.length} Eintraege</td>
                         </tr>
                       ))}
                     </tbody>
@@ -351,24 +351,24 @@ export default async function DashboardPage() {
           </div>
 
           <aside className="space-y-6">
-            <article className="rounded-lg border border-border bg-white">
+            <article className="rounded-lg border border-border bg-surface">
               <div className="flex items-center justify-between border-b border-border p-5">
-                <h2 className="text-2xl font-bold text-slate-950">Tagesablauf</h2>
+                <h2 className="text-2xl font-bold text-foreground">Tagesablauf</h2>
                 <p className="text-sm text-muted">Heute</p>
               </div>
               {todayEvents.length > 0 ? (
                 <div className="divide-y divide-border">
                   {todayEvents.map((event) => (
                     <Link
-                      className={`grid grid-cols-[64px_1fr] gap-4 p-5 transition hover:bg-blue-50/60 ${
-                        event.id === nextTraining?.id ? "border-l-4 border-primary bg-blue-50" : ""
+                      className={`grid grid-cols-[64px_1fr] gap-4 p-5 transition hover:bg-primary-soft/60 ${
+                        event.id === nextTraining?.id ? "border-l-4 border-primary bg-primary-soft" : ""
                       }`}
                       href={`/kalender/${event.id}`}
                       key={event.id}
                     >
-                      <p className="text-sm font-bold tabular-nums text-slate-900">{formatTime(event.startsAt)}</p>
+                      <p className="text-sm font-bold tabular-nums text-foreground">{formatTime(event.startsAt)}</p>
                       <div>
-                        <p className="text-xl font-bold text-slate-950">{event.title}</p>
+                        <p className="text-xl font-bold text-foreground">{event.title}</p>
                         <p className="mt-1 text-sm text-muted">
                           {eventTypeLabel(event.type)}
                           {event.location ? ` / ${event.location}` : ""}
@@ -420,8 +420,8 @@ function RingCard({
 }) {
   const colorClass = {
     blue: "text-primary",
-    green: "text-emerald-600",
-    orange: "text-orange-600",
+    green: "text-success",
+    orange: "text-warning",
   }[color];
   const strokeClass = {
     blue: "#0f5bcf",
@@ -431,9 +431,9 @@ function RingCard({
   const dash = `${Math.max(0, Math.min(value, 100))} 100`;
 
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
+    <article className="rounded-lg border border-border bg-surface p-5">
       <div className="flex items-center justify-between border-b border-border pb-4">
-        <h2 className="text-xl font-bold text-slate-950">{label}</h2>
+        <h2 className="text-xl font-bold text-foreground">{label}</h2>
         <span className={colorClass}>{icon}</span>
       </div>
       <div className="mt-6 flex items-center justify-center">
@@ -455,21 +455,21 @@ function RingCard({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-4xl font-bold tabular-nums text-slate-950">{value}</p>
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-800">{sublabel}</p>
+            <p className="text-4xl font-bold tabular-nums text-foreground">{value}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-foreground">{sublabel}</p>
           </div>
         </div>
       </div>
-      <p className="mt-5 text-sm font-medium text-slate-700">{detail}</p>
+      <p className="mt-5 text-sm font-medium text-foreground">{detail}</p>
     </article>
   );
 }
 
 function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
-    <Link className="relative overflow-hidden rounded-lg border border-border bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-sm" href={href}>
+    <Link className="relative overflow-hidden rounded-lg border border-border bg-surface p-5 transition hover:-translate-y-0.5 hover:shadow-sm" href={href}>
       <span className="text-primary">{icon}</span>
-      <p className="mt-6 text-2xl font-bold leading-tight text-slate-950">{label}</p>
+      <p className="mt-6 text-2xl font-bold leading-tight text-foreground">{label}</p>
       <div className="absolute -bottom-6 -right-5 text-8xl font-bold text-slate-100">{label[0]}</div>
     </Link>
   );
@@ -479,16 +479,16 @@ function ResultBar({ color, label, total, value }: { color: "blue" | "red" | "sl
   const width = percent(value, total);
   const colorClass = {
     blue: "bg-primary",
-    red: "bg-rose-600",
-    slate: "bg-slate-500",
+    red: "bg-danger",
+    slate: "bg-muted",
   }[color];
 
   return (
     <div>
-      <p className="text-sm font-semibold text-slate-800">
+      <p className="text-sm font-semibold text-foreground">
         {label} ({value})
       </p>
-      <div className="mt-3 h-3 rounded-full bg-slate-100">
+      <div className="mt-3 h-3 rounded-full bg-surface-muted">
         <div className={`h-3 rounded-full ${colorClass}`} style={{ width: `${width}%` }} />
       </div>
     </div>
@@ -497,9 +497,9 @@ function ResultBar({ color, label, total, value }: { color: "blue" | "red" | "sl
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-4">
+    <div className="rounded-lg bg-surface-muted p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-2 text-3xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
@@ -518,10 +518,10 @@ function ResultPill({ goalsAgainst, goalsFor }: { goalsAgainst: number; goalsFor
   const result = goalsFor > goalsAgainst ? "Sieg" : goalsFor === goalsAgainst ? "Remis" : "Niederlage";
   const className =
     goalsFor > goalsAgainst
-      ? "bg-emerald-50 text-emerald-700"
+      ? "bg-success-soft text-success"
       : goalsFor === goalsAgainst
-        ? "bg-slate-100 text-slate-700"
-        : "bg-rose-50 text-rose-700";
+        ? "bg-surface-muted text-foreground"
+        : "bg-danger-soft text-danger";
 
   return <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>{result}</span>;
 }

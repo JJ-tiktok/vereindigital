@@ -81,22 +81,22 @@ export default async function ImportReviewPage({
       <section className="space-y-6 py-6">
         {query.error ? <ErrorBanner error={query.error} /> : null}
         {query.saved ? (
-          <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <p className="rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm font-semibold text-success">
             Aenderungen wurden im Import gespeichert.
           </p>
         ) : null}
         <IssuePanel issues={issues} />
 
         {job.type === "ROSTER" && isRosterImportData(job.parsedData) ? (
-          <form action={confirmRosterImportJob} className="overflow-hidden rounded-lg border border-border bg-white">
+          <form action={confirmRosterImportJob} className="overflow-hidden rounded-lg border border-border bg-surface">
             <input name="jobId" type="hidden" value={job.id} />
             <div className="border-b border-border p-5">
-              <h2 className="text-xl font-bold text-slate-950">Kaderdaten</h2>
+              <h2 className="text-xl font-bold text-foreground">Kaderdaten</h2>
               <p className="mt-1 text-sm text-muted">Waehle je Zeile, ob ein Spieler neu angelegt, aktualisiert oder uebersprungen wird.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-[960px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-4 py-3">Zeile</th>
                     <th className="px-4 py-3">Vorname</th>
@@ -122,14 +122,14 @@ export default async function ImportReviewPage({
                         </td>
                         <td className="px-4 py-3">
                           <input
-                            className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
+                            className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm font-semibold text-foreground"
                             defaultValue={row.firstName}
                             name={`firstName-${index}`}
                           />
                         </td>
                         <td className="px-4 py-3">
                           <input
-                            className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
+                            className="h-10 w-full min-w-36 rounded-lg border border-border px-2 text-sm font-semibold text-foreground"
                             defaultValue={row.lastName}
                             name={`lastName-${index}`}
                           />
@@ -137,7 +137,7 @@ export default async function ImportReviewPage({
                         <td className="px-4 py-3">
                           <input
                             className={`h-10 w-full min-w-36 rounded-lg border px-2 text-sm ${
-                              row.birthDate ? "border-border" : "border-amber-300 bg-amber-50"
+                              row.birthDate ? "border-border" : "border-warning-soft bg-warning-soft"
                             }`}
                             defaultValue={row.birthDate}
                             name={`birthDate-${index}`}
@@ -172,7 +172,7 @@ export default async function ImportReviewPage({
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
               <button
-                className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-900"
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
                 formAction={saveImportReviewData}
                 formNoValidate
                 type="submit"
@@ -187,17 +187,17 @@ export default async function ImportReviewPage({
         ) : null}
 
         {job.type === "MATCH_STATS" && isMatchStatsImportData(job.parsedData) ? (
-          <form action={confirmMatchStatsImportJob} className="overflow-hidden rounded-lg border border-border bg-white">
+          <form action={confirmMatchStatsImportJob} className="overflow-hidden rounded-lg border border-border bg-surface">
             <input name="jobId" type="hidden" value={job.id} />
-            <div className="grid gap-4 border-b border-border p-5 xl:grid-cols-[1fr_360px]">
+            <div className="grid gap-4 border-b border-border p-5 lg:grid-cols-[1fr_360px]">
               <div>
-                <h2 className="text-xl font-bold text-slate-950">Spieldaten</h2>
+                <h2 className="text-xl font-bold text-foreground">Spieldaten</h2>
                 <p className="mt-1 text-sm text-muted">Basisdaten fuer das Zielspiel koennen vor dem Import korrigiert werden.</p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   <label className="text-xs font-semibold uppercase text-muted md:col-span-2 xl:col-span-1">
                     Spiel / Titel
                     <input
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.title}
                       name="matchTitle"
                     />
@@ -205,7 +205,7 @@ export default async function ImportReviewPage({
                   <label className="text-xs font-semibold uppercase text-muted">
                     Datum
                     <input
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.date ?? ""}
                       name="matchDate"
                       type="date"
@@ -214,7 +214,7 @@ export default async function ImportReviewPage({
                   <label className="text-xs font-semibold uppercase text-muted">
                     Gegner
                     <input
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.opponent}
                       name="opponent"
                     />
@@ -222,7 +222,7 @@ export default async function ImportReviewPage({
                   <label className="text-xs font-semibold uppercase text-muted">
                     Tore fuer
                     <input
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.goalsFor ?? ""}
                       min={0}
                       name="goalsFor"
@@ -232,7 +232,7 @@ export default async function ImportReviewPage({
                   <label className="text-xs font-semibold uppercase text-muted">
                     Tore gegen
                     <input
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.goalsAgainst ?? ""}
                       min={0}
                       name="goalsAgainst"
@@ -242,7 +242,7 @@ export default async function ImportReviewPage({
                   <label className="text-xs font-semibold uppercase text-muted">
                     Heim / Auswaerts
                     <select
-                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-slate-900"
+                      className="mt-1 h-10 w-full rounded-lg border border-border px-2 text-sm font-normal text-foreground"
                       defaultValue={job.parsedData.match.isHomeGame ? "true" : "false"}
                       name="isHomeGame"
                     >
@@ -253,7 +253,7 @@ export default async function ImportReviewPage({
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-800" htmlFor="matchId">
+                <label className="text-sm font-semibold text-foreground" htmlFor="matchId">
                   Zielspiel
                 </label>
                 <select className="mt-2 h-10 w-full rounded-lg border border-border px-2 text-sm" defaultValue={findMatchCandidate(job.parsedData, matches)?.id ?? ""} id="matchId" name="matchId">
@@ -267,11 +267,11 @@ export default async function ImportReviewPage({
               </div>
             </div>
             <div className="overflow-x-auto">
-              <p className="border-b border-border bg-blue-50 px-5 py-3 text-sm font-semibold text-primary">
+              <p className="border-b border-border bg-primary-soft px-5 py-3 text-sm font-semibold text-primary">
                 Bewertung ist nur fuer eingesetzte Spieler Pflicht. Bei 0 Minuten und Nicht eingesetzt kann die Note leer bleiben.
               </p>
               <table className="min-w-[1080px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-4 py-3">Zeile</th>
                     <th className="px-4 py-3">Import-Spieler</th>
@@ -300,7 +300,7 @@ export default async function ImportReviewPage({
                         </td>
                         <td className="px-4 py-3">
                           <input
-                            className="h-10 w-full min-w-44 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
+                            className="h-10 w-full min-w-44 rounded-lg border border-border px-2 text-sm font-semibold text-foreground"
                             defaultValue={row.playerName}
                             name={`playerName-${index}`}
                           />
@@ -344,7 +344,7 @@ export default async function ImportReviewPage({
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
               <button
-                className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-900"
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
                 formAction={saveImportReviewData}
                 formNoValidate
                 type="submit"
@@ -359,17 +359,17 @@ export default async function ImportReviewPage({
         ) : null}
 
         {job.type === "FIXTURES" && isFixturesImportData(job.parsedData) ? (
-          <form action={confirmFixturesImportJob} className="overflow-hidden rounded-lg border border-border bg-white">
+          <form action={confirmFixturesImportJob} className="overflow-hidden rounded-lg border border-border bg-surface">
             <input name="jobId" type="hidden" value={job.id} />
             <div className="border-b border-border p-5">
-              <h2 className="text-xl font-bold text-slate-950">Spielplan</h2>
+              <h2 className="text-xl font-bold text-foreground">Spielplan</h2>
               <p className="mt-1 text-sm text-muted">
                 Aus jeder nicht uebersprungenen Zeile entsteht ein neuer Kalendertermin mit verknuepftem Spiel.
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-[840px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                   <tr>
                     <th className="px-4 py-3">Zeile</th>
                     <th className="px-4 py-3">Datum</th>
@@ -392,7 +392,7 @@ export default async function ImportReviewPage({
                       <td className="px-4 py-3">
                         <input
                           className={`h-10 w-full min-w-36 rounded-lg border px-2 text-sm ${
-                            row.date ? "border-border" : "border-amber-300 bg-amber-50"
+                            row.date ? "border-border" : "border-warning-soft bg-warning-soft"
                           }`}
                           defaultValue={row.date}
                           name={`date-${index}`}
@@ -409,7 +409,7 @@ export default async function ImportReviewPage({
                       </td>
                       <td className="px-4 py-3">
                         <input
-                          className="h-10 w-full min-w-44 rounded-lg border border-border px-2 text-sm font-semibold text-slate-950"
+                          className="h-10 w-full min-w-44 rounded-lg border border-border px-2 text-sm font-semibold text-foreground"
                           defaultValue={row.opponent}
                           name={`opponent-${index}`}
                         />
@@ -441,7 +441,7 @@ export default async function ImportReviewPage({
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
               <button
-                className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-900"
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
                 formAction={saveImportReviewData}
                 formNoValidate
                 type="submit"
@@ -513,7 +513,7 @@ function NumberInput({
 }) {
   return (
     <input
-      className="h-10 w-20 rounded-lg border border-border px-2 text-sm tabular-nums text-slate-900"
+      className="h-10 w-20 rounded-lg border border-border px-2 text-sm tabular-nums text-foreground"
       defaultValue={defaultValue}
       max={max}
       min={min}
@@ -527,7 +527,7 @@ function NumberInput({
 function IssuePanel({ issues }: { issues: ImportIssue[] }) {
   if (issues.length === 0) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
+      <div className="flex items-center gap-3 rounded-lg border border-success-soft bg-success-soft p-4 text-sm font-semibold text-success">
         <CheckCircle2 className="size-5" aria-hidden="true" />
         Keine strukturellen Fehler gefunden. Bitte pruefe trotzdem die Zuordnungen.
       </div>
@@ -535,14 +535,14 @@ function IssuePanel({ issues }: { issues: ImportIssue[] }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white p-5">
-      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+    <div className="rounded-lg border border-border bg-surface p-5">
+      <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
         <AlertTriangle className="size-5 text-warning" aria-hidden="true" />
         Validierung
       </h2>
       <div className="mt-4 space-y-2">
         {issues.map((issue, index) => (
-          <p className={`rounded-lg px-3 py-2 text-sm ${issue.severity === "error" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`} key={`${issue.code}-${index}`}>
+          <p className={`rounded-lg px-3 py-2 text-sm ${issue.severity === "error" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning"}`} key={`${issue.code}-${index}`}>
             {issue.rowIndex !== undefined ? `Zeile ${issue.rowIndex + 2}: ` : ""}
             {issue.message}
           </p>
@@ -561,7 +561,7 @@ function ErrorBanner({ error }: { error: string }) {
     unresolved: "Der Import hat noch blockierende Fehler und kann nicht bestaetigt werden.",
   };
 
-  return <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{messages[error] ?? "Der Import konnte nicht bestaetigt werden."}</p>;
+  return <p className="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{messages[error] ?? "Der Import konnte nicht bestaetigt werden."}</p>;
 }
 
 function readIssues(value: unknown) {

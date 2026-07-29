@@ -57,7 +57,7 @@ export default async function TrainingExerciseDetailPage({
             <form action={duplicateTrainingExercise}>
               <input name="exerciseId" type="hidden" value={exercise.id} />
               <button
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-700"
+                className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
                 type="submit"
               >
                 <Copy className="size-4" aria-hidden="true" />
@@ -65,7 +65,7 @@ export default async function TrainingExerciseDetailPage({
               </button>
             </form>
             <Link
-              className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-700"
+              className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
               href={`/training/${exercise.id}/skizze`}
             >
               <PencilRuler className="size-4" aria-hidden="true" />
@@ -82,9 +82,9 @@ export default async function TrainingExerciseDetailPage({
         }
       />
 
-      <div className="grid gap-6 py-6 xl:grid-cols-[1fr_340px]">
+      <div className="grid gap-6 py-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-          <section className="rounded-lg border border-border bg-white p-5">
+          <section className="rounded-lg border border-border bg-surface p-5">
             <div className="grid gap-4 md:grid-cols-4">
               <Metric icon={<Clock className="size-4" />} label="Dauer" value={exercise.durationMinutes ? `${exercise.durationMinutes} Min.` : "-"} />
               <Metric icon={<Users className="size-4" />} label="Spieler" value={playerRange(exercise.minPlayers, exercise.maxPlayers)} />
@@ -101,24 +101,24 @@ export default async function TrainingExerciseDetailPage({
         </div>
 
         <aside className="space-y-6">
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <p className="text-xs font-semibold uppercase text-muted">Katalog</p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-950">{trainingVisibilityLabel(exercise.visibility)}</h2>
+            <h2 className="mt-2 text-xl font-semibold text-foreground">{trainingVisibilityLabel(exercise.visibility)}</h2>
             <p className="mt-2 text-sm text-muted">
               {exercise.team ? exercise.team.name : "Vereinsweit fuer alle Teams"}
             </p>
           </article>
 
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <p className="text-xs font-semibold uppercase text-muted">Material</p>
-            <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">
+            <p className="mt-3 whitespace-pre-line text-sm leading-6 text-foreground">
               {exercise.material || "Noch kein Material hinterlegt."}
             </p>
           </article>
 
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <p className="text-xs font-semibold uppercase text-muted">Skizze</p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-950">
+            <h2 className="mt-2 text-xl font-semibold text-foreground">
               {exercise.sketches.length > 0
                 ? `${exercise.sketches.length} Skizzen vorhanden`
                 : hasSketch
@@ -149,20 +149,20 @@ export default async function TrainingExerciseDetailPage({
 
 function Metric({ icon, label, value }: { icon?: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-4">
+    <div className="rounded-lg bg-surface-muted p-4">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase text-muted">
         {icon}
         {label}
       </div>
-      <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
+      <p className="mt-2 text-lg font-bold text-foreground">{value}</p>
     </div>
   );
 }
 
 function TextSection({ title, value }: { title: string; value: string | null }) {
   return (
-    <section className="rounded-lg border border-border bg-white p-5">
-      <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-lg border border-border bg-surface p-5">
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
       <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted">{value || "Noch nicht beschrieben."}</p>
     </section>
   );

@@ -47,11 +47,11 @@ export function TrainingExerciseForm({ exercise }: { exercise?: TrainingExercise
       {exercise ? <input name="exerciseId" type="hidden" value={exercise.id} /> : null}
 
       {state?.error ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{state.error}</p>
+        <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">{state.error}</p>
       ) : null}
 
-      <section className="rounded-lg border border-border bg-white p-5">
-        <h2 className="text-xl font-semibold text-slate-950">Grunddaten</h2>
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="text-xl font-semibold text-foreground">Grunddaten</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <Field defaultValue={exercise?.title} label="Titel" name="title" required />
           <Field defaultValue={exercise?.objective ?? undefined} label="Ziel / Schwerpunkt" name="objective" />
@@ -87,8 +87,8 @@ export function TrainingExerciseForm({ exercise }: { exercise?: TrainingExercise
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-white p-5">
-        <h2 className="text-xl font-semibold text-slate-950">Rahmen</h2>
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="text-xl font-semibold text-foreground">Rahmen</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-4">
           <Field defaultValue={exercise?.durationMinutes?.toString()} label="Dauer" min={1} name="durationMinutes" type="number" />
           <Field defaultValue={exercise?.minPlayers?.toString()} label="Min. Spieler" min={1} name="minPlayers" type="number" />
@@ -97,8 +97,8 @@ export function TrainingExerciseForm({ exercise }: { exercise?: TrainingExercise
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-white p-5">
-        <h2 className="text-xl font-semibold text-slate-950">Beschreibung</h2>
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="text-xl font-semibold text-foreground">Beschreibung</h2>
         <div className="mt-5 grid gap-4">
           <Textarea defaultValue={exercise?.description ?? undefined} label="Kurzbeschreibung" name="description" />
           <Textarea defaultValue={exercise?.organization ?? undefined} label="Organisation / Aufbau" name="organization" />
@@ -135,10 +135,10 @@ function Field({
   type?: string;
 }) {
   return (
-    <label className="text-sm font-semibold text-slate-800">
+    <label className="text-sm font-semibold text-foreground">
       {label}
       <input
-        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
         defaultValue={defaultValue}
         min={min}
         name={name}
@@ -161,10 +161,10 @@ function Select({
   value: string;
 }) {
   return (
-    <label className="text-sm font-semibold text-slate-800">
+    <label className="text-sm font-semibold text-foreground">
       {label}
       <select
-        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
         defaultValue={value}
         name={name}
       >
@@ -176,10 +176,10 @@ function Select({
 
 function Textarea({ defaultValue, label, name }: { defaultValue?: string; label: string; name: string }) {
   return (
-    <label className="text-sm font-semibold text-slate-800">
+    <label className="text-sm font-semibold text-foreground">
       {label}
       <textarea
-        className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+        className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
         defaultValue={defaultValue}
         name={name}
       />

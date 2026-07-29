@@ -7,30 +7,35 @@ import {
   Dumbbell,
   FileUp,
   LayoutDashboard,
+  LayoutGrid,
   MessageSquare,
-  Shield,
   ShieldCheck,
   Trophy,
   Users,
   UserCog,
 } from "lucide-react";
-import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { ClubSwitcher } from "@/components/club-switcher";
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { Sidebar, type SidebarNavEntry } from "@/components/sidebar";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { hasPermission, type AppContext } from "@/lib/app-context";
 import { canUseFeedback } from "@/lib/feedback-permissions";
 
-const navItems = [
+const primaryNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Kader", href: "/kader", icon: Users },
-  { label: "Mitglieder", href: "/mitglieder", icon: UserCog },
   { label: "Kalender", href: "/kalender", icon: CalendarDays },
+  { label: "Training", href: "/training", icon: Dumbbell },
+  { label: "Taktik", href: "/taktik", icon: LayoutGrid },
+  { label: "Spieltage", href: "/spiele", icon: Trophy },
+];
+
+const managementNavItems = [
+  { label: "Mitglieder", href: "/mitglieder", icon: UserCog },
   { label: "Saisons", href: "/saisons", icon: CalendarRange },
   { label: "Rollen", href: "/rollen", icon: ShieldCheck },
-  { label: "Training", href: "/training", icon: Dumbbell },
-  { label: "Spieltage", href: "/spiele", icon: Trophy },
   { label: "Statistiken", href: "/statistiken", icon: BarChart3 },
   { label: "Importe", href: "/importe", icon: FileUp },
   { label: "Abwesenheiten", href: "/abwesenheiten", icon: ClipboardList },
@@ -38,7 +43,7 @@ const navItems = [
   { label: "Feedback", href: "/feedback", icon: MessageSquare },
 ];
 
-export function AppShell({
+export async function AppShell({
   context,
   activePath,
   children,
@@ -49,7 +54,7 @@ export function AppShell({
 }) {
   const showFeedback = canUseFeedback(context);
   const showRoles = hasPermission(context, "roles.manage");
-  const visibleNavItems = navItems.filter((item) => {
+  const visibleManagementItems = managementNavItems.filter((item) => {
     if (item.href === "/feedback") {
       return showFeedback;
     }
@@ -60,70 +65,58 @@ export function AppShell({
 
     return true;
   });
+  const toEntry = (item: (typeof primaryNavItems)[number]): SidebarNavEntry => ({
+    href: item.href,
+    label: item.label,
+    icon: <item.icon className="size-4 shrink-0" aria-hidden="true" />,
+    active: activePath === item.href,
+  });
+  const primaryEntries: SidebarNavEntry[] = primaryNavItems.map(toEntry);
+  const managementEntries: SidebarNavEntry[] = visibleManagementItems.map(toEntry);
+
+  const cookieStore = await cookies();
+  const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "1";
+
+  const clubSwitcherSlot =
+    context.clubs.length > 1 ? (
+      <div>
+        <p className="text-xs font-semibold uppercase text-muted">Aktiver Verein</p>
+        <ClubSwitcher
+          activeClubId={context.club.id}
+          clubs={context.clubs.map((club) => ({ id: club.id, name: club.name }))}
+        />
+      </div>
+    ) : null;
+
+  const seasonTeamSlot = (
+    <>
+      <p className="text-xs font-semibold uppercase text-muted">Aktive Saison</p>
+      <p className="mt-2 font-semibold">{context.activeSeason?.name ?? "Keine Saison"}</p>
+      <div className="my-3 h-px bg-border" />
+      <p className="text-xs font-semibold uppercase text-muted">Aktives Team</p>
+      {context.teams.length > 1 && context.activeTeam ? (
+        <TeamSwitcher
+          activeTeamId={context.activeTeam.id}
+          teams={context.teams.map((team) => ({ id: team.id, name: team.name }))}
+        />
+      ) : (
+        <p className="mt-2 font-semibold">{context.activeTeam?.name ?? "Kein Team"}</p>
+      )}
+      <p className="mt-1 text-sm text-muted">{context.isClubAdmin ? "Admin-Zugriff" : "Team-Zugriff"}</p>
+    </>
+  );
 
   return (
-    <main className="min-h-screen bg-background text-slate-950">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col lg:flex-row">
-        <aside className="border-b border-border bg-white px-4 py-4 lg:w-72 lg:border-b-0 lg:border-r lg:px-6 lg:py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-lg bg-primary text-white">
-              <Shield className="size-5" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-lg font-bold">VereinDigital</p>
-              <p className="text-sm text-muted">{context.club.name}</p>
-            </div>
-          </div>
-
-          {context.clubs.length > 1 ? (
-            <div className="mt-4">
-              <p className="text-xs font-semibold uppercase text-muted">Aktiver Verein</p>
-              <ClubSwitcher
-                activeClubId={context.club.id}
-                clubs={context.clubs.map((club) => ({ id: club.id, name: club.name }))}
-              />
-            </div>
-          ) : null}
-
-          <nav className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
-            {visibleNavItems.map((item) => {
-              const active = activePath === item.href;
-
-              return (
-                <Link
-                  className={`flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${
-                    active
-                      ? "bg-blue-50 text-primary"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
-                  }`}
-                  href={item.href}
-                  key={item.href}
-                >
-                  <item.icon className="size-4" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="mt-6 hidden rounded-lg border border-border bg-slate-50 p-4 lg:block">
-            <p className="text-xs font-semibold uppercase text-muted">Aktive Saison</p>
-            <p className="mt-2 font-semibold">{context.activeSeason?.name ?? "Keine Saison"}</p>
-            <div className="my-3 h-px bg-border" />
-            <p className="text-xs font-semibold uppercase text-muted">Aktives Team</p>
-            {context.teams.length > 1 && context.activeTeam ? (
-              <TeamSwitcher
-                activeTeamId={context.activeTeam.id}
-                teams={context.teams.map((team) => ({ id: team.id, name: team.name }))}
-              />
-            ) : (
-              <p className="mt-2 font-semibold">{context.activeTeam?.name ?? "Kein Team"}</p>
-            )}
-            <p className="mt-1 text-sm text-muted">
-              {context.isClubAdmin ? "Admin-Zugriff" : "Team-Zugriff"}
-            </p>
-          </div>
-        </aside>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1680px] flex-col lg:flex-row">
+        <Sidebar
+          clubName={context.club.name}
+          clubSwitcherSlot={clubSwitcherSlot}
+          initialCollapsed={initialCollapsed}
+          managementEntries={managementEntries}
+          primaryEntries={primaryEntries}
+          seasonTeamSlot={seasonTeamSlot}
+        />
 
         <section className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           {showFeedback ? (
@@ -153,7 +146,7 @@ export function PageHeader({
     <header className="flex flex-col gap-4 border-b border-border pb-6 xl:flex-row xl:items-center xl:justify-between">
       <div>
         <p className="text-xs font-semibold uppercase text-primary">{eyebrow}</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">{title}</h1>
+        <h1 className="mt-2 text-3xl font-bold tracking-normal text-foreground sm:text-4xl">{title}</h1>
         {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{description}</p> : null}
       </div>
       {action ? <div className="flex flex-wrap gap-3">{action}</div> : null}
@@ -171,8 +164,8 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-white p-8 text-center">
-      <p className="text-lg font-semibold text-slate-950">{title}</p>
+    <div className="rounded-lg border border-dashed border-border bg-surface p-8 text-center">
+      <p className="text-lg font-semibold text-foreground">{title}</p>
       <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted">{description}</p>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>

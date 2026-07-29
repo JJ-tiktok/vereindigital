@@ -43,29 +43,29 @@ export function ImportForm({
   importType: "MATCH_STATS" | "ROSTER" | "FIXTURES";
 }) {
   return (
-    <div className="grid gap-6 py-6 xl:grid-cols-[1fr_420px]">
+    <div className="grid gap-6 py-6 lg:grid-cols-[1fr_420px]">
       <section className="space-y-6">
-        <form action={importActions[importType]} className="rounded-lg border border-border bg-white p-5">
+        <form action={importActions[importType]} className="rounded-lg border border-border bg-surface p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Variante 1</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-950">CSV-Vorlage importieren</h2>
+          <h2 className="mt-2 text-2xl font-bold text-foreground">CSV-Vorlage importieren</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             Fuege CSV-Daten ein oder lade eine CSV-Datei hoch. Der Import wird danach nur vorbereitet und kann auf der Review-Seite bestaetigt werden.
           </p>
           {error === "missing-csv" ? (
-            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">Bitte CSV-Daten einfuegen oder eine Datei auswaehlen.</p>
+            <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">Bitte CSV-Daten einfuegen oder eine Datei auswaehlen.</p>
           ) : null}
           <div className="mt-5">
-            <label className="text-sm font-semibold text-slate-800" htmlFor="file">
+            <label className="text-sm font-semibold text-foreground" htmlFor="file">
               CSV-Datei
             </label>
-            <input className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm" id="file" name="file" type="file" accept=".csv,text/csv" />
+            <input className="mt-2 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm" id="file" name="file" type="file" accept=".csv,text/csv" />
           </div>
           <div className="mt-5">
-            <label className="text-sm font-semibold text-slate-800" htmlFor="csv">
+            <label className="text-sm font-semibold text-foreground" htmlFor="csv">
               CSV einfuegen
             </label>
             <textarea
-              className="mt-2 min-h-56 w-full rounded-lg border border-border px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
+              className="mt-2 min-h-56 w-full rounded-lg border border-border px-3 py-2 font-mono text-xs leading-5 outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
               defaultValue={importSamples[importType]}
               id="csv"
               name="csv"
@@ -76,29 +76,29 @@ export function ImportForm({
           </button>
         </form>
 
-        <form action={createAiUrlImportJob} className="rounded-lg border border-border bg-white p-5">
+        <form action={createAiUrlImportJob} className="rounded-lg border border-border bg-surface p-5">
           <input name="importType" type="hidden" value={importType} />
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Variante 2</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-950">URL mit OpenAI auswerten</h2>
+          <h2 className="mt-2 text-2xl font-bold text-foreground">URL mit OpenAI auswerten</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
             Die App liest die URL bestmoeglich aus und laesst OpenAI daraus strukturierte Importdaten erzeugen. Falls die Quelle blockiert, bleibt CSV der Fallback.
           </p>
           {error === "missing-url" ? (
-            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">Bitte eine URL eintragen.</p>
+            <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">Bitte eine URL eintragen.</p>
           ) : null}
           <div className="mt-5">
-            <label className="text-sm font-semibold text-slate-800" htmlFor="sourceUrl">
+            <label className="text-sm font-semibold text-foreground" htmlFor="sourceUrl">
               Quell-URL
             </label>
             <input
-              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
               id="sourceUrl"
               name="sourceUrl"
               placeholder="https://..."
               type="url"
             />
           </div>
-          <button className="mt-5 h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-800" type="submit">
+          <button className="mt-5 h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" type="submit">
             URL pruefen
           </button>
         </form>

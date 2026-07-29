@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-170128c6-b1d5-467e-91cd-500e031153cb/styles.css">
+<script src="_ds/nocturne-170128c6-b1d5-467e-91cd-500e031153cb/_ds_bundle.js"></script>
+<style>
+body { margin: 0; background: var(--color-bg); }
+.sb-item { display: block; padding: 8px 12px; border-radius: var(--radius-md); color: var(--color-neutral-300); text-decoration: none; font-size: 13px; }
+.sb-item:hover { background: var(--color-neutral-800); color: var(--color-text); }
+.tac-tab { padding: 6px 14px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; font-size:13px; border:1px solid var(--color-neutral-700); border-bottom:none; background: var(--color-neutral-900); color: var(--color-neutral-400); cursor:pointer; }
+.tac-item { display:flex; align-items:center; justify-content:space-between; padding: 7px 10px; border-radius: var(--radius-sm); font-size:13px; cursor:pointer; }
+.tac-item:hover { background: var(--color-neutral-800); }
+.icon-btn { background:none; border:1px solid var(--color-neutral-700); border-radius: var(--radius-sm); color: var(--color-neutral-400); font-size:11px; padding:3px 7px; cursor:pointer; }
+.icon-btn:hover { border-color: var(--color-accent); color: var(--color-text); }
+</style>
+</helmet>
+<div style="display:flex; min-height:100vh; font-family: var(--font-body); color: var(--color-text); background: var(--color-bg);">
+
+  <aside style="width:220px; flex-shrink:0; background: var(--color-neutral-900); border-right:1px solid var(--color-neutral-800); padding: var(--space-4) var(--space-3); display:flex; flex-direction:column; gap: var(--space-5);">
+    <div style="display:flex; align-items:center; gap:8px; padding:0 8px;">
+      <div style="width:22px; height:22px; border-radius:6px; background: var(--color-accent-700); border:1px solid var(--color-accent);"></div>
+      <div style="font-size:14px; font-weight:500;">VereinDigital<div style="font-size:11px; color:var(--color-neutral-400); font-weight:400;">SG Ruwertal</div></div>
+    </div>
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <a class="sb-item" href="#">Dashboard</a>
+      <a class="sb-item" href="#">Kader</a>
+      <a class="sb-item" href="#">Kalender</a>
+      <a class="sb-item" href="#" style="background: var(--color-accent-800); color: var(--color-text); border-left:2px solid var(--color-accent);">Training</a>
+      <a class="sb-item" href="#">Spieltage</a>
+      <button type="button" onclick="{{ onToggleVerwaltung }}" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding: 8px 12px; border-radius: var(--radius-md); background:none; border:none; color: var(--color-neutral-400); font-size:13px; cursor:pointer; text-align:left; margin-top:6px;">
+        <span>Verwaltung</span><span style="font-size:10px;">{{ verwaltungChevron }}</span>
+      </button>
+      <div style="{{ verwaltungListStyle }}">
+        <a class="sb-item" href="#">Mitglieder</a>
+        <a class="sb-item" href="#">Saisons</a>
+        <a class="sb-item" href="#">Rollen</a>
+        <a class="sb-item" href="#">Statistiken</a>
+        <a class="sb-item" href="#">Importe</a>
+        <a class="sb-item" href="#">Abwesenheiten</a>
+        <a class="sb-item" href="#">Einladungen</a>
+        <a class="sb-item" href="#">Feedback</a>
+      </div>
+    </nav>
+    <div style="margin-top:auto; padding: var(--space-3); background: var(--color-neutral-800); border-radius: var(--radius-md); font-size:11px; color: var(--color-neutral-400);">
+      <div style="text-transform:uppercase; letter-spacing:0.06em;">Aktive Saison</div>
+      <div style="color: var(--color-text); font-size:13px; margin: 2px 0 8px;">2026/27</div>
+      <div style="text-transform:uppercase; letter-spacing:0.06em;">Aktives Team</div>
+      <div style="color: var(--color-text); font-size:13px; margin-top:2px;">1. Mannschaft</div>
+    </div>
+  </aside>
+
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--space-3); padding: var(--space-4) var(--space-4) var(--space-3); border-bottom:1px solid var(--color-neutral-800); flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color: var(--color-accent-300); font-weight:500;">Training</div>
+        <h1 style="margin:4px 0 0; font-size:24px; font-weight:500; font-family: var(--font-heading);">Aufstellungsplaner</h1>
+      </div>
+      <div style="display:flex; align-items:flex-end; gap: var(--space-2); flex-wrap:wrap;">
+        <div class="field" style="margin:0; min-width:200px;"><label>Taktikname</label><input class="input" value="{{ tacticName }}" onchange="{{ onNameChange }}"></div>
+        <button type="button" class="btn btn-secondary" onclick="{{ onSaveAsNew }}">Als neue Taktik speichern</button>
+        <button type="button" class="btn btn-primary" onclick="{{ onSave }}">Speichern</button>
+      </div>
+    </div>
+
+    <div style="flex:1; display:flex; min-height:0; overflow-x:auto;">
+
+      <div style="width:240px; flex-shrink:0; border-right:1px solid var(--color-neutral-800); padding: var(--space-4); overflow-y:auto; display:flex; flex-direction:column; gap: var(--space-4);">
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400); margin-bottom:8px;">Formation</div>
+          <select class="input" value="{{ formation }}" onchange="{{ onFormationChange }}">
+            <sc-for list="{{ formationOptions }}" as="fo" hint-placeholder-count="5"><option value="{{ fo }}">{{ fo }}</option></sc-for>
+          </select>
+          <p style="font-size:11px; color: var(--color-neutral-500); margin: 8px 0 0;">Vorlage laden, danach Spieler frei auf dem Feld verschieben.</p>
+        </div>
+        <div style="border-top:1px solid var(--color-neutral-800); padding-top: var(--space-3);">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400); margin-bottom:8px;">Gespeicherte Taktiken</div>
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <sc-for list="{{ savedTactics }}" as="t" hint-placeholder-count="2">
+              <div class="tac-item" style="background: var(--color-neutral-850, var(--color-neutral-800));">
+                <span onclick="{{ t.onLoad }}" style="flex:1;">{{ t.name }}</span>
+                <div style="display:flex; gap:4px;">
+                  <button type="button" class="icon-btn" onclick="{{ t.onRename }}">Umbenennen</button>
+                  <button type="button" class="icon-btn" onclick="{{ t.onDelete }}">Loeschen</button>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noSavedTactics }}" hint-placeholder-val="{{ false }}">
+              <p style="font-size:12px; color: var(--color-neutral-500);">Noch keine Taktik gespeichert.</p>
+            </sc-if>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--color-neutral-800); padding-top: var(--space-3);">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color: var(--color-neutral-400); margin-bottom:8px;">Mannschaftstaktik</div>
+          <div style="display:flex; flex-direction:column; gap: var(--space-3);">
+            <sc-for list="{{ sliders }}" as="sl" hint-placeholder-count="5">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span>{{ sl.label }}</span><span style="color: var(--color-accent-300);">{{ sl.valueLabel }}</span></div>
+                <input type="range" min="0" max="4" value="{{ sl.value }}" onchange="{{ sl.onChange }}" style="width:100%; accent-color: var(--color-accent);">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color: var(--color-neutral-500);"><span>{{ sl.lowLabel }}</span><span>{{ sl.highLabel }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1; min-width:380px; display:flex; flex-direction:column; padding: var(--space-4); gap: var(--space-3);">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap: var(--space-2);">
+          <div style="display:flex; gap: var(--space-1);">
+            <button type="button" class="tac-tab" style="{{ offenseTabStyle }}" onclick="{{ onTabOffense }}">Offensiv-Phase</button>
+            <button type="button" class="tac-tab" style="{{ defenseTabStyle }}" onclick="{{ onTabDefense }}">Defensiv-Phase</button>
+          </div>
+          <div style="display:flex; gap: var(--space-2);">
+            <button type="button" class="btn btn-secondary" style="{{ drawBtnStyle }}" onclick="{{ onToggleDraw }}">{{ drawBtnLabel }}</button>
+            <button type="button" class="btn btn-secondary" onclick="{{ onClearArrows }}">Laufwege leeren</button>
+          </div>
+        </div>
+        <p style="margin:0; font-size:12px; color: var(--color-neutral-500);">Spieler ziehen, um die Formation frei anzupassen. {{ drawHint }}</p>
+
+        <div ref="{{ pitchRef }}" onpointermove="{{ onPitchPointerMove }}" onpointerup="{{ onPitchPointerUp }}" onpointerleave="{{ onPitchPointerUp }}" onclick="{{ onPitchClick }}" style="position:relative; flex:1; min-height:0; background: var(--color-neutral-900); border:1px solid var(--color-neutral-800); border-radius: var(--radius-lg); overflow:hidden; cursor: {{ pitchCursor }};">
+          <svg viewBox="0 0 700 1000" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+            <rect x="0" y="0" width="700" height="1000" fill="#2f5f3a"></rect>
+            <sc-for list="{{ hstripes }}" as="st" hint-placeholder-count="10"><rect x="0" y="{{ st.y }}" width="700" height="50" fill="#33643d"></rect></sc-for>
+            <rect x="10" y="10" width="680" height="980" fill="none" stroke="#ffffff" stroke-width="2"></rect>
+            <line x1="10" y1="500" x2="690" y2="500" stroke="#ffffff" stroke-width="2"></line>
+            <circle cx="350" cy="500" r="70" fill="none" stroke="#ffffff" stroke-width="2"></circle>
+            <circle cx="350" cy="500" r="4" fill="#ffffff"></circle>
+            <rect x="200" y="10" width="300" height="120" fill="none" stroke="#ffffff" stroke-width="2"></rect>
+            <rect x="200" y="870" width="300" height="120" fill="none" stroke="#ffffff" stroke-width="2"></rect>
+            <path d="M 260 130 A 90 90 0 0 0 440 130" fill="none" stroke="#ffffff" stroke-width="2"></path>
+            <path d="M 260 870 A 90 90 0 0 1 440 870" fill="none" stroke="#ffffff" stroke-width="2"></path>
+            <defs><marker id="arrowhead" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f4c453"></path></marker></defs>
+            <sc-for list="{{ currentArrows }}" as="ar" hint-placeholder-count="0">
+              <line x1="{{ ar.x1 }}" y1="{{ ar.y1 }}" x2="{{ ar.x2 }}" y2="{{ ar.y2 }}" stroke="#f4c453" stroke-width="4" marker-end="url(#arrowhead)"></line>
+            </sc-for>
+            <sc-if value="{{ hasDrawStart }}" hint-placeholder-val="{{ false }}">
+              <circle cx="{{ drawStartPx.x }}" cy="{{ drawStartPx.y }}" r="6" fill="#f4c453"></circle>
+            </sc-if>
+          </svg>
+
+          <sc-for list="{{ slots }}" as="s" hint-placeholder-count="11">
+            <div onpointerdown="{{ s.onPointerDown }}" style="{{ s.style }}">
+              <div style="font-size:11px; font-weight:600; line-height:1;">{{ s.code }}</div>
+              <div style="font-size:8px; color: var(--color-neutral-300); line-height:1; margin-top:2px; white-space:nowrap;">{{ s.playerLabel }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="width:280px; flex-shrink:0; border-left:1px solid var(--color-neutral-800); padding: var(--space-4); overflow-y:auto;">
+        <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+          <div class="card-title" style="margin-bottom:2px;">{{ selectedPosLabel }}</div>
+          <p class="card-body" style="margin-top:-4px;">Position, Rolle und Spieler fuer diesen Platz festlegen.</p>
+          <div class="field"><label>Rolle</label>
+            <select class="input" value="{{ selectedRole }}" onchange="{{ onRoleChange }}">
+              <sc-for list="{{ selectedRoleOptions }}" as="ro" hint-placeholder-count="4"><option value="{{ ro }}">{{ ro }}</option></sc-for>
+            </select>
+          </div>
+          <div class="field"><label>Anweisung</label>
+            <select class="input" value="{{ selectedDuty }}" onchange="{{ onDutyChange }}">
+              <option value="Defensiv">Defensiv</option>
+              <option value="Ausgeglichen">Ausgeglichen</option>
+              <option value="Offensiv">Offensiv</option>
+            </select>
+          </div>
+          <div class="field"><label>Spieler</label>
+            <select class="input" value="{{ selectedPlayer }}" onchange="{{ onPlayerChange }}">
+              <option value="">Platzhalter (kein Spieler)</option>
+              <sc-for list="{{ squad }}" as="p" hint-placeholder-count="16"><option value="{{ p }}">{{ p }}</option></sc-for>
+            </select>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasNoSelection }}" hint-placeholder-val="{{ true }}">
+          <div class="card-title">Positionsdetails</div>
+          <p class="card-body" style="margin-top:-4px;">Auf eine Position im Feld klicken, um Rolle, Anweisung und Spieler zuzuweisen.</p>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const ROLES = {
+  TW: ['Torhueter', 'Ballsicherer Torhueter'],
+  IV: ['Zentraler Verteidiger', 'Ballspielender Verteidiger', 'Libero', 'Aggressiver Manndecker'],
+  AV: ['Aussenverteidiger', 'Fluegellaeufer', 'Inverser Aussenverteidiger', 'Offensiver Aussenverteidiger'],
+  ZDM: ['Sechser', 'Ballverteiler (tief)', 'Box-to-Box', 'Abraeumer'],
+  ZM: ['Zentrales Mittelfeld', 'Ballverteiler', 'Box-to-Box-Spieler', 'Halbraumspieler'],
+  FS: ['Klassischer Fluegelspieler', 'Inverser Fluegelspieler', 'Fluegelstuermer'],
+  ZOM: ['Spielmacher', 'Schattenstuermer', 'Freie Spitze hinter den Stuermern'],
+  ST: ['Zielspieler', 'Falsche Neun', 'Tiefer Stuermer', 'Wandspieler'],
+};
+
+const FORMATIONS = {
+  '4-4-2': [
+    ['TW', 50, 8], ['AV', 15, 25], ['IV', 35, 20], ['IV', 65, 20], ['AV', 85, 25],
+    ['FS', 15, 50], ['ZM', 38, 48], ['ZM', 62, 48], ['FS', 85, 50], ['ST', 40, 78], ['ST', 60, 78],
+  ],
+  '4-3-3': [
+    ['TW', 50, 8], ['AV', 15, 25], ['IV', 35, 20], ['IV', 65, 20], ['AV', 85, 25],
+    ['ZDM', 50, 42], ['ZM', 30, 55], ['ZM', 70, 55], ['FS', 15, 78], ['ST', 50, 85], ['FS', 85, 78],
+  ],
+  '4-2-3-1': [
+    ['TW', 50, 8], ['AV', 15, 25], ['IV', 35, 20], ['IV', 65, 20], ['AV', 85, 25],
+    ['ZDM', 38, 42], ['ZDM', 62, 42], ['ZOM', 20, 62], ['ZOM', 50, 65], ['ZOM', 80, 62], ['ST', 50, 85],
+  ],
+  '3-5-2': [
+    ['TW', 50, 8], ['IV', 30, 20], ['IV', 50, 15], ['IV', 70, 20],
+    ['AV', 10, 45], ['ZM', 35, 50], ['ZM', 50, 45], ['ZM', 65, 50], ['AV', 90, 45], ['ST', 40, 80], ['ST', 60, 80],
+  ],
+  '5-3-2': [
+    ['TW', 50, 8], ['AV', 10, 30], ['IV', 30, 20], ['IV', 50, 15], ['IV', 70, 20], ['AV', 90, 30],
+    ['ZM', 35, 55], ['ZM', 50, 50], ['ZM', 65, 55], ['ST', 40, 80], ['ST', 60, 80],
+  ],
+};
+
+const SQUAD = ['Mike Kirchen', 'Jonas Weber', 'Tim Schaefer', 'Lukas Becker', 'Finn Hoffmann', 'Paul Richter', 'Noah Klein', 'Leon Wagner', 'Elias Schulz', 'Ben Krueger', 'Max Zimmermann', 'David Neumann', 'Felix Braun', 'Jan Schwarz', 'Nico Vogel', 'Erik Lange'];
+
+const SLIDER_DEFS = [
+  { key: 'spielstil', label: 'Spielstil', lowLabel: 'Direkt', highLabel: 'Kombination' },
+  { key: 'linie', label: 'Verteidigungslinie', lowLabel: 'Tief', highLabel: 'Hoch' },
+  { key: 'pressing', label: 'Pressing', lowLabel: 'Zurueckhaltend', highLabel: 'Intensiv' },
+  { key: 'breite', label: 'Breite', lowLabel: 'Schmal', highLabel: 'Breit' },
+  { key: 'tempo', label: 'Tempo', lowLabel: 'Langsam', highLabel: 'Schnell' },
+];
+const LEVELS = ['Sehr niedrig', 'Niedrig', 'Mittel', 'Hoch', 'Sehr hoch'];
+
+function makeSlots(formationKey) {
+  return FORMATIONS[formationKey].map((d, i) => ({
+    id: i, posGroup: d[0], x: d[1], y: d[2],
+    role: ROLES[d[0]][0], duty: 'Ausgeglichen', player: '',
+  }));
+}
+
+class Component extends DCLogic {
+  pitchRef = React.createRef();
+  state = {
+    formation: '4-4-2',
+    slots: makeSlots('4-4-2'),
+    selectedIndex: null,
+    draggingIndex: null,
+    activeTab: 'offense',
+    arrows: { offense: [], defense: [] },
+    drawMode: false,
+    drawStart: null,
+    tacticName: 'Standard 4-4-2',
+    savedTactics: [],
+    sliders: { spielstil: 2, linie: 2, pressing: 2, breite: 2, tempo: 2 },
+    verwaltungOpen: false,
+  };
+
+  toPitchPoint(clientX, clientY) {
+    const rect = this.pitchRef.current.getBoundingClientRect();
+    const xPct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
+    const yPct = Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100));
+    return { xPct, yPct, xSvg: (xPct / 100) * 700, ySvg: (yPct / 100) * 1000 };
+  }
+
+  onFormationChange(e) {
+    const f = e.target.value;
+    this.setState({ formation: f, slots: makeSlots(f), selectedIndex: null });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const selected = s.selectedIndex != null ? s.slots[s.selectedIndex] : null;
+
+    const slots = s.slots.map((slot, i) => {
+      const isSel = i === s.selectedIndex;
+      return {
+        code: slot.posGroup,
+        playerLabel: slot.player || '-',
+        style: {
+          position: 'absolute', left: slot.x + '%', top: slot.y + '%', transform: 'translate(-50%,-50%)',
+          width: '46px', height: '46px', borderRadius: '50%',
+          background: isSel ? 'var(--color-accent-700)' : 'var(--color-neutral-800)',
+          border: '2px solid ' + (isSel ? 'var(--color-accent)' : 'var(--color-neutral-600)'),
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          cursor: 'grab', userSelect: 'none', touchAction: 'none', boxShadow: 'var(--shadow-sm)',
+        },
+        onPointerDown: (e) => {
+          e.stopPropagation();
+          this.setState({ draggingIndex: i, selectedIndex: i });
+        },
+      };
+    });
+
+    const savedTactics = s.savedTactics.map((t, i) => ({
+      name: t.name,
+      onLoad: () => this.setState({ formation: t.formation, slots: makeSlots(t.formation), tacticName: t.name, selectedIndex: null }),
+      onRename: () => {
+        const name = prompt('Neuer Name', t.name);
+        if (name) this.setState(st => ({ savedTactics: st.savedTactics.map((x, j) => j === i ? { ...x, name } : x) }));
+      },
+      onDelete: () => this.setState(st => ({ savedTactics: st.savedTactics.filter((_, j) => j !== i) })),
+    }));
+
+    const sliders = SLIDER_DEFS.map(def => ({
+      label: def.label, value: s.sliders[def.key], valueLabel: LEVELS[s.sliders[def.key]],
+      lowLabel: def.lowLabel, highLabel: def.highLabel,
+      onChange: (e) => this.setState(st => ({ sliders: { ...st.sliders, [def.key]: Number(e.target.value) } })),
+    }));
+
+    const tabActive = { borderColor: 'var(--color-accent)', color: 'var(--color-text)', background: 'var(--color-accent-800)' };
+    const tabInactive = {};
+
+    return {
+      formationOptions: Object.keys(FORMATIONS),
+      formation: s.formation,
+      onFormationChange: (e) => this.onFormationChange(e),
+      savedTactics,
+      noSavedTactics: s.savedTactics.length === 0,
+      sliders,
+      tacticName: s.tacticName,
+      onNameChange: (e) => this.setState({ tacticName: e.target.value }),
+      onSaveAsNew: () => this.setState(st => ({ savedTactics: [...st.savedTactics, { name: st.tacticName || ('Taktik ' + (st.savedTactics.length + 1)), formation: st.formation }] })),
+      onSave: () => {},
+      offenseTabStyle: s.activeTab === 'offense' ? tabActive : tabInactive,
+      defenseTabStyle: s.activeTab === 'defense' ? tabActive : tabInactive,
+      onTabOffense: () => this.setState({ activeTab: 'offense', drawStart: null }),
+      onTabDefense: () => this.setState({ activeTab: 'defense', drawStart: null }),
+      drawBtnLabel: s.drawMode ? 'Zeichnen beenden' : 'Laufweg zeichnen',
+      drawBtnStyle: s.drawMode ? { borderColor: 'var(--color-accent)', color: 'var(--color-accent-300)' } : {},
+      onToggleDraw: () => this.setState(st => ({ drawMode: !st.drawMode, drawStart: null })),
+      onClearArrows: () => this.setState(st => ({ arrows: { ...st.arrows, [st.activeTab]: [] } })),
+      drawHint: s.drawMode ? 'Start- und Endpunkt fuer den Laufweg anklicken.' : '',
+      pitchCursor: s.drawMode ? 'crosshair' : (s.draggingIndex != null ? 'grabbing' : 'default'),
+      pitchRef: this.pitchRef,
+      hstripes: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900].map(y => ({ y })),
+      currentArrows: s.arrows[s.activeTab],
+      hasDrawStart: !!s.drawStart,
+      drawStartPx: s.drawStart || { x: 0, y: 0 },
+      slots,
+      onPitchPointerMove: (e) => {
+        if (s.draggingIndex == null) return;
+        const p = this.toPitchPoint(e.clientX, e.clientY);
+        this.setState(st => ({ slots: st.slots.map((sl, i) => i === st.draggingIndex ? { ...sl, x: p.xPct, y: p.yPct } : sl) }));
+      },
+      onPitchPointerUp: () => { if (s.draggingIndex != null) this.setState({ draggingIndex: null }); },
+      onPitchClick: (e) => {
+        if (!s.drawMode) return;
+        const p = this.toPitchPoint(e.clientX, e.clientY);
+        if (!s.drawStart) {
+          this.setState({ drawStart: { x: p.xSvg, y: p.ySvg } });
+        } else {
+          const start = s.drawStart;
+          this.setState(st => ({
+            arrows: { ...st.arrows, [st.activeTab]: [...st.arrows[st.activeTab], { x1: start.x, y1: start.y, x2: p.xSvg, y2: p.ySvg }] },
+            drawStart: null,
+          }));
+        }
+      },
+      hasSelection: !!selected,
+      hasNoSelection: !selected,
+      selectedPosLabel: selected ? selected.posGroup + ' \u2013 Position ' + (s.selectedIndex + 1) : '',
+      selectedRole: selected ? selected.role : '',
+      selectedRoleOptions: selected ? ROLES[selected.posGroup] : [],
+      selectedDuty: selected ? selected.duty : 'Ausgeglichen',
+      selectedPlayer: selected ? selected.player : '',
+      onRoleChange: (e) => this.setState(st => ({ slots: st.slots.map((sl, i) => i === st.selectedIndex ? { ...sl, role: e.target.value } : sl) })),
+      onDutyChange: (e) => this.setState(st => ({ slots: st.slots.map((sl, i) => i === st.selectedIndex ? { ...sl, duty: e.target.value } : sl) })),
+      onPlayerChange: (e) => this.setState(st => ({ slots: st.slots.map((sl, i) => i === st.selectedIndex ? { ...sl, player: e.target.value } : sl) })),
+      squad: SQUAD,
+      verwaltungOpen: s.verwaltungOpen,
+      onToggleVerwaltung: () => this.setState(st => ({ verwaltungOpen: !st.verwaltungOpen })),
+      verwaltungChevron: s.verwaltungOpen ? '\u25be' : '\u25b8',
+      verwaltungListStyle: s.verwaltungOpen ? { display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' } : { display: 'none' },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

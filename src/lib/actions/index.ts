@@ -22,4 +22,5 @@ export {
   updateTrainingExerciseSketch,
   upsertTrainingPlan,
 } from "./training";
+export { deleteTactic, ensureTacticsPermissions, renameTactic, saveTactic, saveTacticAsNew } from "./tactics";
 export type { ActionState } from "./helpers";

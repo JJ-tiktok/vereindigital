@@ -18,7 +18,7 @@ export function ClubSwitcher({
       <input name="redirectTo" type="hidden" value={pathname} />
       <select
         aria-label="Aktiven Verein wechseln"
-        className="mt-2 h-10 w-full rounded-lg border border-border bg-white px-2 text-sm font-semibold"
+        className="mt-2 h-10 w-full rounded-lg border border-border bg-surface px-2 text-sm font-semibold"
         defaultValue={activeClubId}
         name="clubId"
         onChange={(event) => event.currentTarget.form?.requestSubmit()}

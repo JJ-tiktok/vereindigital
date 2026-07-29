@@ -18,7 +18,7 @@ export function TeamSwitcher({
       <input name="redirectTo" type="hidden" value={pathname} />
       <select
         aria-label="Aktives Team wechseln"
-        className="mt-2 h-10 w-full rounded-lg border border-border bg-white px-2 text-sm font-semibold"
+        className="mt-2 h-10 w-full rounded-lg border border-border bg-surface px-2 text-sm font-semibold"
         defaultValue={activeTeamId}
         name="teamId"
         onChange={(event) => event.currentTarget.form?.requestSubmit()}

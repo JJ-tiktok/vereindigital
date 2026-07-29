@@ -35,30 +35,30 @@ const eventTypes: CalendarEventTypeConfig[] = [
   {
     key: "TRAINING",
     label: "Training",
-    dot: "bg-blue-600",
-    chip: "bg-blue-600 text-white",
-    soft: "bg-blue-50 text-blue-700",
+    dot: "bg-primary",
+    chip: "bg-primary text-white",
+    soft: "bg-primary-soft text-primary",
   },
   {
     key: "MATCH",
     label: "Spiele",
     dot: "bg-emerald-600",
     chip: "bg-emerald-600 text-white",
-    soft: "bg-emerald-50 text-emerald-700",
+    soft: "bg-success-soft text-success",
   },
   {
     key: "TEAM_EVENT",
     label: "Mannschaftsabende",
     dot: "bg-amber-500",
     chip: "bg-amber-500 text-white",
-    soft: "bg-amber-50 text-amber-800",
+    soft: "bg-warning-soft text-amber-800",
   },
   {
     key: "OTHER",
     label: "Sonstiges",
-    dot: "bg-slate-500",
+    dot: "bg-muted",
     chip: "bg-slate-600 text-white",
-    soft: "bg-slate-100 text-slate-700",
+    soft: "bg-surface-muted text-foreground",
   },
 ];
 
@@ -112,21 +112,21 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <section className="overflow-hidden rounded-lg border border-border bg-white">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="overflow-hidden rounded-lg border border-border bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border p-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted">
               {view === "month" ? "Monatsansicht" : "Jahresansicht"}
             </p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+            <h2 className="mt-1 text-2xl font-bold text-foreground">
               {view === "month" ? capitalize(monthFormatter.format(visibleDate)) : visibleDate.getFullYear()}
             </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
-              className="inline-flex size-10 items-center justify-center rounded-lg border border-border text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex size-10 items-center justify-center rounded-lg border border-border text-foreground transition hover:bg-surface-muted"
               onClick={() => (view === "month" ? moveMonth(-1) : moveYear(-1))}
               type="button"
               aria-label="Vorheriger Zeitraum"
@@ -134,14 +134,14 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
               <ChevronLeft className="size-4" aria-hidden="true" />
             </button>
             <button
-              className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+              className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:bg-surface-muted"
               onClick={() => setVisibleDate(firstDayOfMonth(new Date()))}
               type="button"
             >
               Heute
             </button>
             <button
-              className="inline-flex size-10 items-center justify-center rounded-lg border border-border text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex size-10 items-center justify-center rounded-lg border border-border text-foreground transition hover:bg-surface-muted"
               onClick={() => (view === "month" ? moveMonth(1) : moveYear(1))}
               type="button"
               aria-label="Naechster Zeitraum"
@@ -149,10 +149,10 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
               <ChevronRight className="size-4" aria-hidden="true" />
             </button>
 
-            <div className="ml-1 grid h-10 grid-cols-2 rounded-lg bg-slate-100 p-1">
+            <div className="ml-1 grid h-10 grid-cols-2 rounded-lg bg-surface-muted p-1">
               <button
                 className={`rounded-md px-4 text-sm font-semibold transition ${
-                  view === "month" ? "bg-white text-primary shadow-sm" : "text-slate-600 hover:text-slate-950"
+                  view === "month" ? "bg-surface text-primary shadow-sm" : "text-muted hover:text-foreground"
                 }`}
                 onClick={() => setView("month")}
                 type="button"
@@ -161,7 +161,7 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
               </button>
               <button
                 className={`rounded-md px-4 text-sm font-semibold transition ${
-                  view === "year" ? "bg-white text-primary shadow-sm" : "text-slate-600 hover:text-slate-950"
+                  view === "year" ? "bg-surface text-primary shadow-sm" : "text-muted hover:text-foreground"
                 }`}
                 onClick={() => setView("year")}
                 type="button"
@@ -184,27 +184,27 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
       </section>
 
       <aside className="space-y-6">
-        <section className="rounded-lg border border-border bg-white p-5">
-          <h2 className="text-xl font-bold text-slate-950">Kategorien</h2>
+        <section className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="text-xl font-bold text-foreground">Kategorien</h2>
           <div className="mt-5 space-y-4">
             {eventTypes.map((type) => (
               <label className="flex cursor-pointer items-center gap-3" key={type.key}>
                 <input
                   checked={activeTypes.has(type.key)}
-                  className="size-4 accent-blue-600"
+                  className="size-4 accent-primary"
                   onChange={() => toggleType(type.key)}
                   type="checkbox"
                 />
                 <span className={`size-3 rounded-full ${type.dot}`} aria-hidden="true" />
-                <span className="text-sm font-semibold text-slate-800">{type.label}</span>
+                <span className="text-sm font-semibold text-foreground">{type.label}</span>
               </label>
             ))}
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-white p-5">
+        <section className="rounded-lg border border-border bg-surface p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold text-slate-950">Anstehend</h2>
+            <h2 className="text-xl font-bold text-foreground">Anstehend</h2>
             <Link className="text-sm font-semibold text-primary hover:text-primary-strong" href="/kalender">
               Alle sehen
             </Link>
@@ -217,7 +217,7 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
 
                 return (
                   <Link
-                    className="grid grid-cols-[56px_1fr] gap-4 rounded-lg p-2 transition hover:bg-slate-50"
+                    className="grid grid-cols-[56px_1fr] gap-4 rounded-lg p-2 transition hover:bg-surface-muted"
                     href={`/kalender/${event.id}`}
                     key={event.id}
                   >
@@ -226,7 +226,7 @@ export function CalendarGrid({ events }: { events: CalendarEventPreview[] }) {
                       <span className="mt-1 block">{dayMonthFormatter.format(event.startsAtDate).replace(/\d+\.\s?/, "")}</span>
                     </div>
                     <div>
-                      <p className="font-bold text-slate-950">{event.title}</p>
+                      <p className="font-bold text-foreground">{event.title}</p>
                       <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
                         <Clock className="size-4" aria-hidden="true" />
                         {timeFormatter.format(event.startsAtDate)} - {timeFormatter.format(event.endsAtDate)}
@@ -273,7 +273,7 @@ function MonthView({
 
   return (
     <>
-      <div className="grid grid-cols-7 border-b border-border bg-slate-50">
+      <div className="grid grid-cols-7 border-b border-border bg-surface-muted">
         {weekDays.map((weekDay) => (
           <div className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted" key={weekDay}>
             {weekDay}
@@ -289,13 +289,13 @@ function MonthView({
           return (
             <div
               className={`min-h-36 border-b border-r border-border p-2 ${
-                inMonth ? "bg-white" : "bg-slate-50 text-slate-400"
+                inMonth ? "bg-surface" : "bg-surface-muted text-muted"
               }`}
               key={date.toISOString()}
             >
               <Link
                 className={`inline-flex size-8 items-center justify-center rounded-lg text-sm font-semibold ${
-                  isToday(date) ? "bg-primary text-white" : inMonth ? "text-slate-900 hover:bg-blue-50" : "text-slate-400"
+                  isToday(date) ? "bg-primary text-white" : inMonth ? "text-foreground hover:bg-primary-soft" : "text-muted"
                 }`}
                 href={`/kalender/new?date=${dayParam}`}
                 title="Termin an diesem Tag erstellen"
@@ -339,10 +339,10 @@ function YearMonthCard({
   );
 
   return (
-    <article className="rounded-lg border border-border bg-slate-50 p-4">
+    <article className="rounded-lg border border-border bg-surface-muted p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold text-slate-950">{capitalize(new Intl.DateTimeFormat("de-DE", { month: "long" }).format(month))}</h3>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-muted">{monthEvents.length}</span>
+        <h3 className="font-bold text-foreground">{capitalize(new Intl.DateTimeFormat("de-DE", { month: "long" }).format(month))}</h3>
+        <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-muted">{monthEvents.length}</span>
       </div>
       {monthEvents.length > 0 ? (
         <div className="mt-4 space-y-2">

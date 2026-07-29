@@ -11,7 +11,7 @@ export default async function SignInPage({
   const redirectUrl = normalizeRedirect(params.redirect_url);
 
   return (
-    <main className="grid min-h-screen bg-background text-slate-950 lg:grid-cols-[1fr_520px]">
+    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[1fr_520px]">
       <section className="relative hidden overflow-hidden border-r border-border px-10 py-10 lg:flex lg:flex-col lg:justify-between">
         <div
           aria-hidden="true"
@@ -37,7 +37,7 @@ export default async function SignInPage({
             <h1 className="mt-5 text-5xl font-black leading-tight tracking-normal">
               Fuehre dein Team mit klaren Daten.
             </h1>
-            <p className="mt-5 text-lg leading-8 text-slate-700">
+            <p className="mt-5 text-lg leading-8 text-foreground">
               Kader, Termine, Rueckmeldungen, Trainingsplaene und Spielerentwicklung warten in deinem Dashboard.
             </p>
           </div>

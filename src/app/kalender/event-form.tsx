@@ -20,7 +20,7 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
   return (
     <form
       action={formAction}
-      className="max-w-3xl rounded-lg border border-border bg-white p-6"
+      className="max-w-3xl rounded-lg border border-border bg-surface p-6"
       onSubmit={(event) => {
         const form = event.currentTarget;
         const formData = new FormData(form);
@@ -50,17 +50,17 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
       }}
     >
       {clientError || serverError ? (
-        <p className="mb-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+        <p className="mb-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
           {clientError ?? serverError}
         </p>
       ) : null}
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="type">
+          <label className="text-sm font-semibold text-foreground" htmlFor="type">
             Typ
           </label>
           <select
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             id="type"
             name="type"
             onChange={(event) => setType(event.target.value)}
@@ -76,11 +76,11 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
         <Field label="Ort" name="location" />
         <Field label="Gegner bei Spiel" name="opponent" required={type === "MATCH"} />
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="startsAt">
+          <label className="text-sm font-semibold text-foreground" htmlFor="startsAt">
             Start
           </label>
           <input
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             id="startsAt"
             name="startsAt"
             onChange={(event) => {
@@ -97,11 +97,11 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
           />
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="endsAt">
+          <label className="text-sm font-semibold text-foreground" htmlFor="endsAt">
             Ende
           </label>
           <input
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
             id="endsAt"
             name="endsAt"
             onChange={(event) => {
@@ -114,10 +114,10 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
           />
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-800" htmlFor="isHomeGame">
+          <label className="text-sm font-semibold text-foreground" htmlFor="isHomeGame">
             Heim/Auswaerts
           </label>
-          <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100" id="isHomeGame" name="isHomeGame">
+          <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id="isHomeGame" name="isHomeGame">
             <option value="true">Heimspiel</option>
             <option value="false">Auswaertsspiel</option>
           </select>
@@ -125,10 +125,10 @@ export function EventForm({ selectedDate }: { selectedDate?: string }) {
       </div>
 
       <div className="mt-5">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="description">
+        <label className="text-sm font-semibold text-foreground" htmlFor="description">
           Beschreibung
         </label>
-        <textarea className="mt-2 min-h-28 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100" id="description" name="description" />
+        <textarea className="mt-2 min-h-28 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id="description" name="description" />
       </div>
 
       <button
@@ -179,10 +179,10 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-slate-800" htmlFor={name}>
+      <label className="text-sm font-semibold text-foreground" htmlFor={name}>
         {label}
       </label>
-      <input className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100" id={name} name={name} required={required} />
+      <input className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft" id={name} name={name} required={required} />
     </div>
   );
 }
