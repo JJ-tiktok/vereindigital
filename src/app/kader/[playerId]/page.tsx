@@ -216,7 +216,7 @@ export default async function PlayerDetailPage({
           Zurueck zum Kader
         </Link>
 
-        <section className="rounded-lg border border-border bg-white p-5 sm:p-6">
+        <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[180px_1fr] xl:grid-cols-[200px_1fr_260px]">
             <div className="flex aspect-[4/5] w-full max-w-48 items-center justify-center rounded-lg border border-border bg-slate-950 text-5xl font-bold text-white shadow-sm max-lg:mx-auto">
               {player.firstName[0]}
@@ -224,7 +224,7 @@ export default async function PlayerDetailPage({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-4xl font-bold tracking-normal text-slate-950 sm:text-5xl">
+                <h1 className="text-4xl font-bold tracking-normal text-foreground sm:text-5xl">
                   {player.firstName} {player.lastName}
                 </h1>
                 <span className="rounded-lg bg-primary px-3 py-1 text-sm font-bold text-white">{player.position}</span>
@@ -264,7 +264,7 @@ export default async function PlayerDetailPage({
               content: (
                 <>
                   <section className="grid gap-6 xl:grid-cols-[390px_1fr_360px]">
-                    <article className="rounded-lg border border-border bg-white">
+                    <article className="rounded-lg border border-border bg-surface">
                       <SectionHeader title="Faehigkeiten" description="Top-Werte aus dem letzten Bewertungsstand." />
                       {highlightedRatings.length > 0 ? (
                         <div className="space-y-2 p-5">
@@ -290,7 +290,7 @@ export default async function PlayerDetailPage({
                     <div className="space-y-6">
                       <PitchCard position={player.position} />
 
-                      <article className="rounded-lg border border-border bg-white">
+                      <article className="rounded-lg border border-border bg-surface">
                         <SectionHeader
                           action={<FileText className="size-5 text-muted" aria-hidden="true" />}
                           title="Spielerakte & Notizen"
@@ -301,7 +301,7 @@ export default async function PlayerDetailPage({
                           <input name="playerProfileId" type="hidden" value={player.id} />
                           <div className="grid gap-3 md:grid-cols-2">
                             <Field label="Titel" name="title" required />
-                            <label className="text-sm font-semibold text-slate-800">
+                            <label className="text-sm font-semibold text-foreground">
                               Typ
                               <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="type">
                                 <option value="PLAYER_TALK">Spielergespraech</option>
@@ -317,11 +317,11 @@ export default async function PlayerDetailPage({
                             <Field defaultValue={today} label="Datum" name="occurredAt" type="date" required />
                             <Field label="Wiedervorlage" name="followUpAt" type="date" />
                           </div>
-                          <label className="text-sm font-semibold text-slate-800">
+                          <label className="text-sm font-semibold text-foreground">
                             Notiz
                             <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" name="body" required />
                           </label>
-                          <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-slate-800 md:w-max" type="submit">
+                          <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-foreground md:w-max" type="submit">
                             <ClipboardEdit className="size-4" aria-hidden="true" />
                             Eintrag hinzufuegen
                           </button>
@@ -330,14 +330,14 @@ export default async function PlayerDetailPage({
                     </div>
 
                     <aside className="space-y-6">
-                      <article className="rounded-lg border border-border bg-white">
+                      <article className="rounded-lg border border-border bg-surface">
                         <SectionHeader title="Form" description="Getrennt nach Spiel- und Trainingsleistung." />
                         <div className="space-y-4 p-5">
                           <RatingBar label="Spielform" value={matchForm} />
                           <RatingBar label="Trainingsform" value={trainingForm} />
-                          <div className="rounded-lg bg-slate-50 p-4">
+                          <div className="rounded-lg bg-surface-muted p-4">
                             <p className="text-xs font-semibold uppercase text-muted">Eindruck</p>
-                            <p className="mt-2 text-2xl font-bold text-slate-950">{formLabel(matchForm, trainingForm)}</p>
+                            <p className="mt-2 text-2xl font-bold text-foreground">{formLabel(matchForm, trainingForm)}</p>
                           </div>
                         </div>
                       </article>
@@ -345,14 +345,14 @@ export default async function PlayerDetailPage({
                   </section>
 
                   {seasonHistory.length > 0 ? (
-                    <section className="overflow-hidden rounded-lg border border-border bg-white">
+                    <section className="overflow-hidden rounded-lg border border-border bg-surface">
                       <SectionHeader
                         title="Saisonverlauf"
                         description="Spiel- und Trainingsdaten ueber alle Saisons und Teams des Spielers hinweg."
                       />
                       <div className="overflow-x-auto">
                         <table className="min-w-[720px] w-full text-left text-sm">
-                          <thead className="bg-slate-50 text-xs font-semibold uppercase text-muted">
+                          <thead className="bg-surface-muted text-xs font-semibold uppercase text-muted">
                             <tr>
                               <th className="px-5 py-3">Saison</th>
                               <th className="px-5 py-3">Spiele</th>
@@ -366,13 +366,13 @@ export default async function PlayerDetailPage({
                           <tbody className="divide-y divide-border">
                             {seasonHistory.map((season) => (
                               <tr key={season.seasonId}>
-                                <td className="px-5 py-4 font-semibold text-slate-950">{season.name}</td>
-                                <td className="px-5 py-4 text-slate-700">{season.matchCount}</td>
-                                <td className="px-5 py-4 text-slate-700">{season.minutesPlayed}</td>
-                                <td className="px-5 py-4 text-slate-700">{season.goals}</td>
-                                <td className="px-5 py-4 text-slate-700">{season.assists}</td>
-                                <td className="px-5 py-4 text-slate-700">{formatRating(season.averageMatchRating)}</td>
-                                <td className="px-5 py-4 text-slate-700">{formatRating(season.averageTrainingRating)}</td>
+                                <td className="px-5 py-4 font-semibold text-foreground">{season.name}</td>
+                                <td className="px-5 py-4 text-foreground">{season.matchCount}</td>
+                                <td className="px-5 py-4 text-foreground">{season.minutesPlayed}</td>
+                                <td className="px-5 py-4 text-foreground">{season.goals}</td>
+                                <td className="px-5 py-4 text-foreground">{season.assists}</td>
+                                <td className="px-5 py-4 text-foreground">{formatRating(season.averageMatchRating)}</td>
+                                <td className="px-5 py-4 text-foreground">{formatRating(season.averageTrainingRating)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -389,7 +389,7 @@ export default async function PlayerDetailPage({
                     id: "torwart-analyse",
                     label: "Torwart-Analyse",
                     content: (
-                      <section className="rounded-lg border border-border bg-white">
+                      <section className="rounded-lg border border-border bg-surface">
                         <SectionHeader
                           title="Torwart-Analyse"
                           description="Zwei Bewertungsstaende auswaehlen und im Radar vergleichen – auch spielerübergreifend unter Torwaertern."
@@ -410,10 +410,10 @@ export default async function PlayerDetailPage({
               id: "bewertung",
               label: "Neue Bewertung",
               content: (
-                <section className="rounded-lg border border-border bg-white">
+                <section className="rounded-lg border border-border bg-surface">
                   <SectionHeader title="Neuer Bewertungsstand" description="Faehigkeiten auf einer Skala von 1 bis 20 erfassen." />
                   {query.error === "attribute-values" ? (
-                    <p className="mx-5 mt-5 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                    <p className="mx-5 mt-5 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
                       Bitte mindestens einen Wert zwischen 1 und 20 erfassen.
                     </p>
                   ) : null}
@@ -422,7 +422,7 @@ export default async function PlayerDetailPage({
                     <div className="grid gap-3 md:grid-cols-3">
                       <Field defaultValue="Trainerbewertung" label="Titel" name="title" required />
                       <Field defaultValue={today} label="Bewertungsdatum" name="ratedAt" type="date" required />
-                      <label className="text-sm font-semibold text-slate-800 md:col-span-1">
+                      <label className="text-sm font-semibold text-foreground md:col-span-1">
                         Notiz
                         <input className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" name="notes" />
                       </label>
@@ -430,13 +430,13 @@ export default async function PlayerDetailPage({
                     <div className="grid gap-4 xl:grid-cols-3">
                       {[...definitionsByCategory.entries()].map(([category, definitions]) => (
                         <div className="rounded-lg border border-border p-4" key={category}>
-                          <p className="text-sm font-semibold text-slate-950">{attributeCategoryLabel(category)}</p>
+                          <p className="text-sm font-semibold text-foreground">{attributeCategoryLabel(category)}</p>
                           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                             {definitions.map((definition) => (
                               <label className="min-w-0 break-words text-xs font-semibold uppercase leading-snug text-muted" key={definition.id}>
                                 {definition.name}
                                 <input
-                                  className="mt-1 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900"
+                                  className="mt-1 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal text-foreground"
                                   max={20}
                                   min={1}
                                   name={`attribute-${definition.id}`}
@@ -461,15 +461,15 @@ export default async function PlayerDetailPage({
               label: "Stammdaten",
               content: (
                 <div className="grid gap-6 lg:grid-cols-2">
-                  <article className="rounded-lg border border-border bg-white">
+                  <article className="rounded-lg border border-border bg-surface">
                     <SectionHeader action={<Shield className="size-5 text-muted" aria-hidden="true" />} title="Stammdaten" description="Basisdaten bearbeiten." />
                     <div className="p-5">
                       <PlayerForm player={player} embedded />
                     </div>
                   </article>
 
-                  <article className="rounded-lg border border-rose-100 bg-rose-50/40 p-5">
-                    <h2 className="text-lg font-bold text-rose-950">Kader entfernen</h2>
+                  <article className="rounded-lg border border-danger-soft bg-rose-50/40 p-5">
+                    <h2 className="text-lg font-bold text-danger">Kader entfernen</h2>
                     <p className="mt-2 text-sm leading-6 text-rose-800">
                       Entfernt den Spieler aus dem aktuellen Teamkader. Bereits erfasste Statistiken und Akteneintraege bleiben erhalten.
                     </p>
@@ -500,7 +500,7 @@ function SectionHeader({
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border p-5">
       <div>
-        <h2 className="text-2xl font-bold tracking-normal text-slate-950">{title}</h2>
+        <h2 className="text-2xl font-bold tracking-normal text-foreground">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-muted">{description}</p>
       </div>
       {action}
@@ -512,16 +512,16 @@ function ProfileStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-2 text-2xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-2 text-2xl font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
 
 function MetricCard({ label, value, helper }: { label: string; value: string; helper: string }) {
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
+    <article className="rounded-lg border border-border bg-surface p-5">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-3 text-3xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-3 text-3xl font-bold tabular-nums text-foreground">{value}</p>
       <p className="mt-1 text-sm text-muted">{helper}</p>
     </article>
   );
@@ -541,10 +541,10 @@ function AttributeRow({
   const trend = previousValue !== null ? value - previousValue : null;
 
   return (
-    <div className="rounded-lg px-3 py-2 odd:bg-slate-50">
+    <div className="rounded-lg px-3 py-2 odd:bg-surface-muted">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-slate-900">{label}</p>
+          <p className="font-semibold text-foreground">{label}</p>
           <p className="mt-1 text-xs text-muted">
             {meta}
             {previousValue !== null ? ` · Vorher ${previousValue} (${trend! > 0 ? "+" : ""}${trend})` : ""}
@@ -561,7 +561,7 @@ function PitchCard({ position }: { position: string | null }) {
   const markerClass = positionMarkerClass(normalizedPosition);
 
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
+    <article className="rounded-lg border border-border bg-surface p-5">
       <div className="mx-auto flex aspect-[3/4] max-h-[360px] max-w-[260px] items-center justify-center rounded-lg border-2 border-slate-300 bg-slate-50 p-4">
         <div className="relative h-full w-full overflow-hidden rounded-md border border-slate-300">
           <div className="absolute left-0 right-0 top-1/2 border-t border-slate-300" />
@@ -571,9 +571,9 @@ function PitchCard({ position }: { position: string | null }) {
           <div className={`absolute size-6 rounded-full border-4 border-white bg-primary shadow ${markerClass}`} />
         </div>
       </div>
-      <div className="mt-4 rounded-lg border border-border bg-white p-3">
+      <div className="mt-4 rounded-lg border border-border bg-surface p-3">
         <p className="text-xs font-semibold uppercase text-muted">Position</p>
-        <p className="mt-1 font-bold text-slate-950">{positionLabel(normalizedPosition)}</p>
+        <p className="mt-1 font-bold text-foreground">{positionLabel(normalizedPosition)}</p>
       </div>
     </article>
   );
@@ -601,17 +601,17 @@ function NotesList({
       {entries.map((entry) => (
         <article className="border-l-2 border-primary pl-4" key={entry.id}>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-950">{formatDate(entry.occurredAt)}</span>
-            <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-primary">
+            <span className="text-xs font-bold text-foreground">{formatDate(entry.occurredAt)}</span>
+            <span className="rounded-full bg-primary-soft px-2 py-1 text-xs font-semibold text-primary">
               {fileEntryTypeLabel(entry.type)}
             </span>
             {entry.followUpAt ? (
-              <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+              <span className="rounded-full bg-warning-soft px-2 py-1 text-xs font-semibold text-warning">
                 Wiedervorlage {formatDate(entry.followUpAt)}
               </span>
             ) : null}
           </div>
-          <h3 className="mt-2 font-semibold text-slate-950">{entry.title}</h3>
+          <h3 className="mt-2 font-semibold text-foreground">{entry.title}</h3>
           <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-6 text-muted">{entry.body}</p>
           <p className="mt-2 text-xs text-muted">
             {entry.createdByUser?.displayName ?? entry.createdByUser?.email ?? "Trainerteam"}
@@ -628,10 +628,10 @@ function RatingBar({ label, value }: { label: string; value: number | null }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <p className="font-semibold text-slate-900">{label}</p>
-        <p className="text-xl font-bold tabular-nums text-slate-950">{formatRating(value)}</p>
+        <p className="font-semibold text-foreground">{label}</p>
+        <p className="text-xl font-bold tabular-nums text-foreground">{formatRating(value)}</p>
       </div>
-      <div className="mt-3 h-2 rounded-full bg-slate-100">
+      <div className="mt-3 h-2 rounded-full bg-surface-muted">
         <div className="h-2 rounded-full bg-primary" style={{ width: `${percentage}%` }} />
       </div>
     </div>
@@ -652,7 +652,7 @@ function Field({
   type?: string;
 }) {
   return (
-    <label className="text-sm font-semibold text-slate-800">
+    <label className="text-sm font-semibold text-foreground">
       {label}
       <input
         className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm"

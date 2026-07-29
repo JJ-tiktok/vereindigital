@@ -26,7 +26,7 @@ export default async function Home() {
   const primaryLabel = user ? "Zum Dashboard" : "Anmelden";
 
   return (
-    <main className="min-h-screen bg-background text-slate-950">
+    <main className="min-h-screen bg-background text-foreground">
       <section className="relative isolate flex min-h-[86vh] items-center overflow-hidden border-b border-border px-4 py-10 sm:px-6 lg:px-8">
         <div
           aria-hidden="true"
@@ -50,7 +50,7 @@ export default async function Home() {
               </div>
             </div>
             <Link
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-4 text-sm font-bold text-slate-800 transition hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-bold text-foreground transition hover:bg-surface-muted"
               href={primaryHref}
             >
               {primaryLabel}
@@ -59,10 +59,10 @@ export default async function Home() {
 
           <div className="max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Fussballvereine smart organisieren</p>
-            <h1 className="mt-5 text-5xl font-black leading-tight tracking-normal text-slate-950 sm:text-6xl">
+            <h1 className="mt-5 text-5xl font-black leading-tight tracking-normal text-foreground sm:text-6xl">
               Der digitale Arbeitsplatz fuer Trainerteams.
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-700">
+            <p className="mt-6 max-w-xl text-lg leading-8 text-foreground">
               VereinDigital verbindet Kaderverwaltung, Trainingsplanung, Spieltagsdaten und Coaching-Notizen in einem
               klaren Dashboard fuer den Vereinsalltag.
             </p>
@@ -76,7 +76,7 @@ export default async function Home() {
               </Link>
               {!user ? (
                 <Link
-                  className="inline-flex h-12 items-center rounded-lg border border-border bg-white px-5 text-sm font-bold text-slate-800 transition hover:bg-slate-50"
+                  className="inline-flex h-12 items-center rounded-lg border border-border bg-surface px-5 text-sm font-bold text-foreground transition hover:bg-surface-muted"
                   href="/sign-up"
                 >
                   Kostenlos starten
@@ -90,7 +90,7 @@ export default async function Home() {
       <section className="px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
           {featureCards.map((feature) => (
-            <article className="rounded-lg border border-border bg-white p-5" key={feature.title}>
+            <article className="rounded-lg border border-border bg-surface p-5" key={feature.title}>
               <feature.icon className="size-5 text-primary" aria-hidden="true" />
               <h2 className="mt-4 text-xl font-bold">{feature.title}</h2>
               <p className="mt-2 text-sm leading-6 text-muted">{feature.description}</p>

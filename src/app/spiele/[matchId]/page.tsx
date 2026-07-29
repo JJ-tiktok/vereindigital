@@ -121,31 +121,31 @@ export default async function MatchDetailPage({
         <LineupField players={playedRows} />
 
         {query.imported ? (
-          <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          <p className="rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm font-semibold text-success">
             Spieltagsdaten wurden importiert.
           </p>
         ) : null}
         {query.error === "stat-values" ? (
-          <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          <p className="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
             Bitte pruefe Minuten, Karten, Tore und Bewertung. Eingesetzte Spieler brauchen eine Note zwischen 1.0 und 10.0; bei Nicht eingesetzt und 0 Minuten kann die Note leer bleiben.
           </p>
         ) : null}
         {query.error === "score" ? (
-          <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          <p className="rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
             Ergebnisse duerfen nicht negativ sein.
           </p>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <aside className="space-y-4">
-            <form action={updateMatchResult} className="rounded-lg border border-border bg-white p-5">
+            <form action={updateMatchResult} className="rounded-lg border border-border bg-surface p-5">
               <input name="matchId" type="hidden" value={match.id} />
               <SectionTitle icon={<ClipboardPen className="size-5 text-primary" aria-hidden="true" />} title="Match Result" />
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <NumberField label="Tore fuer" name="goalsFor" defaultValue={match.goalsFor} />
                 <NumberField label="Tore gegen" name="goalsAgainst" defaultValue={match.goalsAgainst} />
               </div>
-              <label className="mt-4 block text-sm font-semibold text-slate-800" htmlFor="status">
+              <label className="mt-4 block text-sm font-semibold text-foreground" htmlFor="status">
                 Status
                 <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" defaultValue={match.status} id="status" name="status">
                   <option value="PLANNED">Geplant</option>
@@ -160,7 +160,7 @@ export default async function MatchDetailPage({
               </button>
             </form>
 
-            <article className="rounded-lg border border-border bg-white p-5">
+            <article className="rounded-lg border border-border bg-surface p-5">
               <SectionTitle icon={<BarChart3 className="size-5 text-primary" aria-hidden="true" />} title="Spielstatus" />
               <div className="mt-5 grid gap-3">
                 <SideMetric label="Eingesetzt" value={`${playedRows.length}/${players.length}`} />
@@ -170,7 +170,7 @@ export default async function MatchDetailPage({
               </div>
             </article>
 
-            <article className="rounded-lg border border-border bg-white p-5">
+            <article className="rounded-lg border border-border bg-surface p-5">
               <SectionTitle icon={<Shield className="size-5 text-primary" aria-hidden="true" />} title="Kurzfazit" />
               <p className="mt-4 text-sm leading-6 text-muted">
                 Die Liste rechts ist nach Einsatz sortiert. Spieler mit Minuten, Startelf oder Einwechslung stehen oben; nicht eingesetzte Spieler bleiben fuer den vollstaendigen Spieltagskader erhalten.
@@ -178,17 +178,17 @@ export default async function MatchDetailPage({
             </article>
           </aside>
 
-          <section className="overflow-hidden rounded-lg border border-border bg-white">
+          <section className="overflow-hidden rounded-lg border border-border bg-surface">
             <div className="border-b border-border p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
-                  <h2 className="mt-1 text-2xl font-bold text-slate-950">Matchday Squad</h2>
+                  <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
                   <p className="mt-1 text-sm text-muted">Eingesetzte Spieler oben, komplette Kaderpflege darunter.</p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">{players.length - playedRows.length} ohne Einsatz</span>
+                  <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
+                  <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{players.length - playedRows.length} ohne Einsatz</span>
                 </div>
               </div>
             </div>
@@ -300,19 +300,19 @@ function PlayerStatRow({
   return (
     <form
       action={updatePlayerMatchStat}
-      className={`grid gap-3 p-4 transition hover:bg-slate-50 lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px_92px] lg:items-center ${
-        player.played ? "bg-white" : "bg-slate-50/50"
+      className={`grid gap-3 p-4 transition hover:bg-surface-muted lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px_92px] lg:items-center ${
+        player.played ? "bg-surface" : "bg-slate-50/50"
       }`}
     >
       <input name="matchId" type="hidden" value={matchId} />
       <input name="playerProfileId" type="hidden" value={player.id} />
       <div className="flex min-w-0 items-center gap-3">
-        <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${player.played ? "bg-blue-50 text-primary" : "bg-slate-100 text-slate-600"}`}>
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${player.played ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted"}`}>
           {player.jerseyNumber ?? player.initials}
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-bold text-slate-950">{player.name}</p>
+            <p className="truncate font-bold text-foreground">{player.name}</p>
             {player.played ? <CircleDot className="size-3 text-primary" aria-hidden="true" /> : null}
           </div>
           <p className="mt-1 text-xs font-bold uppercase tracking-wide text-muted">{player.position}</p>
@@ -320,7 +320,7 @@ function PlayerStatRow({
       </div>
       <label className="text-xs font-semibold uppercase text-muted">
         Status
-        <select className="mt-1 h-9 w-full rounded-lg border border-border bg-white px-2 text-sm font-normal text-slate-900" defaultValue={player.lineupStatus} name="lineupStatus">
+        <select className="mt-1 h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm font-normal text-foreground" defaultValue={player.lineupStatus} name="lineupStatus">
           <option value="STARTER">Startelf</option>
           <option value="SUBSTITUTE">Einwechslung</option>
           <option value="NOT_USED">Nicht eingesetzt</option>
@@ -332,7 +332,7 @@ function PlayerStatRow({
       <CompactNumber name="yellowCards" label="Gelb" value={player.yellowCards} accent={player.yellowCards > 0 ? "yellow" : undefined} />
       <CompactNumber name="redCards" label="Rot" value={player.redCards} accent={player.redCards > 0 ? "red" : undefined} />
       <CompactNumber name="rating" label="Note" value={player.rating ?? undefined} max={10} step="0.1" />
-      <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-blue-50 px-3 text-sm font-bold text-primary transition hover:bg-blue-100" formNoValidate type="submit">
+      <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary-soft px-3 text-sm font-bold text-primary transition hover:bg-blue-100" formNoValidate type="submit">
         <Save className="size-4" aria-hidden="true" />
         Save
       </button>
@@ -359,11 +359,11 @@ function LineupField({
   ];
 
   return (
-    <section className="rounded-lg border border-border bg-white p-5">
+    <section className="rounded-lg border border-border bg-surface p-5">
       <div className="flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Aufstellung</p>
-          <h2 className="mt-1 text-xl font-bold text-slate-950">Positionsuebersicht</h2>
+          <h2 className="mt-1 text-xl font-bold text-foreground">Positionsuebersicht</h2>
         </div>
         <p className="text-sm text-muted">Eingesetzte Spieler nach Mannschaftsteil, ohne taktische Formation.</p>
       </div>
@@ -430,13 +430,13 @@ function CompactNumber({
   step?: string;
   value?: number;
 }) {
-  const accentClass = accent === "yellow" ? "border-amber-300 bg-amber-50" : accent === "red" ? "border-rose-300 bg-rose-50" : "border-border bg-white";
+  const accentClass = accent === "yellow" ? "border-warning-soft bg-warning-soft" : accent === "red" ? "border-danger-soft bg-danger-soft" : "border-border bg-surface";
 
   return (
     <label className="text-xs font-semibold uppercase text-muted">
       {label}
       <input
-        className={`mt-1 h-9 w-full rounded-lg border px-2 text-sm font-semibold tabular-nums text-slate-900 ${accentClass}`}
+        className={`mt-1 h-9 w-full rounded-lg border px-2 text-sm font-semibold tabular-nums text-foreground ${accentClass}`}
         defaultValue={value ?? ""}
         max={max}
         min={0}
@@ -458,7 +458,7 @@ function NumberField({
   defaultValue?: number | null;
 }) {
   return (
-    <label className="text-sm font-semibold text-slate-800">
+    <label className="text-sm font-semibold text-foreground">
       {label}
       <input
         className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm font-bold tabular-nums"
@@ -475,16 +475,16 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
   return (
     <div className="flex items-center gap-2 border-b border-border pb-4">
       {icon}
-      <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
     </div>
   );
 }
 
 function SideMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 px-3 py-2">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-muted px-3 py-2">
       <span className="text-sm font-semibold text-muted">{label}</span>
-      <span className="font-black tabular-nums text-slate-950">{value}</span>
+      <span className="font-black tabular-nums text-foreground">{value}</span>
     </div>
   );
 }

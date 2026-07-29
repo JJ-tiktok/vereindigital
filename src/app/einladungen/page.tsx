@@ -67,7 +67,7 @@ export default async function InvitationsPage({
         description="Erstelle Teamlinks fuer Trainer, Co-Trainer oder Spieler und verschicke sie per E-Mail, WhatsApp oder direkt als Link."
       />
 
-      <div className="grid gap-6 py-6 xl:grid-cols-[380px_1fr]">
+      <div className="grid gap-6 py-6 lg:grid-cols-[380px_1fr]">
         <InvitationForm
           created={Boolean(query.created)}
           emailed={Boolean(query.emailed)}
@@ -75,9 +75,9 @@ export default async function InvitationsPage({
           teams={teams}
         />
 
-        <section className="rounded-lg border border-border bg-white">
+        <section className="rounded-lg border border-border bg-surface">
           <div className="border-b border-border p-5">
-            <h2 className="text-xl font-semibold text-slate-950">Einladungslinks</h2>
+            <h2 className="text-xl font-semibold text-foreground">Einladungslinks</h2>
             <p className="mt-1 text-sm text-muted">{invitations.length} Einladungen im Verein.</p>
           </div>
           <div className="divide-y divide-border">
@@ -90,18 +90,18 @@ export default async function InvitationsPage({
                   <article className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]" key={invitation.id}>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
+                        <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                           {invitation.role.name}
                         </span>
                         <span className={statusClass(invitation.status, expired)}>
                           {expired && invitation.status === "PENDING" ? "Abgelaufen" : statusLabel(invitation.status)}
                         </span>
                       </div>
-                      <h3 className="mt-3 font-semibold text-slate-950">{invitation.team?.name ?? "Verein"}</h3>
+                      <h3 className="mt-3 font-semibold text-foreground">{invitation.team?.name ?? "Verein"}</h3>
                       <p className="mt-1 text-sm text-muted">
                         {invitation.email || "Offener Link"} / gueltig bis {invitation.expiresAt.toLocaleDateString("de-DE")}
                       </p>
-                      <p className="mt-3 flex items-center gap-2 break-all rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                      <p className="mt-3 flex items-center gap-2 break-all rounded-lg bg-surface-muted px-3 py-2 text-xs text-muted">
                         <LinkIcon className="size-3 shrink-0" aria-hidden="true" />
                         {url}
                       </p>
@@ -111,7 +111,7 @@ export default async function InvitationsPage({
                       {invitation.status === "PENDING" && !expired ? (
                         <form action={revokeInvitation}>
                           <input name="invitationId" type="hidden" value={invitation.id} />
-                          <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-semibold text-red-700" type="submit">
+                          <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger" type="submit">
                             <XCircle className="size-4" aria-hidden="true" />
                             Widerrufen
                           </button>
@@ -148,12 +148,12 @@ function statusClass(status: string, expired: boolean) {
   const base = "rounded-full px-3 py-1 text-xs font-semibold";
 
   if (expired || status === "EXPIRED" || status === "REVOKED") {
-    return `${base} bg-slate-100 text-slate-600`;
+    return `${base} bg-surface-muted text-muted`;
   }
 
   if (status === "ACCEPTED") {
-    return `${base} bg-emerald-50 text-emerald-700`;
+    return `${base} bg-success-soft text-success`;
   }
 
-  return `${base} bg-amber-50 text-amber-700`;
+  return `${base} bg-warning-soft text-warning`;
 }

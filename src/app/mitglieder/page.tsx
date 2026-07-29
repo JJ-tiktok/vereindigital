@@ -100,15 +100,15 @@ export default async function MembersPage() {
         <MetricCard label="Offene Einladungen" value={pendingInvitations.length.toString()} helper="noch nicht angenommen" />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_340px]">
+      <section className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-          <article className="overflow-hidden rounded-lg border border-border bg-white">
+          <article className="overflow-hidden rounded-lg border border-border bg-surface">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
               <div>
-                <h2 className="text-xl font-bold text-slate-950">Vereinsrollen</h2>
+                <h2 className="text-xl font-bold text-foreground">Vereinsrollen</h2>
                 <p className="mt-1 text-sm text-muted">{clubMemberships.length} Rollen auf Vereinsebene</p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+              <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-foreground">
                 Gesamtverein
               </span>
             </div>
@@ -116,7 +116,7 @@ export default async function MembersPage() {
             {clubMemberships.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-[720px] w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                  <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                     <tr>
                       <th className="px-5 py-3">Mitglied</th>
                       <th className="px-5 py-3">Rolle</th>
@@ -132,7 +132,7 @@ export default async function MembersPage() {
                           <div className="flex items-center gap-3">
                             <AvatarLabel label={membership.user.displayName ?? membership.user.email} />
                             <div>
-                              <p className="font-semibold text-slate-950">
+                              <p className="font-semibold text-foreground">
                                 {membership.user.displayName ?? membership.user.email}
                               </p>
                               <p className="text-sm text-muted">{membership.user.email}</p>
@@ -140,15 +140,15 @@ export default async function MembersPage() {
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
+                          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                             {membership.role.name}
                           </span>
                         </td>
                         <td className="px-5 py-4">
                           <span className={statusClass(membership.status)}>{statusLabel(membership.status)}</span>
                         </td>
-                        <td className="px-5 py-4 text-slate-700">Vereinsrolle</td>
-                        <td className="px-5 py-4 text-slate-700">
+                        <td className="px-5 py-4 text-foreground">Vereinsrolle</td>
+                        <td className="px-5 py-4 text-foreground">
                           {membership.createdAt.toLocaleDateString("de-DE")}
                         </td>
                       </tr>
@@ -171,15 +171,15 @@ export default async function MembersPage() {
               const teamMemberships = memberships.filter((membership: TeamMembershipRow) => membership.teamId === team.id);
 
               return (
-                <article className="overflow-hidden rounded-lg border border-border bg-white" key={team.id}>
+                <article className="overflow-hidden rounded-lg border border-border bg-surface" key={team.id}>
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-950">{team.name}</h2>
+                      <h2 className="text-xl font-bold text-foreground">{team.name}</h2>
                       <p className="mt-1 text-sm text-muted">
                         {teamMemberships.length} Rollen / {context.activeSeason?.name ?? "Keine Saison"}
                       </p>
                     </div>
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
+                    <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                       {context.isClubAdmin ? "Admin-Sicht" : "Team-Sicht"}
                     </span>
                   </div>
@@ -187,7 +187,7 @@ export default async function MembersPage() {
                   {teamMemberships.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="min-w-[760px] w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-muted">
+                        <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                           <tr>
                             <th className="px-5 py-3">Mitglied</th>
                             <th className="px-5 py-3">Rolle</th>
@@ -210,7 +210,7 @@ export default async function MembersPage() {
                                     }
                                   />
                                   <div>
-                                    <p className="font-semibold text-slate-950">
+                                    <p className="font-semibold text-foreground">
                                       {membership.user?.displayName ??
                                         playerName(membership.playerProfile) ??
                                         membership.user?.email ??
@@ -221,17 +221,17 @@ export default async function MembersPage() {
                                 </div>
                               </td>
                               <td className="px-5 py-4">
-                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-foreground">
                                   {membership.role.name}
                                 </span>
                               </td>
                               <td className="px-5 py-4">
                                 <span className={statusClass(membership.status)}>{statusLabel(membership.status)}</span>
                               </td>
-                              <td className="px-5 py-4 text-slate-700">
+                              <td className="px-5 py-4 text-foreground">
                                 {membership.userId ? "App-Nutzer" : "Kaderprofil"}
                               </td>
-                              <td className="px-5 py-4 text-slate-700">
+                              <td className="px-5 py-4 text-foreground">
                                 {membership.createdAt.toLocaleDateString("de-DE")}
                               </td>
                             </tr>
@@ -259,10 +259,10 @@ export default async function MembersPage() {
         </div>
 
         <aside className="space-y-6">
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <div className="flex items-center gap-2">
               <UserCog className="size-5 text-primary" aria-hidden="true" />
-              <h2 className="text-xl font-bold text-slate-950">Was ist ein Mitglied?</h2>
+              <h2 className="text-xl font-bold text-foreground">Was ist ein Mitglied?</h2>
             </div>
             <p className="mt-3 text-sm leading-6 text-muted">
               Mitglieder sind App-Nutzer mit Rollen und Teamzugriff. Spielerprofile im Kader koennen existieren, ohne
@@ -270,16 +270,16 @@ export default async function MembersPage() {
             </p>
           </article>
 
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <div className="flex items-center gap-2">
               <Users className="size-5 text-primary" aria-hidden="true" />
-              <h2 className="text-xl font-bold text-slate-950">Offene Einladungen</h2>
+              <h2 className="text-xl font-bold text-foreground">Offene Einladungen</h2>
             </div>
             {pendingInvitations.length > 0 ? (
               <div className="mt-4 space-y-3">
                 {pendingInvitations.map((invitation) => (
-                  <div className="rounded-lg bg-slate-50 p-3" key={invitation.id}>
-                    <p className="font-semibold text-slate-950">{invitation.email ?? "Offener Link"}</p>
+                  <div className="rounded-lg bg-surface-muted p-3" key={invitation.id}>
+                    <p className="font-semibold text-foreground">{invitation.email ?? "Offener Link"}</p>
                     <p className="mt-1 text-sm text-muted">
                       {invitation.team?.name ?? "Verein"} / {invitation.role.name}
                     </p>
@@ -292,7 +292,7 @@ export default async function MembersPage() {
           </article>
 
           {profileOnlyMemberships.length > 0 ? (
-            <article className="rounded-lg border border-amber-200 bg-amber-50 p-5">
+            <article className="rounded-lg border border-amber-200 bg-warning-soft p-5">
               <p className="text-sm font-bold text-amber-900">Kaderprofile ohne Login</p>
               <p className="mt-2 text-sm leading-6 text-amber-800">
                 {profileOnlyMemberships.length} Spielerprofile sind im Team, aber noch nicht mit einem App-Nutzer
@@ -308,9 +308,9 @@ export default async function MembersPage() {
 
 function MetricCard({ helper, label, value }: { helper: string; label: string; value: string }) {
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
+    <article className="rounded-lg border border-border bg-surface p-5">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-3 text-4xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-3 text-4xl font-bold tabular-nums text-foreground">{value}</p>
       <p className="mt-1 text-sm text-muted">{helper}</p>
     </article>
   );
@@ -325,7 +325,7 @@ function AvatarLabel({ label }: { label: string }) {
     .toUpperCase();
 
   return (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-primary">
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
       {initials || "?"}
     </div>
   );
@@ -350,12 +350,12 @@ function statusClass(status: string) {
   const base = "rounded-full px-3 py-1 text-xs font-semibold";
 
   if (status === "ACTIVE") {
-    return `${base} bg-emerald-50 text-emerald-700`;
+    return `${base} bg-success-soft text-success`;
   }
 
   if (status === "INVITED") {
-    return `${base} bg-amber-50 text-amber-700`;
+    return `${base} bg-warning-soft text-warning`;
   }
 
-  return `${base} bg-slate-100 text-slate-600`;
+  return `${base} bg-surface-muted text-muted`;
 }

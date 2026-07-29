@@ -35,7 +35,7 @@ export default async function InvitePage({
   const redirectUrl = `/invite/${token}`;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-slate-950">
+    <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <section className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[1fr_420px]">
         <div>
           <p className="text-xs font-semibold uppercase text-primary">VereinDigital Einladung</p>
@@ -48,8 +48,8 @@ export default async function InvitePage({
           </p>
         </div>
 
-        <div className="rounded-lg border border-border bg-white p-6 shadow-sm">
-          <div className="rounded-lg bg-slate-50 p-4">
+        <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
+          <div className="rounded-lg bg-surface-muted p-4">
             <p className="text-xs font-semibold uppercase text-muted">Verein</p>
             <p className="mt-1 text-lg font-bold">{invitation.club.name}</p>
             <p className="mt-4 text-xs font-semibold uppercase text-muted">Team</p>
@@ -59,7 +59,7 @@ export default async function InvitePage({
           </div>
 
           {errorMessage(query.error, invitation.status, expired) ? (
-            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+            <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
               {errorMessage(query.error, invitation.status, expired)}
             </p>
           ) : null}
@@ -81,7 +81,7 @@ export default async function InvitePage({
                   Registrieren
                 </Link>
                 <Link
-                  className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-700"
+                  className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
                   href={`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`}
                 >
                   Ich habe schon einen Account
@@ -89,7 +89,7 @@ export default async function InvitePage({
               </div>
             )
           ) : (
-            <p className="mt-4 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-600">
+            <p className="mt-4 rounded-lg bg-surface-muted px-3 py-2 text-sm font-semibold text-muted">
               Diese Einladung kann nicht mehr angenommen werden.
             </p>
           )}

@@ -116,7 +116,7 @@ export function GoalkeeperAnalysis({
   return (
     <div>
       <div className="grid gap-3 border-b border-border p-5 sm:grid-cols-2">
-        <label className="text-sm font-semibold text-slate-800">
+        <label className="text-sm font-semibold text-foreground">
           Vergleich A
           <select
             className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal"
@@ -134,7 +134,7 @@ export function GoalkeeperAnalysis({
             ))}
           </select>
         </label>
-        <label className="text-sm font-semibold text-slate-800">
+        <label className="text-sm font-semibold text-foreground">
           Vergleich B (optional)
           <select
             className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal"
@@ -157,7 +157,7 @@ export function GoalkeeperAnalysis({
 
       <div className="grid gap-6 p-5 xl:grid-cols-2">
         <article className="rounded-lg border border-border p-4">
-          <p className="text-sm font-semibold text-slate-950">Uebersicht</p>
+          <p className="text-sm font-semibold text-foreground">Uebersicht</p>
           <div className="mt-3 flex justify-center">
             <RadarChart axes={overviewAxes} currentLabel={currentLabel} previousLabel={previousLabel} size={300} />
           </div>
@@ -166,7 +166,7 @@ export function GoalkeeperAnalysis({
           .filter((radar) => radar.axes.length >= 3)
           .map((radar) => (
             <article className="rounded-lg border border-border p-4" key={radar.title}>
-              <p className="text-sm font-semibold text-slate-950">{radar.title}</p>
+              <p className="text-sm font-semibold text-foreground">{radar.title}</p>
               <div className="mt-3 flex justify-center">
                 <RadarChart axes={radar.axes} currentLabel={currentLabel} previousLabel={previousLabel} size={300} />
               </div>

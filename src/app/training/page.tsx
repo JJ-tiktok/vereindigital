@@ -88,20 +88,20 @@ export default async function TrainingLibraryPage({
         }
       />
 
-      <section className="grid gap-6 py-6 xl:grid-cols-[300px_1fr]">
+      <section className="grid gap-6 py-6 lg:grid-cols-[300px_1fr]">
         <aside className="space-y-4">
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <p className="text-xs font-semibold uppercase text-muted">Bibliothek</p>
-            <p className="mt-3 text-4xl font-bold tabular-nums text-slate-950">{exercises.length}</p>
+            <p className="mt-3 text-4xl font-bold tabular-nums text-foreground">{exercises.length}</p>
             <p className="mt-1 text-sm text-muted">gefilterte Uebungen</p>
           </article>
-          <article className="rounded-lg border border-border bg-white p-5">
-            <p className="text-sm font-semibold text-slate-950">Kategorien</p>
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <p className="text-sm font-semibold text-foreground">Kategorien</p>
             <div className="mt-4 space-y-3">
               {categoryCounts.map((item) => (
                 <div className="flex items-center justify-between text-sm" key={item.label}>
                   <span className="text-muted">{item.label}</span>
-                  <span className="font-semibold tabular-nums text-slate-900">{item.value}</span>
+                  <span className="font-semibold tabular-nums text-foreground">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -109,11 +109,11 @@ export default async function TrainingLibraryPage({
         </aside>
 
         <div className="space-y-5">
-          <form className="grid gap-3 rounded-lg border border-border bg-white p-4 lg:grid-cols-[1fr_180px_180px_120px]">
+          <form className="grid gap-3 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[1fr_180px_180px_120px]">
             <label className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
               <input
-                className="h-11 w-full rounded-lg border border-border pl-10 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                className="h-11 w-full rounded-lg border border-border pl-10 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                 defaultValue={search}
                 name="q"
                 placeholder="Uebung oder Schwerpunkt suchen..."
@@ -175,7 +175,7 @@ function TrainingExerciseCard({
 
   return (
     <Link
-      className="overflow-hidden rounded-lg border border-border bg-white transition hover:-translate-y-0.5 hover:shadow-sm"
+      className="overflow-hidden rounded-lg border border-border bg-surface transition hover:-translate-y-0.5 hover:shadow-sm"
       href={`/training/${exercise.id}`}
     >
       <TrainingSketchPreview
@@ -185,14 +185,14 @@ function TrainingExerciseCard({
       />
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">
+          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
             {trainingCategoryLabel(exercise.category)}
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-foreground">
             {trainingIntensityLabel(exercise.intensity)}
           </span>
         </div>
-        <h2 className="mt-4 text-xl font-bold text-slate-950">{exercise.title}</h2>
+        <h2 className="mt-4 text-xl font-bold text-foreground">{exercise.title}</h2>
         <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
           {exercise.objective || exercise.description || "Noch keine Beschreibung hinterlegt."}
         </p>
@@ -209,9 +209,9 @@ function TrainingExerciseCard({
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 px-3 py-2">
+    <div className="rounded-lg bg-surface-muted px-3 py-2">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-1 font-semibold text-slate-950">{value}</p>
+      <p className="mt-1 font-semibold text-foreground">{value}</p>
     </div>
   );
 }

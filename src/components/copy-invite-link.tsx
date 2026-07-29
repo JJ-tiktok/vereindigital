@@ -13,7 +13,7 @@ export function CopyInviteLink({ url }: { url: string }) {
 
   return (
     <button
-      className="h-9 rounded-lg border border-border px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+      className="h-9 rounded-lg border border-border px-3 text-sm font-semibold text-foreground transition hover:bg-surface-muted"
       onClick={copyLink}
       type="button"
     >

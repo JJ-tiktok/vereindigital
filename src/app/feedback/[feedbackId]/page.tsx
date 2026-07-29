@@ -50,7 +50,7 @@ export default async function FeedbackDetailPage({
     <AppShell context={context} activePath="/feedback">
       <PageHeader
         action={
-          <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-800" href="/feedback">
+          <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" href="/feedback">
             <ArrowLeft className="size-4" aria-hidden="true" />
             Zurueck
           </Link>
@@ -60,38 +60,38 @@ export default async function FeedbackDetailPage({
         title={item.title}
       />
 
-      <section className="grid gap-6 py-6 xl:grid-cols-[1fr_360px]">
+      <section className="grid gap-6 py-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <div className="flex flex-wrap gap-2">
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${feedbackStatusClass(item.status)}`}>{feedbackStatusLabel(item.status)}</span>
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${feedbackPriorityClass(item.priority)}`}>{feedbackPriorityLabel(item.priority)}</span>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{feedbackTypeLabel(item.type)}</span>
+              <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-foreground">{feedbackTypeLabel(item.type)}</span>
             </div>
-            <h2 className="mt-6 text-xl font-bold text-slate-950">Beschreibung</h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">{item.description}</p>
+            <h2 className="mt-6 text-xl font-bold text-foreground">Beschreibung</h2>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-foreground">{item.description}</p>
           </article>
 
-          <article className="rounded-lg border border-border bg-white p-5">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
               <Camera className="size-5 text-primary" aria-hidden="true" />
               Screenshot
             </h2>
             {item.screenshotData ? (
-              <div className="mt-4 overflow-hidden rounded-lg border border-border bg-slate-50">
+              <div className="mt-4 overflow-hidden rounded-lg border border-border bg-surface-muted">
                 <Image alt={`Screenshot zu ${item.title}`} className="h-auto w-full" height={720} src={item.screenshotData} unoptimized width={1280} />
               </div>
             ) : (
-              <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-muted">Kein Screenshot gespeichert. Das Feedback bleibt trotzdem gueltig.</p>
+              <p className="mt-4 rounded-lg bg-surface-muted p-4 text-sm text-muted">Kein Screenshot gespeichert. Das Feedback bleibt trotzdem gueltig.</p>
             )}
           </article>
         </div>
 
         <aside className="space-y-6">
           {context.isClubAdmin ? (
-            <form action={updateFeedbackStatus} className="rounded-lg border border-border bg-white p-5">
+            <form action={updateFeedbackStatus} className="rounded-lg border border-border bg-surface p-5">
               <input name="feedbackId" type="hidden" value={item.id} />
-              <label className="text-sm font-semibold text-slate-800" htmlFor="status">
+              <label className="text-sm font-semibold text-foreground" htmlFor="status">
                 Status
               </label>
               <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" defaultValue={item.status} id="status" name="status">
@@ -107,8 +107,8 @@ export default async function FeedbackDetailPage({
             </form>
           ) : null}
 
-          <article className="rounded-lg border border-border bg-white p-5">
-            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
               <UserRound className="size-5 text-primary" aria-hidden="true" />
               Absender
             </h2>
@@ -121,8 +121,8 @@ export default async function FeedbackDetailPage({
             </dl>
           </article>
 
-          <article className="rounded-lg border border-border bg-white p-5">
-            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
               <Monitor className="size-5 text-primary" aria-hidden="true" />
               Kontext
             </h2>
@@ -141,7 +141,7 @@ export default async function FeedbackDetailPage({
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="font-semibold text-slate-900">{label}</dt>
+      <dt className="font-semibold text-foreground">{label}</dt>
       <dd className="mt-1 break-words text-muted">{value}</dd>
     </div>
   );

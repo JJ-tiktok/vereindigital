@@ -14,10 +14,10 @@ export function AvailabilityForm({
   return (
     <form action={formAction} className="mt-5 space-y-5">
       {state?.error ? (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{state.error}</p>
+        <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">{state.error}</p>
       ) : null}
       <div>
-        <label className="text-sm font-semibold text-slate-800" htmlFor="playerProfileId">
+        <label className="text-sm font-semibold text-foreground" htmlFor="playerProfileId">
           Spieler
         </label>
         <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm" id="playerProfileId" name="playerProfileId">
@@ -29,7 +29,7 @@ export function AvailabilityForm({
         </select>
       </div>
       <div>
-        <label className="text-sm font-semibold text-slate-800" htmlFor="type">
+        <label className="text-sm font-semibold text-foreground" htmlFor="type">
           Typ
         </label>
         <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm" id="type" name="type">
@@ -44,7 +44,7 @@ export function AvailabilityForm({
         <DateTimeField error={state?.fieldErrors?.endsAt?.[0]} label="Ende" name="endsAt" />
       </div>
       <div>
-        <label className="text-sm font-semibold text-slate-800" htmlFor="note">
+        <label className="text-sm font-semibold text-foreground" htmlFor="note">
           Notiz
         </label>
         <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" id="note" name="note" />
@@ -63,11 +63,11 @@ export function AvailabilityForm({
 function DateTimeField({ error, label, name }: { error?: string; label: string; name: string }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-slate-800" htmlFor={name}>
+      <label className="text-sm font-semibold text-foreground" htmlFor={name}>
         {label}
       </label>
       <input className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm" id={name} name={name} required type="datetime-local" />
-      {error ? <p className="mt-1 text-xs font-semibold text-rose-700">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs font-semibold text-danger">{error}</p> : null}
     </div>
   );
 }

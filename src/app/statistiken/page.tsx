@@ -180,7 +180,7 @@ export default async function StatisticsPage() {
       ) : (
         <div className="space-y-6 pb-8">
           <section className="grid gap-6 xl:grid-cols-2">
-            <article className="rounded-lg border border-border bg-white">
+            <article className="rounded-lg border border-border bg-surface">
               <PanelHeader
                 title="Trainingsbeteiligung"
                 description="Annahmen werden nur aus Trainingsterminen berechnet."
@@ -201,7 +201,7 @@ export default async function StatisticsPage() {
               )}
             </article>
 
-            <article className="rounded-lg border border-border bg-white">
+            <article className="rounded-lg border border-border bg-surface">
               <PanelHeader
                 title="Spielerleistungen"
                 description="Sortiert nach Toren, Vorlagen und Einsatzzeit."
@@ -211,7 +211,7 @@ export default async function StatisticsPage() {
                   {performanceLeaders.map((row) => (
                     <div className="grid gap-3 p-5 sm:grid-cols-[1fr_repeat(4,72px)]" key={row.id}>
                       <div>
-                        <p className="font-semibold text-slate-950">{row.name}</p>
+                        <p className="font-semibold text-foreground">{row.name}</p>
                         <p className="mt-1 text-sm text-muted">{row.position}</p>
                       </div>
                       <SmallStat label="Tore" value={row.goals} />
@@ -227,16 +227,16 @@ export default async function StatisticsPage() {
             </article>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-border bg-white">
+          <section className="overflow-hidden rounded-lg border border-border bg-surface">
             <div className="border-b border-border p-5">
-              <h2 className="text-xl font-semibold text-slate-950">Spieler-Auswertung</h2>
+              <h2 className="text-xl font-semibold text-foreground">Spieler-Auswertung</h2>
               <p className="mt-1 text-sm text-muted">
                 Kombinierte Sicht auf Training, Spielminuten, Scorerpunkte, Karten sowie getrennte Trainings- und Spielbewertung.
               </p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-[1080px] w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs font-semibold uppercase text-muted">
+                <thead className="bg-surface-muted text-xs font-semibold uppercase text-muted">
                   <tr>
                     <th className="px-5 py-3">Spieler</th>
                     <th className="px-5 py-3">Training</th>
@@ -254,31 +254,31 @@ export default async function StatisticsPage() {
                   {rows.map((row) => (
                     <tr className="align-top" key={row.id}>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-950">{row.name}</p>
+                        <p className="font-semibold text-foreground">{row.name}</p>
                         <p className="mt-1 text-xs text-muted">{row.position}</p>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-950">{row.trainingRate}%</p>
+                        <p className="font-semibold text-foreground">{row.trainingRate}%</p>
                         <p className="mt-1 text-xs text-muted">
                           {row.acceptedTrainings} ja, {row.maybeTrainings} vielleicht, {row.declinedTrainings} nein
                         </p>
                       </td>
-                      <td className="px-5 py-4 text-slate-700">
+                      <td className="px-5 py-4 text-foreground">
                         {formatRating(row.averageTrainingRating)}
                         <p className="mt-1 text-xs text-muted">{row.ratedTrainings} Bewertungen</p>
                       </td>
-                      <td className="px-5 py-4 text-slate-700">
+                      <td className="px-5 py-4 text-foreground">
                         {row.playedMatches} Einsaetze
                         <p className="mt-1 text-xs text-muted">{row.substitutions} Einwechslungen</p>
                       </td>
-                      <td className="px-5 py-4 text-slate-700">{row.starts}</td>
-                      <td className="px-5 py-4 text-slate-700">{row.minutesPlayed}</td>
-                      <td className="px-5 py-4 text-slate-700">{row.goals}</td>
-                      <td className="px-5 py-4 text-slate-700">{row.assists}</td>
-                      <td className="px-5 py-4 text-slate-700">
+                      <td className="px-5 py-4 text-foreground">{row.starts}</td>
+                      <td className="px-5 py-4 text-foreground">{row.minutesPlayed}</td>
+                      <td className="px-5 py-4 text-foreground">{row.goals}</td>
+                      <td className="px-5 py-4 text-foreground">{row.assists}</td>
+                      <td className="px-5 py-4 text-foreground">
                         {row.yellowCards} / {row.redCards}
                       </td>
-                      <td className="px-5 py-4 text-slate-700">
+                      <td className="px-5 py-4 text-foreground">
                         {formatRating(row.averageRating)}
                         <p className="mt-1 text-xs text-muted">{row.ratedMatches} Bewertungen</p>
                       </td>
@@ -302,9 +302,9 @@ export default async function StatisticsPage() {
 
 function MetricCard({ label, value, helper }: { label: string; value: string; helper: string }) {
   return (
-    <article className="rounded-lg border border-border bg-white p-5">
+    <article className="rounded-lg border border-border bg-surface p-5">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-3 text-3xl font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-3 text-3xl font-bold tabular-nums text-foreground">{value}</p>
       <p className="mt-1 text-sm text-muted">{helper}</p>
     </article>
   );
@@ -313,7 +313,7 @@ function MetricCard({ label, value, helper }: { label: string; value: string; he
 function PanelHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="border-b border-border p-5">
-      <h2 className="text-xl font-semibold text-slate-950">{title}</h2>
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted">{description}</p>
     </div>
   );
@@ -332,12 +332,12 @@ function PlayerProgressRow({
     <div className="p-5">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-slate-950">{label}</p>
+          <p className="font-semibold text-foreground">{label}</p>
           <p className="mt-1 text-sm text-muted">{meta}</p>
         </div>
-        <p className="text-lg font-bold tabular-nums text-slate-950">{value}%</p>
+        <p className="text-lg font-bold tabular-nums text-foreground">{value}%</p>
       </div>
-      <div className="mt-4 h-2 rounded-full bg-slate-100">
+      <div className="mt-4 h-2 rounded-full bg-surface-muted">
         <div className="h-2 rounded-full bg-primary" style={{ width: `${value}%` }} />
       </div>
     </div>
@@ -348,7 +348,7 @@ function SmallStat({ label, value }: { label: string; value: number | string }) 
   return (
     <div>
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
-      <p className="mt-1 font-bold tabular-nums text-slate-950">{value}</p>
+      <p className="mt-1 font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }

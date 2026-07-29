@@ -92,7 +92,7 @@ export default async function CalendarEventDetailPage({
         action={
           event.type === "TRAINING" ? (
             <Link
-              className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-700"
+              className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
               href={`/kalender/${event.id}/druck`}
             >
               <Printer className="size-4" aria-hidden="true" />
@@ -102,18 +102,18 @@ export default async function CalendarEventDetailPage({
         }
       />
 
-      <div className="grid gap-6 py-6 xl:grid-cols-[1fr_360px]">
-        <section className="rounded-lg border border-border bg-white">
+      <div className="grid gap-6 py-6 lg:grid-cols-[1fr_360px]">
+        <section className="rounded-lg border border-border bg-surface">
           <div className="border-b border-border p-5">
             <h2 className="text-xl font-semibold">Rueckmeldungen</h2>
             <p className="mt-1 text-sm text-muted">Trainer und Co-Trainer koennen Rueckmeldungen fuer Spieler setzen.</p>
             {query.error === "declined-reason" ? (
-              <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+              <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
                 Bei einer Absage muss ein Grund angegeben werden.
               </p>
             ) : null}
             {query.error === "training-rating" ? (
-              <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+              <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
                 Trainingsbewertungen muessen zwischen 1.0 und 10.0 liegen.
               </p>
             ) : null}
@@ -128,7 +128,7 @@ export default async function CalendarEventDetailPage({
                     <input name="calendarEventId" type="hidden" value={event.id} />
                     <input name="playerProfileId" type="hidden" value={player.id} />
                     <div>
-                      <p className="font-semibold text-slate-950">
+                      <p className="font-semibold text-foreground">
                         {player.firstName} {player.lastName}
                       </p>
                       <p className="text-sm text-muted">{player.position}</p>
@@ -158,14 +158,14 @@ export default async function CalendarEventDetailPage({
 
         {event.type === "TRAINING" ? (
           <>
-            <section className="rounded-lg border border-border bg-white xl:col-start-1">
+            <section className="rounded-lg border border-border bg-surface xl:col-start-1">
               <div className="border-b border-border p-5">
                 <h2 className="text-xl font-semibold">Trainingsplan</h2>
                 <p className="mt-1 text-sm text-muted">
                   Plane die Einheit aus Uebungen im Katalog. Reihenfolge, Dauer und Coaching Points koennen je Termin abweichen.
                 </p>
               </div>
-              <div className="grid gap-6 p-5 xl:grid-cols-[1fr_360px]">
+              <div className="grid gap-6 p-5 lg:grid-cols-[1fr_360px]">
                 <div className="space-y-4">
                   {event.trainingPlan?.exercises.length ? (
                     event.trainingPlan.exercises.map((planExercise, index) => (
@@ -173,13 +173,13 @@ export default async function CalendarEventDetailPage({
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-xs font-semibold uppercase text-primary">Teil {index + 1}</p>
-                            <h3 className="mt-1 text-lg font-bold text-slate-950">{planExercise.trainingExercise.title}</h3>
+                            <h3 className="mt-1 text-lg font-bold text-foreground">{planExercise.trainingExercise.title}</h3>
                             <p className="mt-1 text-sm text-muted">
                               {trainingCategoryLabel(planExercise.trainingExercise.category)} /{" "}
                               {trainingIntensityLabel(planExercise.trainingExercise.intensity)}
                             </p>
                           </div>
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                          <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-foreground">
                             {planExercise.durationMinutes ?? planExercise.trainingExercise.durationMinutes ?? "-"} Min.
                           </span>
                         </div>
@@ -200,9 +200,9 @@ export default async function CalendarEventDetailPage({
                 </div>
 
                 <aside className="space-y-5">
-                  <form action={upsertTrainingPlan} className="rounded-lg border border-border bg-slate-50 p-4">
+                  <form action={upsertTrainingPlan} className="rounded-lg border border-border bg-surface-muted p-4">
                     <input name="calendarEventId" type="hidden" value={event.id} />
-                    <p className="text-sm font-semibold text-slate-950">Ziel der Einheit</p>
+                    <p className="text-sm font-semibold text-foreground">Ziel der Einheit</p>
                     <input
                       className="mt-3 h-10 w-full rounded-lg border border-border px-3 text-sm"
                       defaultValue={event.trainingPlan?.objective ?? ""}
@@ -220,9 +220,9 @@ export default async function CalendarEventDetailPage({
                     </button>
                   </form>
 
-                  <form action={addExerciseToTrainingPlan} className="rounded-lg border border-border bg-white p-4">
+                  <form action={addExerciseToTrainingPlan} className="rounded-lg border border-border bg-surface p-4">
                     <input name="calendarEventId" type="hidden" value={event.id} />
-                    <p className="text-sm font-semibold text-slate-950">Uebung hinzufuegen</p>
+                    <p className="text-sm font-semibold text-foreground">Uebung hinzufuegen</p>
                     <select className="mt-3 h-10 w-full rounded-lg border border-border px-3 text-sm" name="trainingExerciseId" required>
                       <option value="">Uebung auswaehlen</option>
                       {catalogExercises.map((exercise) => (
@@ -256,7 +256,7 @@ export default async function CalendarEventDetailPage({
               </div>
             </section>
 
-            <section className="rounded-lg border border-border bg-white xl:col-start-1">
+            <section className="rounded-lg border border-border bg-surface xl:col-start-1">
               <div className="border-b border-border p-5">
                 <h2 className="text-xl font-semibold">Trainingsleistung</h2>
                 <p className="mt-1 text-sm text-muted">
@@ -277,7 +277,7 @@ export default async function CalendarEventDetailPage({
                         <input name="calendarEventId" type="hidden" value={event.id} />
                         <input name="playerProfileId" type="hidden" value={player.id} />
                         <div>
-                          <p className="font-semibold text-slate-950">
+                          <p className="font-semibold text-foreground">
                             {player.firstName} {player.lastName}
                           </p>
                           <p className="text-sm text-muted">{player.position}</p>
@@ -318,13 +318,13 @@ export default async function CalendarEventDetailPage({
         ) : null}
 
         <aside className="space-y-6">
-          <article className="rounded-lg border border-border bg-white p-5">
+          <article className="rounded-lg border border-border bg-surface p-5">
             <p className="text-xs font-semibold uppercase text-muted">Status</p>
             <h2 className="mt-2 text-xl font-semibold">{event.attendances.length} Rueckmeldungen</h2>
             <p className="mt-2 text-sm text-muted">{players.length - event.attendances.length} offen</p>
           </article>
           {event.match ? (
-            <article className="rounded-lg border border-border bg-white p-5">
+            <article className="rounded-lg border border-border bg-surface p-5">
               <p className="text-xs font-semibold uppercase text-muted">Spiel</p>
               <h2 className="mt-2 text-xl font-semibold">{event.match.opponent}</h2>
               <p className="mt-2 text-sm text-muted">{event.match.isHomeGame ? "Heimspiel" : "Auswaertsspiel"}</p>

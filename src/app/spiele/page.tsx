@@ -33,22 +33,22 @@ export default async function MatchesPage() {
 
       <section className="py-6">
         {matches.length > 0 ? (
-          <div className="overflow-hidden rounded-lg border border-border bg-white">
+          <div className="overflow-hidden rounded-lg border border-border bg-surface">
             <div className="divide-y divide-border">
               {matches.map((match) => (
                 <Link
-                  className="grid gap-4 p-5 transition hover:bg-slate-50 md:grid-cols-[1fr_180px_160px]"
+                  className="grid gap-4 p-5 transition hover:bg-surface-muted md:grid-cols-[1fr_180px_160px]"
                   href={`/spiele/${match.id}`}
                   key={match.id}
                 >
                   <div>
-                    <p className="font-semibold text-slate-950">{match.opponent}</p>
+                    <p className="font-semibold text-foreground">{match.opponent}</p>
                     <p className="mt-1 text-sm text-muted">
                       {match.calendarEvent ? formatDateTime(match.calendarEvent.startsAt) : "Ohne Kalendertermin"}
                     </p>
                   </div>
                   <div className="text-sm text-muted">{match.isHomeGame ? "Heimspiel" : "Auswaertsspiel"}</div>
-                  <div className="text-sm font-semibold text-slate-950">
+                  <div className="text-sm font-semibold text-foreground">
                     {match.goalsFor ?? "-"} : {match.goalsAgainst ?? "-"}
                   </div>
                 </Link>

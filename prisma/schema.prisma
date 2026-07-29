@@ -165,6 +165,17 @@ enum FeedbackPriority {
   HIGH
 }
 
+enum TacticDuty {
+  DEFENSIVE
+  BALANCED
+  OFFENSIVE
+}
+
+enum TacticPhase {
+  OFFENSE
+  DEFENSE
+}
+
 model Club {
   id        String   @id @default(cuid())
   name      String
@@ -182,6 +193,7 @@ model Club {
   attributeDefinitions PlayerAttributeDefinition[]
   importJobs        ImportJob[]
   feedbackItems     FeedbackItem[]
+  tactics           Tactic[]
 
   @@map("clubs")
 }
@@ -227,6 +239,7 @@ model Team {
   trainingExercises TrainingExercise[]
   importJobs      ImportJob[]
   feedbackItems   FeedbackItem[]
+  tactics         Tactic[]
 
   @@unique([clubId, seasonId, name])
   @@index([clubId])
@@ -255,6 +268,7 @@ model User {
   fileEntriesUpdated PlayerFileEntry[] @relation("PlayerFileEntryUpdatedBy")
   importJobsCreated ImportJob[] @relation("ImportJobCreatedBy")
   feedbackItemsCreated FeedbackItem[] @relation("FeedbackItemCreatedBy")
+  tacticsCreated    Tactic[] @relation("TacticCreatedBy")
 
   @@index([email])
   @@map("users")
@@ -282,6 +296,7 @@ model PlayerProfile {
   formSnapshots PlayerFormSnapshot[]
   fileEntries   PlayerFileEntry[]
   trainingPerformances PlayerTrainingPerformance[]
+  tacticSlots   TacticSlot[]
 
   @@index([clubId])
   @@index([userId])
@@ -781,4 +796,67 @@ model TrainingPlanExercise {
   @@unique([trainingPlanId, sortOrder])
   @@index([trainingExerciseId])
   @@map("training_plan_exercises")
+}
+
+model Tactic {
+  id              String   @id @default(cuid())
+  clubId          String
+  teamId          String
+  name            String
+  formation       String
+  defenseFormation String  @default("4-4-2")
+  styleValue      Int      @default(2)
+  lineValue       Int      @default(2)
+  pressingValue   Int      @default(2)
+  widthValue      Int      @default(2)
+  tempoValue      Int      @default(2)
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?         @relation("TacticCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  slots         TacticSlot[]
+  arrows        TacticArrow[]
+
+  @@index([clubId])
+  @@index([teamId])
+  @@map("tactics")
+}
+
+model TacticSlot {
+  id              String     @id @default(cuid())
+  tacticId        String
+  phase           TacticPhase @default(OFFENSE)
+  positionCode    String
+  x               Float
+  y               Float
+  role            String
+  duty            TacticDuty @default(BALANCED)
+  playerProfileId String?
+  sortOrder       Int        @default(0)
+
+  tactic        Tactic         @relation(fields: [tacticId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: SetNull)
+
+  @@index([tacticId])
+  @@index([playerProfileId])
+  @@map("tactic_slots")
+}
+
+model TacticArrow {
+  id        String      @id @default(cuid())
+  tacticId  String
+  phase     TacticPhase
+  x1        Float
+  y1        Float
+  x2        Float
+  y2        Float
+  sortOrder Int         @default(0)
+
+  tactic Tactic @relation(fields: [tacticId], references: [id], onDelete: Cascade)
+
+  @@index([tacticId])
+  @@map("tactic_arrows")
 }

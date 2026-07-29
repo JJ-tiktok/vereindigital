@@ -20,21 +20,21 @@ export function InvitationForm({
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(createInvitation, null);
 
   return (
-    <form action={formAction} className="rounded-lg border border-border bg-white p-5">
+    <form action={formAction} className="rounded-lg border border-border bg-surface p-5">
       <div className="flex items-center gap-2">
         <Send className="size-5 text-primary" aria-hidden="true" />
-        <h2 className="text-xl font-semibold text-slate-950">Neue Einladung</h2>
+        <h2 className="text-xl font-semibold text-foreground">Neue Einladung</h2>
       </div>
 
       {created && !state ? (
-        <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+        <p className="mt-4 rounded-lg bg-success-soft px-3 py-2 text-sm font-semibold text-success">
           {emailed
             ? "Einladung wurde erstellt und per E-Mail verschickt."
             : "Einladung wurde erstellt. Du kannst den Link jetzt kopieren."}
         </p>
       ) : null}
       {state?.error ? (
-        <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{state.error}</p>
+        <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">{state.error}</p>
       ) : null}
 
       <Field label="Team">
@@ -59,7 +59,7 @@ export function InvitationForm({
 
       <Field label="E-Mail optional">
         <input
-          className="h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+          className="h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
           name="email"
           placeholder="max@example.com"
           type="email"
@@ -89,7 +89,7 @@ export function InvitationForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mt-5 block">
-      <span className="text-sm font-semibold text-slate-800">{label}</span>
+      <span className="text-sm font-semibold text-foreground">{label}</span>
       <span className="mt-2 block">{children}</span>
     </label>
   );

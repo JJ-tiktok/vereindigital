@@ -60,7 +60,7 @@ export function FeedbackWidget() {
   return (
     <>
       <button
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
         onClick={() => {
           setState(initialState);
           setOpen(true);
@@ -73,14 +73,14 @@ export function FeedbackWidget() {
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 sm:items-center" data-feedback-modal="true">
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-white shadow-xl">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-surface shadow-xl">
             <div className="flex items-start justify-between gap-4 border-b border-border p-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-primary">VereinDigital Feedback</p>
-                <h2 className="mt-1 text-2xl font-bold text-slate-950">Feedback senden</h2>
+                <h2 className="mt-1 text-2xl font-bold text-foreground">Feedback senden</h2>
                 <p className="mt-1 text-sm text-muted">Wir speichern Route, Browserdaten und einen Screenshot automatisch mit.</p>
               </div>
-              <button className="rounded-lg p-2 text-muted transition hover:bg-slate-100 hover:text-slate-950" onClick={() => setOpen(false)} type="button">
+              <button className="rounded-lg p-2 text-muted transition hover:bg-surface-muted hover:text-foreground" onClick={() => setOpen(false)} type="button">
                 <X className="size-5" aria-hidden="true" />
                 <span className="sr-only">Schliessen</span>
               </button>
@@ -89,7 +89,7 @@ export function FeedbackWidget() {
             {state.message ? (
               <p
                 className={`mx-5 mt-5 rounded-lg px-4 py-3 text-sm font-semibold ${
-                  state.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                  state.ok ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
                 }`}
                 role="status"
               >
@@ -99,18 +99,18 @@ export function FeedbackWidget() {
 
             <form className="grid gap-5 p-5" onSubmit={handleSubmit} ref={formRef}>
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-semibold text-slate-800">
+                <label className="text-sm font-semibold text-foreground">
                   Kategorie
-                  <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900" name="type" required>
+                  <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-foreground" name="type" required>
                     <option value="BUG">Bug melden</option>
                     <option value="FEATURE_REQUEST">Feature Request</option>
                     <option value="IMPROVEMENT">Verbesserung</option>
                     <option value="OTHER">Sonstiges</option>
                   </select>
                 </label>
-                <label className="text-sm font-semibold text-slate-800">
+                <label className="text-sm font-semibold text-foreground">
                   Dringlichkeit
-                  <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900" name="priority" required>
+                  <select className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-foreground" name="priority" required>
                     <option value="MEDIUM">Normal</option>
                     <option value="LOW">Niedrig</option>
                     <option value="HIGH">Hoch</option>
@@ -118,10 +118,10 @@ export function FeedbackWidget() {
                 </label>
               </div>
 
-              <label className="text-sm font-semibold text-slate-800">
+              <label className="text-sm font-semibold text-foreground">
                 Titel
                 <input
-                  className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
+                  className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   maxLength={140}
                   name="title"
                   placeholder="Kurz beschreiben, worum es geht"
@@ -129,18 +129,18 @@ export function FeedbackWidget() {
                 />
               </label>
 
-              <label className="text-sm font-semibold text-slate-800">
+              <label className="text-sm font-semibold text-foreground">
                 Beschreibung
                 <textarea
-                  className="mt-2 min-h-36 w-full rounded-lg border border-border px-3 py-2 text-sm font-normal leading-6 text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
+                  className="mt-2 min-h-36 w-full rounded-lg border border-border px-3 py-2 text-sm font-normal leading-6 text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   name="description"
                   placeholder="Was ist passiert, was fehlt, oder was koennte besser funktionieren?"
                   required
                 />
               </label>
 
-              <div className="rounded-lg bg-slate-50 p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <div className="rounded-lg bg-surface-muted p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <Bug className="size-4 text-primary" aria-hidden="true" />
                   Kontext wird automatisch angehaengt
                 </div>
@@ -153,7 +153,7 @@ export function FeedbackWidget() {
                   Screenshot-Fehler blockieren das Absenden nicht.
                 </p>
                 <div className="flex gap-2">
-                  <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-slate-700" onClick={() => setOpen(false)} type="button">
+                  <button className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" onClick={() => setOpen(false)} type="button">
                     Schliessen
                   </button>
                   <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:bg-slate-300" disabled={isPending} type="submit">

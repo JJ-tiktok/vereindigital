@@ -29,7 +29,7 @@ export default async function OnboardingPage({
   const params = await searchParams;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-slate-950">
+    <main className="min-h-screen bg-background px-4 py-10 text-foreground">
       <section className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_440px]">
         <div>
           <p className="text-xs font-semibold uppercase text-primary">VereinDigital Onboarding</p>
@@ -41,13 +41,13 @@ export default async function OnboardingPage({
           </p>
         </div>
 
-        <form action={completeClubOnboarding} className="rounded-lg border border-border bg-white p-6">
+        <form action={completeClubOnboarding} className="rounded-lg border border-border bg-surface p-6">
           <div>
-            <label className="text-sm font-semibold text-slate-800" htmlFor="clubName">
+            <label className="text-sm font-semibold text-foreground" htmlFor="clubName">
               Vereinsname
             </label>
             <input
-              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
               id="clubName"
               name="clubName"
               placeholder="FC Beispielstadt"
@@ -56,11 +56,11 @@ export default async function OnboardingPage({
           </div>
 
           <div className="mt-5">
-            <label className="text-sm font-semibold text-slate-800" htmlFor="teamName">
+            <label className="text-sm font-semibold text-foreground" htmlFor="teamName">
               Erstes Team
             </label>
             <input
-              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
               id="teamName"
               name="teamName"
               placeholder="1. Herren"
@@ -69,7 +69,7 @@ export default async function OnboardingPage({
           </div>
 
           {params.error ? (
-            <p className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+            <p className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-sm font-medium text-danger">
               Bitte pruefe deine Angaben und versuche es erneut.
             </p>
           ) : null}

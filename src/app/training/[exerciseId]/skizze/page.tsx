@@ -59,7 +59,7 @@ export default async function TrainingSketchPage({
         title={exercise.title}
         description="Mehrere Skizzen, Phasen oder Varianten pro Uebung anlegen und bearbeiten."
       />
-      <div className="grid gap-5 py-6 lg:grid-cols-[300px_1fr] lg:items-start">
+      <div className="grid gap-5 py-6 lg:grid-cols-[260px_1fr] lg:items-start">
         <SketchEditorProvider
           exerciseId={exercise.id}
           sketchId={editorSketch?.id ?? null}
@@ -68,14 +68,14 @@ export default async function TrainingSketchPage({
           initialSketch={parseSketchData(editorSketch?.sketchData)}
         >
           <aside className="space-y-3">
-            <article className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <article className="rounded-2xl border border-border bg-surface p-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Skizzen</p>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Skizzen</p>
                 {activeSketch ? (
                   <form action={deleteTrainingExerciseSketch}>
                     <input name="exerciseId" type="hidden" value={exercise.id} />
                     <input name="sketchId" type="hidden" value={activeSketch.id} />
-                    <button className="text-xs font-semibold text-red-600 hover:text-red-700" type="submit">
+                    <button className="text-xs font-semibold text-danger hover:text-danger-strong" type="submit">
                       Loeschen
                     </button>
                   </form>
@@ -87,8 +87,8 @@ export default async function TrainingSketchPage({
                     <Link
                       className={`flex items-center gap-2.5 rounded-xl border p-2 transition ${
                         sketch.id === activeSketch?.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-slate-200 bg-white hover:border-blue-300"
+                          ? "border-primary bg-primary-soft"
+                          : "border-border bg-surface hover:border-primary"
                       }`}
                       href={`/training/${exercise.id}/skizze?sketchId=${sketch.id}`}
                       key={sketch.id}
@@ -97,13 +97,13 @@ export default async function TrainingSketchPage({
                         <TrainingSketchPreview compact fallbackPitch={sketch.pitchType} sketchData={sketch.sketchData} />
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-slate-950">{sketch.title}</p>
-                        <p className="truncate text-xs text-slate-500">{trainingPitchLabel(sketch.pitchType)}</p>
+                        <p className="truncate text-sm font-bold text-foreground">{sketch.title}</p>
+                        <p className="truncate text-xs text-muted">{trainingPitchLabel(sketch.pitchType)}</p>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="rounded-xl border border-dashed border-slate-200 p-2.5 text-xs text-slate-500">
+                  <div className="rounded-xl border border-dashed border-border p-2.5 text-xs text-muted">
                     Noch keine separate Skizze. Beim Speichern wird die erste Skizze angelegt.
                   </div>
                 )}
@@ -112,11 +112,11 @@ export default async function TrainingSketchPage({
                 <input name="exerciseId" type="hidden" value={exercise.id} />
                 <input name="pitchType" type="hidden" value={activeSketch?.pitchType ?? exercise.pitchType} />
                 <input
-                  className="h-9 min-w-0 flex-1 rounded-lg border border-slate-200 px-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="h-9 min-w-0 flex-1 rounded-lg border border-border px-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                   name="title"
                   placeholder="z.B. Phase 2"
                 />
-                <button className="h-9 shrink-0 rounded-lg bg-blue-600 px-3 text-sm font-bold text-white" type="submit">
+                <button className="h-9 shrink-0 rounded-lg bg-primary px-3 text-sm font-bold text-white" type="submit">
                   +
                 </button>
               </form>

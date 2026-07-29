@@ -46,21 +46,21 @@ export default async function SeasonsPage({
       />
 
       {params.error ? (
-        <p className="mt-6 rounded-lg bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+        <p className="mt-6 rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
           {errorMessage(params.error)}
         </p>
       ) : null}
 
-      <section className="grid gap-6 py-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-4">
           {seasons.map((season) => (
-            <article className="rounded-lg border border-border bg-white p-5" key={season.id}>
+            <article className="rounded-lg border border-border bg-surface p-5" key={season.id}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-bold text-slate-950">{season.name}</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{season.name}</h2>
                     {season.isActive ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">
                         <Check className="size-3" aria-hidden="true" />
                         Aktiv
                       </span>
@@ -75,7 +75,7 @@ export default async function SeasonsPage({
                   <form action={setActiveSeason}>
                     <input name="seasonId" type="hidden" value={season.id} />
                     <button
-                      className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-slate-800 transition hover:border-primary hover:text-primary"
+                      className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
                       type="submit"
                     >
                       Aktiv setzen
@@ -84,12 +84,12 @@ export default async function SeasonsPage({
                 ) : null}
               </div>
 
-              <div className="mt-5 rounded-lg bg-slate-50 p-4">
+              <div className="mt-5 rounded-lg bg-surface-muted p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted">Teams in dieser Saison</p>
                 {season.teams.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {season.teams.map((team: SeasonTeam) => (
-                      <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700" key={team.id}>
+                      <span className="rounded-full bg-surface px-3 py-1 text-sm font-semibold text-foreground" key={team.id}>
                         {team.name}
                       </span>
                     ))}
@@ -107,21 +107,21 @@ export default async function SeasonsPage({
 
         <aside className="space-y-6">
           {context.isClubAdmin ? (
-            <form action={createSeason} className="rounded-lg border border-border bg-white p-5">
+            <form action={createSeason} className="rounded-lg border border-border bg-surface p-5">
               <div className="flex items-center gap-2">
                 <Plus className="size-5 text-primary" aria-hidden="true" />
-                <h2 className="text-xl font-bold text-slate-950">Neue Saison</h2>
+                <h2 className="text-xl font-bold text-foreground">Neue Saison</h2>
               </div>
               <p className="mt-2 text-sm leading-6 text-muted">
                 Erstellt eine neue Spielzeit. Optional kannst du Teams samt aktiver Kader aus einer bestehenden Saison
                 uebernehmen.
               </p>
 
-              <label className="mt-5 block text-sm font-semibold text-slate-800" htmlFor="name">
+              <label className="mt-5 block text-sm font-semibold text-foreground" htmlFor="name">
                 Name
               </label>
               <input
-                className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                 defaultValue={defaults.name}
                 id="name"
                 name="name"
@@ -130,11 +130,11 @@ export default async function SeasonsPage({
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                 <div>
-                  <label className="text-sm font-semibold text-slate-800" htmlFor="startsAt">
+                  <label className="text-sm font-semibold text-foreground" htmlFor="startsAt">
                     Start
                   </label>
                   <input
-                    className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                    className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                     defaultValue={toDateInputValue(defaults.startsAt)}
                     id="startsAt"
                     name="startsAt"
@@ -143,11 +143,11 @@ export default async function SeasonsPage({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-800" htmlFor="endsAt">
+                  <label className="text-sm font-semibold text-foreground" htmlFor="endsAt">
                     Ende
                   </label>
                   <input
-                    className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                    className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                     defaultValue={toDateInputValue(defaults.endsAt)}
                     id="endsAt"
                     name="endsAt"
@@ -157,11 +157,11 @@ export default async function SeasonsPage({
                 </div>
               </div>
 
-              <label className="mt-5 block text-sm font-semibold text-slate-800" htmlFor="copyFromSeasonId">
+              <label className="mt-5 block text-sm font-semibold text-foreground" htmlFor="copyFromSeasonId">
                 Teams und Kader uebernehmen aus
               </label>
               <select
-                className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-blue-100"
+                className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
                 defaultValue=""
                 id="copyFromSeasonId"
                 name="copyFromSeasonId"
@@ -174,8 +174,8 @@ export default async function SeasonsPage({
                 ))}
               </select>
 
-              <label className="mt-5 flex items-center gap-3 text-sm font-semibold text-slate-800">
-                <input className="size-4 accent-blue-600" name="activate" type="checkbox" />
+              <label className="mt-5 flex items-center gap-3 text-sm font-semibold text-foreground">
+                <input className="size-4 accent-primary" name="activate" type="checkbox" />
                 Direkt als aktive Saison setzen
               </label>
 
@@ -188,8 +188,8 @@ export default async function SeasonsPage({
             </form>
           ) : null}
 
-          <article className="rounded-lg border border-border bg-white p-5">
-            <h2 className="text-xl font-bold text-slate-950">Warum Saisons?</h2>
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <h2 className="text-xl font-bold text-foreground">Warum Saisons?</h2>
             <p className="mt-3 text-sm leading-6 text-muted">
               Die aktive Saison bestimmt, welche Teams, Kader, Termine und Statistiken standardmaessig angezeigt werden.
               Spielerprofile bleiben vereinsweit erhalten und koennen in neuen Saisons wieder einem Team zugeordnet werden.
