@@ -9,7 +9,7 @@ export {
   removePlayerFromActiveTeam,
   updatePlayerProfile,
 } from "./players";
-export { createCalendarEvent, updateEventAttendance } from "./calendar";
+export { bulkAcceptEventAttendance, createCalendarEvent, updateCalendarEvent, updateEventAttendance } from "./calendar";
 export { updateMatchResult, updatePlayerMatchStat } from "./matches";
 export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";
 export {
@@ -23,4 +23,13 @@ export {
   upsertTrainingPlan,
 } from "./training";
 export { deleteTactic, ensureTacticsPermissions, renameTactic, saveTactic, saveTacticAsNew } from "./tactics";
+export {
+  convertScoutingProspectToPlayer,
+  createScoutingAttributeSnapshot,
+  createScoutingEvent,
+  createScoutingProspect,
+  ensureScoutingPermissions,
+  updateScoutingProspect,
+  updateScoutingProspectStatus,
+} from "./scouting";
 export type { ActionState } from "./helpers";

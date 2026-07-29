@@ -20,6 +20,8 @@ export const permissionKeys = [
   "training.plan.manage",
   "tactics.read",
   "tactics.manage",
+  "scouting.read",
+  "scouting.manage",
 ] as const;
 
 export type PermissionKey = (typeof permissionKeys)[number];
@@ -46,6 +48,8 @@ export const permissionDefinitions = [
   ["training.plan.manage", "Trainingsplaene aus Uebungen zusammenstellen."],
   ["tactics.read", "Aufstellungen und Taktiken lesen."],
   ["tactics.manage", "Aufstellungen und Taktiken erstellen und bearbeiten."],
+  ["scouting.read", "Scouting-Prospects und Beobachtungen lesen."],
+  ["scouting.manage", "Scouting-Prospects erstellen, bewerten und verwalten."],
 ] as const satisfies ReadonlyArray<readonly [PermissionKey, string]>;
 
 export const defaultRoles = [
@@ -74,6 +78,8 @@ export const defaultRoles = [
       "training.plan.manage",
       "tactics.read",
       "tactics.manage",
+      "scouting.read",
+      "scouting.manage",
     ],
   },
   {
@@ -96,6 +102,8 @@ export const defaultRoles = [
       "training.plan.manage",
       "tactics.read",
       "tactics.manage",
+      "scouting.read",
+      "scouting.manage",
     ],
   },
   {
