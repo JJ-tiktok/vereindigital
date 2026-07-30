@@ -1,9 +1,6 @@
-import { LinkIcon, XCircle } from "lucide-react";
-
 import { InvitationForm } from "@/app/einladungen/invitation-form";
+import { InvitationRow } from "@/app/einladungen/invitation-row";
 import { AppShell, PageHeader } from "@/components/app-shell";
-import { CopyInviteLink } from "@/components/copy-invite-link";
-import { revokeInvitation } from "@/lib/actions";
 import { requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
@@ -82,45 +79,24 @@ export default async function InvitationsPage({
           </div>
           <div className="divide-y divide-border">
             {invitations.length > 0 ? (
-              invitations.map((invitation) => {
-                const url = `${appUrl.replace(/\/$/, "")}/invite/${invitation.token}`;
-                const expired = invitation.expiresAt < new Date();
-
-                return (
-                  <article className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]" key={invitation.id}>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                          {invitation.role.name}
-                        </span>
-                        <span className={statusClass(invitation.status, expired)}>
-                          {expired && invitation.status === "PENDING" ? "Abgelaufen" : statusLabel(invitation.status)}
-                        </span>
-                      </div>
-                      <h3 className="mt-3 font-semibold text-foreground">{invitation.team?.name ?? "Verein"}</h3>
-                      <p className="mt-1 text-sm text-muted">
-                        {invitation.email || "Offener Link"} / gueltig bis {invitation.expiresAt.toLocaleDateString("de-DE")}
-                      </p>
-                      <p className="mt-3 flex items-center gap-2 break-all rounded-lg bg-surface-muted px-3 py-2 text-xs text-muted">
-                        <LinkIcon className="size-3 shrink-0" aria-hidden="true" />
-                        {url}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-start gap-2 lg:justify-end">
-                      <CopyInviteLink url={url} />
-                      {invitation.status === "PENDING" && !expired ? (
-                        <form action={revokeInvitation}>
-                          <input name="invitationId" type="hidden" value={invitation.id} />
-                          <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger" type="submit">
-                            <XCircle className="size-4" aria-hidden="true" />
-                            Widerrufen
-                          </button>
-                        </form>
-                      ) : null}
-                    </div>
-                  </article>
-                );
-              })
+              invitations.map((invitation) => (
+                <InvitationRow
+                  invitation={{
+                    id: invitation.id,
+                    roleId: invitation.roleId,
+                    roleName: invitation.role.name,
+                    teamId: invitation.teamId,
+                    teamName: invitation.team?.name ?? "Verein",
+                    email: invitation.email,
+                    status: invitation.status,
+                    expiresAt: invitation.expiresAt,
+                    url: `${appUrl.replace(/\/$/, "")}/invite/${invitation.token}`,
+                  }}
+                  key={invitation.id}
+                  roles={roles.map((role) => ({ id: role.id, name: role.name }))}
+                  teams={teams}
+                />
+              ))
             ) : (
               <div className="p-8 text-center text-sm text-muted">Noch keine Einladungen erstellt.</div>
             )}
@@ -129,31 +105,4 @@ export default async function InvitationsPage({
       </div>
     </AppShell>
   );
-}
-
-function statusLabel(status: string) {
-  switch (status) {
-    case "ACCEPTED":
-      return "Angenommen";
-    case "EXPIRED":
-      return "Abgelaufen";
-    case "REVOKED":
-      return "Widerrufen";
-    default:
-      return "Offen";
-  }
-}
-
-function statusClass(status: string, expired: boolean) {
-  const base = "rounded-full px-3 py-1 text-xs font-semibold";
-
-  if (expired || status === "EXPIRED" || status === "REVOKED") {
-    return `${base} bg-surface-muted text-muted`;
-  }
-
-  if (status === "ACCEPTED") {
-    return `${base} bg-success-soft text-success`;
-  }
-
-  return `${base} bg-warning-soft text-warning`;
 }

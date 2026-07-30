@@ -244,6 +244,100 @@ export async function createPlayerAvailability(_prevState: ActionState, formData
   redirect("/abwesenheiten");
 }
 
+async function requireAvailabilityAccess(availabilityId: string) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+
+  const availability = await prisma.playerAvailability.findFirst({
+    where: {
+      id: availabilityId,
+      playerProfile: {
+        clubId: context.club.id,
+        memberships: {
+          some: {
+            teamId: activeTeam.id,
+          },
+        },
+      },
+    },
+    select: {
+      id: true,
+      playerProfileId: true,
+      playerProfile: {
+        select: { userId: true },
+      },
+    },
+  });
+
+  if (!availability) {
+    return null;
+  }
+
+  const isSelf = availability.playerProfile.userId === context.appUser.id;
+  const allowed =
+    hasPermission(context, "availability.manage", activeTeam.id) ||
+    (isSelf && hasPermission(context, "availability.self.manage", activeTeam.id));
+
+  return allowed ? { context, activeTeam, availability } : null;
+}
+
+const updateAvailabilitySchema = z.object({
+  availabilityId: zRequiredString,
+  type: z.enum(AvailabilityType),
+  startsAt: zDate,
+  endsAt: zDate,
+  note: zOptionalString,
+});
+
+export async function updatePlayerAvailability(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = parseForm(formData, updateAvailabilitySchema);
+
+  if (!parsed.success) {
+    return parsed.state;
+  }
+
+  const { availabilityId, type, startsAt, endsAt, note } = parsed.data;
+
+  if (endsAt < startsAt) {
+    return { fieldErrors: { endsAt: ["Das Ende darf nicht vor dem Beginn liegen."] } };
+  }
+
+  const access = await requireAvailabilityAccess(availabilityId);
+
+  if (!access) {
+    return { error: "Keine Berechtigung, diese Abwesenheit zu bearbeiten." };
+  }
+
+  await prisma.playerAvailability.update({
+    where: { id: availabilityId },
+    data: { type, startsAt, endsAt, note },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/abwesenheiten");
+  redirect("/abwesenheiten");
+}
+
+export async function deletePlayerAvailability(formData: FormData) {
+  const availabilityId = String(formData.get("availabilityId") ?? "");
+
+  if (!availabilityId) {
+    redirect("/abwesenheiten");
+  }
+
+  const access = await requireAvailabilityAccess(availabilityId);
+
+  if (!access) {
+    redirect("/abwesenheiten");
+  }
+
+  await prisma.playerAvailability.delete({ where: { id: availabilityId } });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/abwesenheiten");
+  redirect("/abwesenheiten");
+}
+
 export async function removePlayerFromActiveTeam(formData: FormData) {
   const context = await requireAppContext();
   const activeTeam = requireActiveTeam(context);

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { DeleteFeedbackButton } from "@/app/feedback/[feedbackId]/delete-feedback-button";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { requireAppContext } from "@/lib/app-context";
 import { updateFeedbackStatus } from "@/lib/feedback-actions";
@@ -106,6 +107,8 @@ export default async function FeedbackDetailPage({
               </button>
             </form>
           ) : null}
+
+          {context.isClubAdmin ? <DeleteFeedbackButton feedbackId={item.id} /> : null}
 
           <article className="rounded-lg border border-border bg-surface p-5">
             <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">

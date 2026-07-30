@@ -113,6 +113,49 @@ export async function updateRolePermissions(formData: FormData) {
   redirect("/rollen");
 }
 
+export async function updateAllRolePermissions(formData: FormData) {
+  const context = await requireAppContext();
+  requirePermission(context, "roles.manage");
+
+  const roleIds = formData.getAll("bulkRoleId").map((value) => String(value));
+
+  const roles = await prisma.role.findMany({
+    where: {
+      id: { in: roleIds },
+      clubId: context.club.id,
+    },
+    select: { id: true },
+  });
+
+  if (roles.length === 0) {
+    redirect("/rollen");
+  }
+
+  const allPermissions = await prisma.permission.findMany({
+    select: { id: true, key: true },
+  });
+  const permissionIdByKey = new Map(allPermissions.map((permission) => [permission.key, permission.id]));
+
+  await prisma.$transaction(
+    roles.flatMap((role) => {
+      const selectedKeys = permissionKeys.filter((key) => formData.get(`permission-${key}-${role.id}`) === "on");
+      const permissionIds = selectedKeys
+        .map((key) => permissionIdByKey.get(key))
+        .filter((id): id is string => Boolean(id));
+
+      return [
+        prisma.rolePermission.deleteMany({ where: { roleId: role.id } }),
+        prisma.rolePermission.createMany({
+          data: permissionIds.map((permissionId) => ({ roleId: role.id, permissionId })),
+        }),
+      ];
+    }),
+  );
+
+  revalidateRoles();
+  redirect("/rollen");
+}
+
 export async function deleteRole(formData: FormData) {
   const context = await requireAppContext();
   requirePermission(context, "roles.manage");

@@ -1,16 +1,12 @@
-import { Check, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
+import { SeasonCard } from "@/app/saisons/season-card";
 import { AppShell, PageHeader } from "@/components/app-shell";
-import { createSeason, setActiveSeason } from "@/lib/actions";
+import { createSeason } from "@/lib/actions";
 import { requireAppContext } from "@/lib/app-context";
-import { formatDate, toDateInputValue } from "@/lib/format";
+import { toDateInputValue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getDefaultSeasonWindow } from "@/lib/seasons";
-
-type SeasonTeam = {
-  id: string;
-  name: string;
-};
 
 export default async function SeasonsPage({
   searchParams,
@@ -54,54 +50,7 @@ export default async function SeasonsPage({
       <section className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-4">
           {seasons.map((season) => (
-            <article className="rounded-lg border border-border bg-surface p-5" key={season.id}>
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-bold text-foreground">{season.name}</h2>
-                    {season.isActive ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">
-                        <Check className="size-3" aria-hidden="true" />
-                        Aktiv
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 text-sm text-muted">
-                    {formatDate(season.startsAt)} bis {formatDate(season.endsAt)}
-                  </p>
-                </div>
-
-                {context.isClubAdmin && !season.isActive ? (
-                  <form action={setActiveSeason}>
-                    <input name="seasonId" type="hidden" value={season.id} />
-                    <button
-                      className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                      type="submit"
-                    >
-                      Aktiv setzen
-                    </button>
-                  </form>
-                ) : null}
-              </div>
-
-              <div className="mt-5 rounded-lg bg-surface-muted p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Teams in dieser Saison</p>
-                {season.teams.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {season.teams.map((team: SeasonTeam) => (
-                      <span className="rounded-full bg-surface px-3 py-1 text-sm font-semibold text-foreground" key={team.id}>
-                        {team.name}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-3 text-sm text-muted">
-                    Noch keine Teams in dieser Saison. Beim Anlegen einer neuen Saison kannst du Teams und Kader aus
-                    einer bestehenden Saison uebernehmen.
-                  </p>
-                )}
-              </div>
-            </article>
+            <SeasonCard canManage={context.isClubAdmin} key={season.id} season={season} />
           ))}
         </div>
 

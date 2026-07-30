@@ -2,8 +2,9 @@ import { MailPlus, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 
+import { MembershipRow } from "@/app/mitglieder/membership-row";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
-import { type AppTeam, requireAppContext } from "@/lib/app-context";
+import { type AppTeam, hasPermission, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
 type ClubMembershipRow = Prisma.ClubMembershipGetPayload<{
@@ -22,10 +23,16 @@ type TeamMembershipRow = Prisma.TeamMembershipGetPayload<{
   };
 }>;
 
-export default async function MembersPage() {
+export default async function MembersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const context = await requireAppContext();
+  const query = await searchParams;
   const teamIds = context.teams.map((team: AppTeam) => team.id);
-  const [clubMemberships, memberships, pendingInvitations] = await Promise.all([
+  const canManageClub = hasPermission(context, "club.manage");
+  const [clubMemberships, memberships, pendingInvitations, roles] = await Promise.all([
     prisma.clubMembership.findMany({
       where: {
         clubId: context.club.id,
@@ -67,7 +74,12 @@ export default async function MembersPage() {
       },
       take: 8,
     }),
+    prisma.role.findMany({
+      where: { clubId: context.club.id },
+      orderBy: { name: "asc" },
+    }),
   ]);
+  const roleOptions = roles.map((role) => ({ id: role.id, name: role.name }));
   const userMemberships = memberships.filter((membership: TeamMembershipRow) => membership.userId);
   const profileOnlyMemberships = memberships.filter(
     (membership: TeamMembershipRow) => !membership.userId && membership.playerProfileId,
@@ -94,6 +106,14 @@ export default async function MembersPage() {
         }
       />
 
+      {query.error ? (
+        <p className="mt-6 rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
+          {query.error === "last-admin"
+            ? "Der letzte aktive Admin kann nicht herabgestuft oder deaktiviert werden."
+            : "Die ausgewaehlte Rolle ist ungueltig."}
+        </p>
+      ) : null}
+
       <section className="grid gap-4 py-6 md:grid-cols-3">
         <MetricCard label="App-Mitglieder" value={uniqueUsers.size.toString()} helper="angenommene Nutzer" />
         <MetricCard label="Teamrollen" value={memberships.length.toString()} helper="aktive Zuordnungen" />
@@ -115,43 +135,34 @@ export default async function MembersPage() {
 
             {clubMemberships.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-[720px] w-full text-left text-sm">
+                <table className="min-w-[760px] w-full text-left text-sm">
                   <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
                     <tr>
                       <th className="px-5 py-3">Mitglied</th>
                       <th className="px-5 py-3">Rolle</th>
                       <th className="px-5 py-3">Status</th>
                       <th className="px-5 py-3">Typ</th>
-                      <th className="px-5 py-3">Seit</th>
+                      <th className="px-5 py-3">Seit / Aktionen</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {clubMemberships.map((membership: ClubMembershipRow) => (
-                      <tr key={membership.id}>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <AvatarLabel label={membership.user.displayName ?? membership.user.email} />
-                            <div>
-                              <p className="font-semibold text-foreground">
-                                {membership.user.displayName ?? membership.user.email}
-                              </p>
-                              <p className="text-sm text-muted">{membership.user.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                            {membership.role.name}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={statusClass(membership.status)}>{statusLabel(membership.status)}</span>
-                        </td>
-                        <td className="px-5 py-4 text-foreground">Vereinsrolle</td>
-                        <td className="px-5 py-4 text-foreground">
-                          {membership.createdAt.toLocaleDateString("de-DE")}
-                        </td>
-                      </tr>
+                      <MembershipRow
+                        canEdit={canManageClub}
+                        key={membership.id}
+                        kind="club"
+                        membership={{
+                          id: membership.id,
+                          label: membership.user.displayName ?? membership.user.email,
+                          email: membership.user.email,
+                          roleId: membership.roleId,
+                          roleName: membership.role.name,
+                          status: membership.status,
+                          typeLabel: "Vereinsrolle",
+                          createdAt: membership.createdAt,
+                        }}
+                        roles={roleOptions}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -193,48 +204,31 @@ export default async function MembersPage() {
                             <th className="px-5 py-3">Rolle</th>
                             <th className="px-5 py-3">Status</th>
                             <th className="px-5 py-3">Typ</th>
-                            <th className="px-5 py-3">Seit</th>
+                            <th className="px-5 py-3">Seit / Aktionen</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                           {teamMemberships.map((membership: TeamMembershipRow) => (
-                            <tr key={membership.id}>
-                              <td className="px-5 py-4">
-                                <div className="flex items-center gap-3">
-                                  <AvatarLabel
-                                    label={
-                                      membership.user?.displayName ??
-                                      membership.user?.email ??
-                                      playerName(membership.playerProfile) ??
-                                      "Unbekannt"
-                                    }
-                                  />
-                                  <div>
-                                    <p className="font-semibold text-foreground">
-                                      {membership.user?.displayName ??
-                                        playerName(membership.playerProfile) ??
-                                        membership.user?.email ??
-                                        "Unbekannt"}
-                                    </p>
-                                    <p className="text-sm text-muted">{membership.user?.email ?? "kein App-Login"}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-5 py-4">
-                                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-foreground">
-                                  {membership.role.name}
-                                </span>
-                              </td>
-                              <td className="px-5 py-4">
-                                <span className={statusClass(membership.status)}>{statusLabel(membership.status)}</span>
-                              </td>
-                              <td className="px-5 py-4 text-foreground">
-                                {membership.userId ? "App-Nutzer" : "Kaderprofil"}
-                              </td>
-                              <td className="px-5 py-4 text-foreground">
-                                {membership.createdAt.toLocaleDateString("de-DE")}
-                              </td>
-                            </tr>
+                            <MembershipRow
+                              canEdit={hasPermission(context, "team.members.manage", team.id)}
+                              key={membership.id}
+                              kind="team"
+                              membership={{
+                                id: membership.id,
+                                label:
+                                  membership.user?.displayName ??
+                                  playerName(membership.playerProfile) ??
+                                  membership.user?.email ??
+                                  "Unbekannt",
+                                email: membership.user?.email ?? null,
+                                roleId: membership.roleId,
+                                roleName: membership.role.name,
+                                status: membership.status,
+                                typeLabel: membership.userId ? "App-Nutzer" : "Kaderprofil",
+                                createdAt: membership.createdAt,
+                              }}
+                              roles={roleOptions}
+                            />
                           ))}
                         </tbody>
                       </table>
@@ -316,46 +310,6 @@ function MetricCard({ helper, label, value }: { helper: string; label: string; v
   );
 }
 
-function AvatarLabel({ label }: { label: string }) {
-  const initials = label
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-      {initials || "?"}
-    </div>
-  );
-}
-
 function playerName(player: { firstName: string; lastName: string } | null) {
   return player ? `${player.firstName} ${player.lastName}` : null;
-}
-
-function statusLabel(status: string) {
-  switch (status) {
-    case "INVITED":
-      return "Eingeladen";
-    case "INACTIVE":
-      return "Inaktiv";
-    default:
-      return "Aktiv";
-  }
-}
-
-function statusClass(status: string) {
-  const base = "rounded-full px-3 py-1 text-xs font-semibold";
-
-  if (status === "ACTIVE") {
-    return `${base} bg-success-soft text-success`;
-  }
-
-  if (status === "INVITED") {
-    return `${base} bg-warning-soft text-warning`;
-  }
-
-  return `${base} bg-surface-muted text-muted`;
 }

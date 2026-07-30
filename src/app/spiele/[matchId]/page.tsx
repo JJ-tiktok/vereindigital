@@ -2,7 +2,7 @@ import { BarChart3, CalendarClock, CircleDot, ClipboardPen, Save, Shield } from 
 import { notFound } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
-import { updateMatchResult, updatePlayerMatchStat } from "@/lib/actions";
+import { updateAllPlayerMatchStats, updateMatchResult } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime, getInitials } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -178,27 +178,32 @@ export default async function MatchDetailPage({
             </article>
           </aside>
 
-          <section className="overflow-hidden rounded-lg border border-border bg-surface">
-            <div className="border-b border-border p-5">
+          <form action={updateAllPlayerMatchStats} className="overflow-hidden rounded-lg border border-border bg-surface">
+            <input name="matchId" type="hidden" value={match.id} />
+            <div className="sticky top-0 z-10 border-b border-border bg-surface p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
                   <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
-                  <p className="mt-1 text-sm text-muted">Eingesetzte Spieler oben, komplette Kaderpflege darunter.</p>
+                  <p className="mt-1 text-sm text-muted">Eingesetzte Spieler oben, komplette Kaderpflege darunter. Aenderungen fuer alle Spieler auf einmal speichern.</p>
                 </div>
-                <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
                   <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
                   <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{players.length - playedRows.length} ohne Einsatz</span>
+                  <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="submit">
+                    <Save className="size-4" aria-hidden="true" />
+                    Alle speichern
+                  </button>
                 </div>
               </div>
             </div>
 
             <div className="divide-y divide-border">
               {playerRows.map((player) => (
-                <PlayerStatRow key={player.id} matchId={match.id} player={player} />
+                <PlayerStatRow key={player.id} player={player} />
               ))}
             </div>
-          </section>
+          </form>
         </div>
       </div>
     </AppShell>
@@ -276,10 +281,8 @@ function TeamBadge({ name }: { name: string }) {
 }
 
 function PlayerStatRow({
-  matchId,
   player,
 }: {
-  matchId: string;
   player: {
     assists: number;
     goals: number;
@@ -298,13 +301,11 @@ function PlayerStatRow({
   };
 }) {
   return (
-    <form
-      action={updatePlayerMatchStat}
-      className={`grid gap-3 p-4 transition hover:bg-surface-muted lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px_92px] lg:items-center ${
+    <div
+      className={`grid gap-3 p-4 transition hover:bg-surface-muted lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px] lg:items-center ${
         player.played ? "bg-surface" : "bg-slate-50/50"
       }`}
     >
-      <input name="matchId" type="hidden" value={matchId} />
       <input name="playerProfileId" type="hidden" value={player.id} />
       <div className="flex min-w-0 items-center gap-3">
         <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${player.played ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted"}`}>
@@ -320,23 +321,23 @@ function PlayerStatRow({
       </div>
       <label className="text-xs font-semibold uppercase text-muted">
         Status
-        <select className="mt-1 h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm font-normal text-foreground" defaultValue={player.lineupStatus} name="lineupStatus">
+        <select
+          className="mt-1 h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm font-normal text-foreground"
+          defaultValue={player.lineupStatus}
+          name={`lineupStatus-${player.id}`}
+        >
           <option value="STARTER">Startelf</option>
           <option value="SUBSTITUTE">Einwechslung</option>
           <option value="NOT_USED">Nicht eingesetzt</option>
         </select>
       </label>
-      <CompactNumber name="minutesPlayed" label="Min" value={player.minutesPlayed} max={120} />
-      <CompactNumber name="goals" label="T" value={player.goals} />
-      <CompactNumber name="assists" label="V" value={player.assists} />
-      <CompactNumber name="yellowCards" label="Gelb" value={player.yellowCards} accent={player.yellowCards > 0 ? "yellow" : undefined} />
-      <CompactNumber name="redCards" label="Rot" value={player.redCards} accent={player.redCards > 0 ? "red" : undefined} />
-      <CompactNumber name="rating" label="Note" value={player.rating ?? undefined} max={10} step="0.1" />
-      <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary-soft px-3 text-sm font-bold text-primary transition hover:bg-blue-100" formNoValidate type="submit">
-        <Save className="size-4" aria-hidden="true" />
-        Save
-      </button>
-    </form>
+      <CompactNumber label="Min" max={120} name={`minutesPlayed-${player.id}`} value={player.minutesPlayed} />
+      <CompactNumber label="T" name={`goals-${player.id}`} value={player.goals} />
+      <CompactNumber label="V" name={`assists-${player.id}`} value={player.assists} />
+      <CompactNumber accent={player.yellowCards > 0 ? "yellow" : undefined} label="Gelb" name={`yellowCards-${player.id}`} value={player.yellowCards} />
+      <CompactNumber accent={player.redCards > 0 ? "red" : undefined} label="Rot" name={`redCards-${player.id}`} value={player.redCards} />
+      <CompactNumber label="Note" max={10} name={`rating-${player.id}`} step="0.1" value={player.rating ?? undefined} />
+    </div>
   );
 }
 

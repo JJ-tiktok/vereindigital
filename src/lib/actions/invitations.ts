@@ -132,6 +132,71 @@ export async function revokeInvitation(formData: FormData) {
   redirect("/einladungen");
 }
 
+const updateInvitationSchema = z.object({
+  invitationId: zRequiredString,
+  teamId: zRequiredString,
+  roleId: zRequiredString,
+  email: zOptionalString,
+});
+
+export async function updateInvitation(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const context = await requireAppContext();
+  const parsed = parseForm(formData, updateInvitationSchema);
+
+  if (!parsed.success) {
+    return parsed.state;
+  }
+
+  const { invitationId, teamId, roleId, email } = parsed.data;
+
+  const invitation = await prisma.invitation.findFirst({
+    where: {
+      id: invitationId,
+      clubId: context.club.id,
+    },
+    select: {
+      id: true,
+      teamId: true,
+      status: true,
+      expiresAt: true,
+    },
+  });
+
+  if (!invitation) {
+    return { error: "Einladung wurde nicht gefunden." };
+  }
+
+  if (invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
+    return { error: "Nur offene, noch gueltige Einladungen koennen bearbeitet werden." };
+  }
+
+  requirePermission(context, "invitations.manage", invitation.teamId ?? undefined);
+  requirePermission(context, "invitations.manage", teamId);
+
+  const [team, role] = await Promise.all([
+    prisma.team.findFirst({
+      where: { id: teamId, clubId: context.club.id },
+      select: { id: true },
+    }),
+    prisma.role.findFirst({
+      where: { id: roleId, clubId: context.club.id, key: { in: ["trainer", "assistant_coach", "player"] } },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!team || !role) {
+    return { error: "Team oder Rolle ist ungueltig." };
+  }
+
+  await prisma.invitation.update({
+    where: { id: invitation.id },
+    data: { teamId, roleId, email },
+  });
+
+  revalidatePath("/einladungen");
+  redirect("/einladungen");
+}
+
 export async function acceptInvitation(formData: FormData) {
   const token = String(formData.get("token") ?? "");
 
