@@ -1,20 +1,12 @@
 import { FeedbackPriority, FeedbackStatus, FeedbackType } from "@prisma/client";
 import { MessageSquarePlus } from "lucide-react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { FeedbackRowActions } from "@/app/feedback/feedback-row-actions";
+import { FeedbackTable } from "@/app/feedback/feedback-table";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { requireAppContext } from "@/lib/app-context";
 import { canUseFeedback } from "@/lib/feedback-permissions";
-import {
-  feedbackPriorityClass,
-  feedbackPriorityLabel,
-  feedbackStatusClass,
-  feedbackStatusLabel,
-  feedbackTypeLabel,
-} from "@/lib/feedback-labels";
-import { formatDateTime } from "@/lib/format";
+import { feedbackPriorityLabel, feedbackStatusLabel, feedbackTypeLabel } from "@/lib/feedback-labels";
 import { prisma } from "@/lib/prisma";
 
 export default async function FeedbackPage({
@@ -89,36 +81,20 @@ export default async function FeedbackPage({
         </form>
 
         {feedbackItems.length > 0 ? (
-          <div className="overflow-hidden rounded-lg border border-border bg-surface">
-            <div className="overflow-x-auto">
-              <div className="hidden min-w-[900px] grid-cols-[1fr_130px_140px_170px_150px_190px] gap-4 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted xl:grid">
-                <span>Feedback</span>
-                <span>Kategorie</span>
-                <span>Prioritaet</span>
-                <span>Status</span>
-                <span>Absender</span>
-                <span>Aktionen</span>
-              </div>
-              <div className="min-w-[900px] divide-y divide-border xl:min-w-0">
-                {feedbackItems.map((item) => (
-                  <div className="grid gap-4 p-5 xl:grid-cols-[1fr_130px_140px_170px_150px_190px] xl:items-center" key={item.id}>
-                    <Link className="min-w-0 transition hover:opacity-80" href={`/feedback/${item.id}`}>
-                      <p className="truncate font-semibold text-foreground">{item.title}</p>
-                      <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted">{item.description}</p>
-                    </Link>
-                    <span className="w-max rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-foreground">{feedbackTypeLabel(item.type)}</span>
-                    <span className={`w-max rounded-full px-3 py-1 text-xs font-bold ${feedbackPriorityClass(item.priority)}`}>{feedbackPriorityLabel(item.priority)}</span>
-                    <span className={`w-max rounded-full px-3 py-1 text-xs font-bold ${feedbackStatusClass(item.status)}`}>{feedbackStatusLabel(item.status)}</span>
-                    <div className="text-sm text-muted">
-                      <p>{item.createdByUser?.displayName ?? item.createdByUser?.email ?? "Unbekannt"}</p>
-                      <p className="mt-1">{item.team?.name ?? "Verein"} / {formatDateTime(item.createdAt)}</p>
-                    </div>
-                    {context.isClubAdmin ? <FeedbackRowActions feedbackId={item.id} isNew={item.status === "NEW"} /> : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <FeedbackTable
+            canManage={context.isClubAdmin}
+            items={feedbackItems.map((item) => ({
+              id: item.id,
+              title: item.title,
+              description: item.description,
+              type: item.type,
+              priority: item.priority,
+              status: item.status,
+              senderName: item.createdByUser?.displayName ?? item.createdByUser?.email ?? "Unbekannt",
+              teamName: item.team?.name ?? "Verein",
+              createdAt: item.createdAt,
+            }))}
+          />
         ) : (
           <EmptyState
             action={

@@ -2,7 +2,7 @@ import { ClipboardEdit, Mail, Phone, Shield, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AppShell } from "@/components/app-shell";
+import { AppShell, Breadcrumbs } from "@/components/app-shell";
 import { PlayerTabs } from "@/components/player-tabs";
 import {
   convertScoutingProspectToPlayer,
@@ -118,9 +118,9 @@ export default async function ScoutingProspectPage({
   return (
     <AppShell activePath="/scouting" context={context}>
       <div className="space-y-6 py-2">
-        <Link className="inline-flex items-center text-sm font-semibold text-primary" href="/scouting">
-          Zurueck zu Scouting
-        </Link>
+        <Breadcrumbs
+          items={[{ label: "Scouting", href: "/scouting" }, { label: `${prospect.firstName} ${prospect.lastName}` }]}
+        />
 
         <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[180px_1fr] xl:grid-cols-[200px_1fr_260px]">

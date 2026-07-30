@@ -13,7 +13,7 @@ type EditableEvent = {
   location: string | null;
   startsAt: Date;
   endsAt: Date;
-  match: { opponent: string; isHomeGame: boolean } | null;
+  match: { opponent: string; isHomeGame: boolean; competition: string } | null;
 };
 
 export function EventForm({ selectedDate, event }: { selectedDate?: string; event?: EditableEvent }) {
@@ -161,6 +161,24 @@ export function EventForm({ selectedDate, event }: { selectedDate?: string; even
             >
               <option value="true">Heimspiel</option>
               <option value="false">Auswaertsspiel</option>
+            </select>
+          </div>
+        ) : null}
+        {type === "MATCH" ? (
+          <div>
+            <label className="text-sm font-semibold text-foreground" htmlFor="competition">
+              Wettbewerb
+            </label>
+            <select
+              className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
+              defaultValue={event?.match?.competition ?? "LEAGUE"}
+              id="competition"
+              name="competition"
+            >
+              <option value="LEAGUE">Liga</option>
+              <option value="CUP">Pokal</option>
+              <option value="FRIENDLY">Freundschaftsspiel</option>
+              <option value="OTHER">Sonstiges</option>
             </select>
           </div>
         ) : null}

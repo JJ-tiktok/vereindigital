@@ -1,11 +1,14 @@
-import { BarChart3, CalendarClock, CircleDot, ClipboardPen, Save, Shield } from "lucide-react";
+import { BarChart3, CalendarClock, ClipboardPen, LayoutGrid, Save } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { AppShell } from "@/components/app-shell";
-import { updateAllPlayerMatchStats, updateMatchResult } from "@/lib/actions";
-import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
+import { AppShell, Breadcrumbs } from "@/components/app-shell";
+import { MatchdaySquadTable } from "@/app/spiele/[matchId]/matchday-squad-table";
+import { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic } from "@/lib/actions";
+import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime, getInitials } from "@/lib/format";
+import { matchCompetitionLabel } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
+import { positionCodeLabel } from "@/lib/tactics";
 
 export default async function MatchDetailPage({
   params,
@@ -30,6 +33,13 @@ export default async function MatchDetailPage({
           playerProfile: true,
         },
       },
+      tactic: {
+        include: {
+          slots: {
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+      },
     },
   });
 
@@ -37,22 +47,45 @@ export default async function MatchDetailPage({
     notFound();
   }
 
-  const players = await prisma.playerProfile.findMany({
-    where: {
-      memberships: {
-        some: {
-          teamId: activeTeam.id,
-          status: "ACTIVE",
-          role: {
-            key: "player",
+  const [players, tactics] = await Promise.all([
+    prisma.playerProfile.findMany({
+      where: {
+        memberships: {
+          some: {
+            teamId: activeTeam.id,
+            status: "ACTIVE",
+            role: {
+              key: "player",
+            },
           },
         },
       },
-    },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-  });
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.tactic.findMany({
+      where: { teamId: activeTeam.id },
+      select: { id: true, name: true, formation: true },
+      orderBy: { updatedAt: "desc" },
+    }),
+  ]);
+  const matchDate = match.calendarEvent?.startsAt ?? null;
+  const unavailablePlayerIds = new Set(
+    matchDate && players.length > 0
+      ? (
+          await prisma.playerAvailability.findMany({
+            where: {
+              playerProfileId: { in: players.map((player) => player.id) },
+              startsAt: { lte: matchDate },
+              OR: [{ endsAt: null }, { endsAt: { gte: matchDate } }],
+            },
+            select: { playerProfileId: true },
+          })
+        ).map((availability) => availability.playerProfileId)
+      : [],
+  );
   const statByPlayer = new Map(match.playerStats.map((stat) => [stat.playerProfileId, stat]));
   const playerRows = players
+    .filter((player) => !unavailablePlayerIds.has(player.id) || statByPlayer.has(player.id))
     .map((player) => {
       const stat = statByPlayer.get(player.id);
       const played = Boolean(stat && (stat.minutesPlayed > 0 || stat.lineupStatus !== "NOT_USED"));
@@ -71,6 +104,7 @@ export default async function MatchDetailPage({
         rating: stat?.rating ?? null,
         redCards: stat?.redCards ?? 0,
         saved: Boolean(stat),
+        unavailable: unavailablePlayerIds.has(player.id),
         yellowCards: stat?.yellowCards ?? 0,
       };
     })
@@ -104,12 +138,32 @@ export default async function MatchDetailPage({
   const goalsFor = match.goalsFor ?? null;
   const goalsAgainst = match.goalsAgainst ?? null;
   const eventDate = match.calendarEvent ? formatDateTime(match.calendarEvent.startsAt) : "Spiel ohne Kalendertermin";
+  const playerById = new Map(players.map((player) => [player.id, player]));
+  const formationSlots = (match.tactic?.slots ?? [])
+    .filter((slot) => slot.phase === "OFFENSE")
+    .map((slot) => {
+      const player = slot.playerProfileId ? playerById.get(slot.playerProfileId) : null;
+      const stat = player ? statByPlayer.get(player.id) : undefined;
+
+      return {
+        id: slot.id,
+        x: slot.x,
+        y: slot.y,
+        positionCode: slot.positionCode,
+        jerseyNumber: player?.jerseyNumber ?? null,
+        name: player ? `${player.firstName} ${player.lastName}` : null,
+        rating: stat?.rating ?? null,
+      };
+    });
+  const canManageMatch = hasPermission(context, "match.manage", activeTeam.id);
 
   return (
     <AppShell context={context} activePath="/spiele">
       <div className="space-y-6 py-2">
+        <Breadcrumbs items={[{ label: "Spieltage", href: "/spiele" }, { label: `vs. ${match.opponent}` }]} />
         <MatchHero
           activeTeamName={activeTeam.name}
+          competition={match.competition}
           eventDate={eventDate}
           goalsAgainst={goalsAgainst}
           goalsFor={goalsFor}
@@ -118,7 +172,12 @@ export default async function MatchDetailPage({
           status={match.status}
         />
 
-        <LineupField players={playedRows} />
+        <FormationField
+          formationSlots={formationSlots}
+          players={playedRows}
+          tacticFormation={match.tactic?.formation ?? null}
+          tacticName={match.tactic?.name ?? null}
+        />
 
         {query.imported ? (
           <p className="rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm font-semibold text-success">
@@ -163,19 +222,54 @@ export default async function MatchDetailPage({
             <article className="rounded-lg border border-border bg-surface p-5">
               <SectionTitle icon={<BarChart3 className="size-5 text-primary" aria-hidden="true" />} title="Spielstatus" />
               <div className="mt-5 grid gap-3">
-                <SideMetric label="Eingesetzt" value={`${playedRows.length}/${players.length}`} />
+                <SideMetric label="Eingesetzt" value={`${playedRows.length}/${playerRows.length}`} />
                 <SideMetric label="Startelf" value={starterCount.toString()} />
                 <SideMetric label="Einwechslungen" value={substituteCount.toString()} />
                 <SideMetric label="Gespeicherte Werte" value={statCount.toString()} />
+                {unavailablePlayerIds.size > 0 ? (
+                  <SideMetric label="Nicht verfuegbar" value={unavailablePlayerIds.size.toString()} />
+                ) : null}
               </div>
             </article>
 
-            <article className="rounded-lg border border-border bg-surface p-5">
-              <SectionTitle icon={<Shield className="size-5 text-primary" aria-hidden="true" />} title="Kurzfazit" />
-              <p className="mt-4 text-sm leading-6 text-muted">
-                Die Liste rechts ist nach Einsatz sortiert. Spieler mit Minuten, Startelf oder Einwechslung stehen oben; nicht eingesetzte Spieler bleiben fuer den vollstaendigen Spieltagskader erhalten.
-              </p>
-            </article>
+            {canManageMatch ? (
+              <form action={updateMatchTactic} className="rounded-lg border border-border bg-surface p-5">
+                <input name="matchId" type="hidden" value={match.id} />
+                <SectionTitle icon={<LayoutGrid className="size-5 text-primary" aria-hidden="true" />} title="Taktik" />
+                {tactics.length > 0 ? (
+                  <>
+                    <label className="mt-4 block text-sm font-semibold text-foreground" htmlFor="tacticId">
+                      Formation fuer dieses Spiel
+                      <select
+                        className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm"
+                        defaultValue={match.tacticId ?? ""}
+                        id="tacticId"
+                        name="tacticId"
+                      >
+                        <option value="">Keine ausgewaehlt</option>
+                        {tactics.map((tactic) => (
+                          <option key={tactic.id} value={tactic.id}>
+                            {tactic.name} ({tactic.formation})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+                      <Save className="size-4" aria-hidden="true" />
+                      Taktik uebernehmen
+                    </button>
+                  </>
+                ) : (
+                  <p className="mt-4 text-sm leading-6 text-muted">
+                    Noch keine Taktik angelegt. Im{" "}
+                    <a className="font-semibold text-primary underline" href="/taktik">
+                      Aufstellungsplaner
+                    </a>{" "}
+                    kannst du eine Formation erstellen und hier zuweisen.
+                  </p>
+                )}
+              </form>
+            ) : null}
           </aside>
 
           <form action={updateAllPlayerMatchStats} className="overflow-hidden rounded-lg border border-border bg-surface">
@@ -185,11 +279,13 @@ export default async function MatchDetailPage({
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
                   <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
-                  <p className="mt-1 text-sm text-muted">Eingesetzte Spieler oben, komplette Kaderpflege darunter. Aenderungen fuer alle Spieler auf einmal speichern.</p>
+                  <p className="mt-1 text-sm text-muted">
+                    Eingesetzte Spieler oben, komplette Kaderpflege darunter. Abwesende Spieler (Verletzung, Urlaub etc.) werden ausgeblendet. Aenderungen fuer alle Spieler auf einmal speichern.
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
                   <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
-                  <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{players.length - playedRows.length} ohne Einsatz</span>
+                  <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{playerRows.length - playedRows.length} ohne Einsatz</span>
                   <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="submit">
                     <Save className="size-4" aria-hidden="true" />
                     Alle speichern
@@ -198,11 +294,7 @@ export default async function MatchDetailPage({
               </div>
             </div>
 
-            <div className="divide-y divide-border">
-              {playerRows.map((player) => (
-                <PlayerStatRow key={player.id} player={player} />
-              ))}
-            </div>
+            <MatchdaySquadTable players={playerRows} />
           </form>
         </div>
       </div>
@@ -212,6 +304,7 @@ export default async function MatchDetailPage({
 
 function MatchHero({
   activeTeamName,
+  competition,
   eventDate,
   goalsAgainst,
   goalsFor,
@@ -220,6 +313,7 @@ function MatchHero({
   status,
 }: {
   activeTeamName: string;
+  competition: string;
   eventDate: string;
   goalsAgainst: number | null;
   goalsFor: number | null;
@@ -235,9 +329,12 @@ function MatchHero({
   return (
     <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950 p-5 text-white shadow-sm">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           <span className="rounded-full border border-rose-400/40 bg-rose-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wide text-rose-100">
             {statusLabel(status)}
+          </span>
+          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-200">
+            {matchCompetitionLabel(competition)}
           </span>
         </div>
         <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-slate-300">
@@ -280,70 +377,21 @@ function TeamBadge({ name }: { name: string }) {
   );
 }
 
-function PlayerStatRow({
-  player,
-}: {
-  player: {
-    assists: number;
-    goals: number;
-    id: string;
-    initials: string;
-    jerseyNumber: number | null;
-    lineupStatus: string;
-    minutesPlayed: number;
-    name: string;
-    played: boolean;
-    position: string;
-    rating: number | null;
-    redCards: number;
-    saved: boolean;
-    yellowCards: number;
-  };
-}) {
-  return (
-    <div
-      className={`grid gap-3 p-4 transition hover:bg-surface-muted lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px] lg:items-center ${
-        player.played ? "bg-surface" : "bg-slate-50/50"
-      }`}
-    >
-      <input name="playerProfileId" type="hidden" value={player.id} />
-      <div className="flex min-w-0 items-center gap-3">
-        <div className={`flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${player.played ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted"}`}>
-          {player.jerseyNumber ?? player.initials}
-        </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-bold text-foreground">{player.name}</p>
-            {player.played ? <CircleDot className="size-3 text-primary" aria-hidden="true" /> : null}
-          </div>
-          <p className="mt-1 text-xs font-bold uppercase tracking-wide text-muted">{player.position}</p>
-        </div>
-      </div>
-      <label className="text-xs font-semibold uppercase text-muted">
-        Status
-        <select
-          className="mt-1 h-9 w-full rounded-lg border border-border bg-surface px-2 text-sm font-normal text-foreground"
-          defaultValue={player.lineupStatus}
-          name={`lineupStatus-${player.id}`}
-        >
-          <option value="STARTER">Startelf</option>
-          <option value="SUBSTITUTE">Einwechslung</option>
-          <option value="NOT_USED">Nicht eingesetzt</option>
-        </select>
-      </label>
-      <CompactNumber label="Min" max={120} name={`minutesPlayed-${player.id}`} value={player.minutesPlayed} />
-      <CompactNumber label="T" name={`goals-${player.id}`} value={player.goals} />
-      <CompactNumber label="V" name={`assists-${player.id}`} value={player.assists} />
-      <CompactNumber accent={player.yellowCards > 0 ? "yellow" : undefined} label="Gelb" name={`yellowCards-${player.id}`} value={player.yellowCards} />
-      <CompactNumber accent={player.redCards > 0 ? "red" : undefined} label="Rot" name={`redCards-${player.id}`} value={player.redCards} />
-      <CompactNumber label="Note" max={10} name={`rating-${player.id}`} step="0.1" value={player.rating ?? undefined} />
-    </div>
-  );
-}
-
-function LineupField({
+function FormationField({
+  formationSlots,
   players,
+  tacticFormation,
+  tacticName,
 }: {
+  formationSlots: {
+    id: string;
+    x: number;
+    y: number;
+    positionCode: string;
+    jerseyNumber: number | null;
+    name: string | null;
+    rating: number | null;
+  }[];
   players: {
     id: string;
     jerseyNumber: number | null;
@@ -351,6 +399,8 @@ function LineupField({
     position: string;
     rating: number | null;
   }[];
+  tacticFormation: string | null;
+  tacticName: string | null;
 }) {
   const groups = [
     { key: "attack", label: "Angriff", players: players.filter((player) => positionLine(player.position) === "attack") },
@@ -364,29 +414,54 @@ function LineupField({
       <div className="flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Aufstellung</p>
-          <h2 className="mt-1 text-xl font-bold text-foreground">Positionsuebersicht</h2>
+          <h2 className="mt-1 text-xl font-bold text-foreground">{tacticName ?? "Positionsuebersicht"}</h2>
         </div>
-        <p className="text-sm text-muted">Eingesetzte Spieler nach Mannschaftsteil, ohne taktische Formation.</p>
+        <p className="text-sm text-muted">
+          {tacticName
+            ? `Formation ${tacticFormation}, aus dem Aufstellungsplaner uebernommen.`
+            : "Eingesetzte Spieler nach Mannschaftsteil, ohne taktische Formation. Waehle links eine Taktik aus."}
+        </p>
       </div>
-      <div className="mt-5 overflow-hidden rounded-lg border border-slate-200 bg-[linear-gradient(90deg,#78b66b_0_10%,#8bc77d_10%_20%,#78b66b_20%_30%,#8bc77d_30%_40%,#78b66b_40%_50%,#8bc77d_50%_60%,#78b66b_60%_70%,#8bc77d_70%_80%,#78b66b_80%_90%,#8bc77d_90%_100%)] p-4">
-        <div className="relative grid min-h-[310px] gap-3 rounded-md border-2 border-white/80 p-4">
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 border-t-2 border-white/70" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70" />
-          {groups.map((group) => (
-            <div className="relative z-10 grid grid-cols-[86px_1fr] items-center gap-3" key={group.key}>
-              <p className="rounded-full bg-white/85 px-3 py-1 text-center text-xs font-black uppercase tracking-wide text-slate-700 shadow-sm">
-                {group.label}
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {group.players.length > 0 ? (
-                  group.players.map((player) => <ShirtPlayer key={player.id} player={player} />)
-                ) : (
-                  <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-white">Keine Spieler</span>
-                )}
+      <div className="relative mt-5 min-h-[340px] overflow-hidden rounded-lg border border-slate-200 bg-[linear-gradient(90deg,#78b66b_0_10%,#8bc77d_10%_20%,#78b66b_20%_30%,#8bc77d_30%_40%,#78b66b_40%_50%,#8bc77d_50%_60%,#78b66b_60%_70%,#8bc77d_70%_80%,#78b66b_80%_90%,#8bc77d_90%_100%)] p-4">
+        <div className="pointer-events-none absolute inset-4 top-1/2 border-t-2 border-white/70" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70" />
+        {formationSlots.length > 0 ? (
+          formationSlots.map((slot) => (
+            <div
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
+              key={slot.id}
+              style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
+            >
+              <div className="relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm bg-primary text-lg font-black tabular-nums text-white shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm before:bg-primary after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm after:bg-primary">
+                {slot.jerseyNumber ?? "-"}
               </div>
+              <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">
+                {slot.name ? shortPlayerName(slot.name) : positionCodeLabel(slot.positionCode)}
+              </p>
+              <p className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                {positionCodeLabel(slot.positionCode)}
+                {slot.rating ? ` / ${slot.rating.toFixed(1)}` : ""}
+              </p>
             </div>
-          ))}
-        </div>
+          ))
+        ) : (
+          <div className="relative grid min-h-[308px] gap-3 rounded-md p-0">
+            {groups.map((group) => (
+              <div className="relative z-10 grid grid-cols-[86px_1fr] items-center gap-3" key={group.key}>
+                <p className="rounded-full bg-white/85 px-3 py-1 text-center text-xs font-black uppercase tracking-wide text-slate-700 shadow-sm">
+                  {group.label}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {group.players.length > 0 ? (
+                    group.players.map((player) => <ShirtPlayer key={player.id} player={player} />)
+                  ) : (
+                    <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-white">Keine Spieler</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -413,39 +488,6 @@ function ShirtPlayer({
         {player.rating ? ` / ${player.rating.toFixed(1)}` : ""}
       </p>
     </div>
-  );
-}
-
-function CompactNumber({
-  accent,
-  label,
-  max,
-  name,
-  step = "1",
-  value,
-}: {
-  accent?: "red" | "yellow";
-  label: string;
-  max?: number;
-  name: string;
-  step?: string;
-  value?: number;
-}) {
-  const accentClass = accent === "yellow" ? "border-warning-soft bg-warning-soft" : accent === "red" ? "border-danger-soft bg-danger-soft" : "border-border bg-surface";
-
-  return (
-    <label className="text-xs font-semibold uppercase text-muted">
-      {label}
-      <input
-        className={`mt-1 h-9 w-full rounded-lg border px-2 text-sm font-semibold tabular-nums text-foreground ${accentClass}`}
-        defaultValue={value ?? ""}
-        max={max}
-        min={0}
-        name={name}
-        step={step}
-        type="number"
-      />
-    </label>
   );
 }
 

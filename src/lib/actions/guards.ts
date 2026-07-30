@@ -61,9 +61,7 @@ export async function applyAvailabilityDeclines(
       startsAt: {
         lte: params.endsAt,
       },
-      endsAt: {
-        gte: params.startsAt,
-      },
+      OR: [{ endsAt: null }, { endsAt: { gte: params.startsAt } }],
       playerProfile: {
         memberships: {
           some: {

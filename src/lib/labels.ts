@@ -10,3 +10,16 @@ export function eventTypeLabel(type: string) {
       return "Sonstiges";
   }
 }
+
+export function matchCompetitionLabel(competition: string) {
+  switch (competition) {
+    case "LEAGUE":
+      return "Liga";
+    case "CUP":
+      return "Pokal";
+    case "FRIENDLY":
+      return "Freundschaftsspiel";
+    default:
+      return "Sonstiges";
+  }
+}

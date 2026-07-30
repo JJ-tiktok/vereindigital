@@ -4,6 +4,8 @@ import { FileText } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { SortableHeader } from "@/components/sortable-header";
+
 export type SquadRow = {
   id: string;
   name: string;
@@ -29,10 +31,29 @@ const statusOptions: Array<{ value: "" | SquadRow["status"]["kind"]; label: stri
   { value: "absent", label: "Abwesend" },
 ];
 
+type SortKey = "name" | "position" | "status" | "trainingForm";
+
+const statusRank: Record<SquadRow["status"]["kind"], number> = {
+  fit: 0,
+  injured: 1,
+  absent: 2,
+};
+
 export function SquadTable({ players }: { players: SquadRow[] }) {
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("");
   const [status, setStatus] = useState<"" | SquadRow["status"]["kind"]>("");
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
 
   const positionOptions = useMemo(() => {
     const values = new Set<string>();
@@ -60,6 +81,32 @@ export function SquadTable({ players }: { players: SquadRow[] }) {
       return true;
     });
   }, [players, search, position, status]);
+
+  const sortedPlayers = useMemo(() => {
+    if (!sortKey) {
+      return filteredPlayers;
+    }
+
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    return [...filteredPlayers].sort((a, b) => {
+      switch (sortKey) {
+        case "name":
+          return a.name.localeCompare(b.name) * dir;
+        case "position":
+          return (a.position ?? "").localeCompare(b.position ?? "") * dir;
+        case "status":
+          return (statusRank[a.status.kind] - statusRank[b.status.kind]) * dir;
+        case "trainingForm": {
+          const aValue = a.trainingForm ?? -Infinity;
+          const bValue = b.trainingForm ?? -Infinity;
+          return (aValue - bValue) * dir;
+        }
+        default:
+          return 0;
+      }
+    });
+  }, [filteredPlayers, sortKey, sortDir]);
 
   return (
     <>
@@ -111,10 +158,10 @@ export function SquadTable({ players }: { players: SquadRow[] }) {
         <div className="border-b border-border bg-surface-muted px-5 py-3">
           <div className="grid grid-cols-[48px_minmax(240px,1.3fr)_90px_120px_160px_110px_90px] gap-4 text-xs font-semibold uppercase tracking-wide text-muted max-xl:hidden">
             <span>#</span>
-            <span>Spieler</span>
-            <span>Position</span>
-            <span>Status</span>
-            <span>Trainingsform</span>
+            <SortableHeader label="Spieler" onClick={() => toggleSort("name")} sortDir={sortKey === "name" ? sortDir : null} />
+            <SortableHeader label="Position" onClick={() => toggleSort("position")} sortDir={sortKey === "position" ? sortDir : null} />
+            <SortableHeader label="Status" onClick={() => toggleSort("status")} sortDir={sortKey === "status" ? sortDir : null} />
+            <SortableHeader label="Trainingsform" onClick={() => toggleSort("trainingForm")} sortDir={sortKey === "trainingForm" ? sortDir : null} />
             <span>Belastung</span>
             <span>Aktion</span>
           </div>
@@ -123,9 +170,9 @@ export function SquadTable({ players }: { players: SquadRow[] }) {
           </div>
         </div>
 
-        {filteredPlayers.length > 0 ? (
+        {sortedPlayers.length > 0 ? (
           <div className="divide-y divide-border">
-            {filteredPlayers.map((player, index) => (
+            {sortedPlayers.map((player, index) => (
               <Link
                 className={`block px-5 py-4 transition hover:bg-blue-50/60 ${
                   player.status.kind === "injured" ? "bg-rose-50/40" : ""

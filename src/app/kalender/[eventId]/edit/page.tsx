@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
 import { EventForm } from "@/app/kalender/event-form";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +34,13 @@ export default async function EditCalendarEventPage({
 
   return (
     <AppShell context={context} activePath="/kalender">
+      <Breadcrumbs
+        items={[
+          { label: "Kalender", href: "/kalender" },
+          { label: event.title, href: `/kalender/${event.id}` },
+          { label: "Bearbeiten" },
+        ]}
+      />
       <PageHeader eyebrow="Teamkalender" title="Termin bearbeiten" description={event.title} />
       <div className="py-6">
         <EventForm
@@ -45,7 +52,9 @@ export default async function EditCalendarEventPage({
             location: event.location,
             startsAt: event.startsAt,
             endsAt: event.endsAt,
-            match: event.match ? { opponent: event.match.opponent, isHomeGame: event.match.isHomeGame } : null,
+            match: event.match
+              ? { opponent: event.match.opponent, isHomeGame: event.match.isHomeGame, competition: event.match.competition }
+              : null,
           }}
         />
       </div>

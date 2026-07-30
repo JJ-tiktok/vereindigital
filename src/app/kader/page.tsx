@@ -35,9 +35,7 @@ export default async function SquadPage({
           startsAt: {
             lte: now,
           },
-          endsAt: {
-            gte: now,
-          },
+          OR: [{ endsAt: null }, { endsAt: { gte: now } }],
         },
         select: {
           type: true,

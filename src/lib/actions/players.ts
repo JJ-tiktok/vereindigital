@@ -13,6 +13,7 @@ import {
   availabilityReason,
   parseForm,
   zDate,
+  zOptionalDate,
   zOptionalInt,
   zOptionalString,
   zRequiredString,
@@ -137,8 +138,9 @@ const availabilitySchema = z.object({
   playerProfileId: zRequiredString,
   type: z.enum(AvailabilityType),
   startsAt: zDate,
-  endsAt: zDate,
+  endsAt: zOptionalDate,
   note: zOptionalString,
+  redirectTo: zOptionalString,
 });
 
 export async function createPlayerAvailability(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -152,7 +154,7 @@ export async function createPlayerAvailability(_prevState: ActionState, formData
 
   const { playerProfileId, type, startsAt, endsAt, note } = parsed.data;
 
-  if (endsAt < startsAt) {
+  if (endsAt && endsAt < startsAt) {
     return { fieldErrors: { endsAt: ["Das Ende darf nicht vor dem Beginn liegen."] } };
   }
 
@@ -200,9 +202,7 @@ export async function createPlayerAvailability(_prevState: ActionState, formData
     const affectedEvents = await tx.calendarEvent.findMany({
       where: {
         teamId: activeTeam.id,
-        startsAt: {
-          lte: endsAt,
-        },
+        ...(endsAt ? { startsAt: { lte: endsAt } } : {}),
         endsAt: {
           gte: startsAt,
         },
@@ -241,7 +241,8 @@ export async function createPlayerAvailability(_prevState: ActionState, formData
   revalidatePath("/dashboard");
   revalidatePath("/kalender");
   revalidatePath("/abwesenheiten");
-  redirect("/abwesenheiten");
+  revalidatePath(`/kader/${player.id}`);
+  redirect(parsed.data.redirectTo || "/abwesenheiten");
 }
 
 async function requireAvailabilityAccess(availabilityId: string) {
@@ -285,8 +286,9 @@ const updateAvailabilitySchema = z.object({
   availabilityId: zRequiredString,
   type: z.enum(AvailabilityType),
   startsAt: zDate,
-  endsAt: zDate,
+  endsAt: zOptionalDate,
   note: zOptionalString,
+  redirectTo: zOptionalString,
 });
 
 export async function updatePlayerAvailability(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -298,7 +300,7 @@ export async function updatePlayerAvailability(_prevState: ActionState, formData
 
   const { availabilityId, type, startsAt, endsAt, note } = parsed.data;
 
-  if (endsAt < startsAt) {
+  if (endsAt && endsAt < startsAt) {
     return { fieldErrors: { endsAt: ["Das Ende darf nicht vor dem Beginn liegen."] } };
   }
 
@@ -315,27 +317,30 @@ export async function updatePlayerAvailability(_prevState: ActionState, formData
 
   revalidatePath("/dashboard");
   revalidatePath("/abwesenheiten");
-  redirect("/abwesenheiten");
+  revalidatePath(`/kader/${access.availability.playerProfileId}`);
+  redirect(parsed.data.redirectTo || "/abwesenheiten");
 }
 
 export async function deletePlayerAvailability(formData: FormData) {
   const availabilityId = String(formData.get("availabilityId") ?? "");
+  const redirectTo = String(formData.get("redirectTo") ?? "") || "/abwesenheiten";
 
   if (!availabilityId) {
-    redirect("/abwesenheiten");
+    redirect(redirectTo);
   }
 
   const access = await requireAvailabilityAccess(availabilityId);
 
   if (!access) {
-    redirect("/abwesenheiten");
+    redirect(redirectTo);
   }
 
   await prisma.playerAvailability.delete({ where: { id: availabilityId } });
 
   revalidatePath("/dashboard");
   revalidatePath("/abwesenheiten");
-  redirect("/abwesenheiten");
+  revalidatePath(`/kader/${access.availability.playerProfileId}`);
+  redirect(redirectTo);
 }
 
 export async function removePlayerFromActiveTeam(formData: FormData) {

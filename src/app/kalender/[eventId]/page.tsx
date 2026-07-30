@@ -2,14 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Edit, Printer } from "lucide-react";
 
-import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, EmptyState, PageHeader } from "@/components/app-shell";
 import { AttendancePanel } from "@/app/kalender/[eventId]/attendance-panel";
+import { TrainingPerformanceTable } from "@/app/kalender/[eventId]/training-performance-table";
 import { PlayerTabs } from "@/components/player-tabs";
-import {
-  addExerciseToTrainingPlan,
-  updatePlayerTrainingPerformance,
-  upsertTrainingPlan,
-} from "@/lib/actions";
+import { addExerciseToTrainingPlan, upsertTrainingPlan } from "@/lib/actions";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime } from "@/lib/format";
 import { eventTypeLabel } from "@/lib/labels";
@@ -237,55 +234,20 @@ export default async function CalendarEventDetailPage({
         </p>
       </div>
       {presentPlayers.length > 0 ? (
-        <div className="overflow-x-auto">
-          <div className="hidden min-w-[640px] grid-cols-[minmax(200px,1.3fr)_130px_1fr_110px] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
-            <span>Spieler</span>
-            <span>Bewertung</span>
-            <span>Kommentar</span>
-            <span />
-          </div>
-          <div className="divide-y divide-border">
-            {presentPlayers.map((player) => {
-              const performance = trainingPerformanceByPlayer.get(player.id);
-
-              return (
-                <form
-                  action={updatePlayerTrainingPerformance}
-                  className="grid min-w-[640px] gap-3 p-5 lg:min-w-0 lg:grid-cols-[minmax(200px,1.3fr)_130px_1fr_110px] lg:items-center"
-                  key={player.id}
-                >
-                  <input name="calendarEventId" type="hidden" value={event.id} />
-                  <input name="playerProfileId" type="hidden" value={player.id} />
-                  <div>
-                    <p className="font-semibold text-foreground">
-                      {player.firstName} {player.lastName}
-                    </p>
-                    <p className="text-sm text-muted">{player.position}</p>
-                  </div>
-                  <input
-                    className="h-10 rounded-lg border border-border px-3 text-sm"
-                    defaultValue={performance?.rating ?? ""}
-                    max={10}
-                    min={1}
-                    name="rating"
-                    placeholder="1.0-10.0"
-                    step="0.1"
-                    type="number"
-                  />
-                  <input
-                    className="h-10 rounded-lg border border-border px-3 text-sm"
-                    defaultValue={performance?.note ?? ""}
-                    name="note"
-                    placeholder="Kommentar zur Trainingsleistung"
-                  />
-                  <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
-                    Speichern
-                  </button>
-                </form>
-              );
-            })}
-          </div>
-        </div>
+        <TrainingPerformanceTable
+          eventId={event.id}
+          players={presentPlayers.map((player) => {
+            const performance = trainingPerformanceByPlayer.get(player.id);
+            return {
+              id: player.id,
+              firstName: player.firstName,
+              lastName: player.lastName,
+              position: player.position,
+              rating: performance?.rating ?? null,
+              note: performance?.note ?? null,
+            };
+          })}
+        />
       ) : (
         <div className="p-5">
           <EmptyState
@@ -328,6 +290,7 @@ export default async function CalendarEventDetailPage({
 
   return (
     <AppShell context={context} activePath="/kalender">
+      <Breadcrumbs items={[{ label: "Kalender", href: "/kalender" }, { label: event.title }]} />
       <PageHeader
         eyebrow={eventTypeLabel(event.type)}
         title={event.title}

@@ -2,7 +2,7 @@ import { Clock, Copy, Edit, Flag, PencilRuler, Printer, Users } from "lucide-rea
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
 import { duplicateTrainingExercise } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
@@ -48,6 +48,7 @@ export default async function TrainingExerciseDetailPage({
 
   return (
     <AppShell context={context} activePath="/training">
+      <Breadcrumbs items={[{ label: "Training", href: "/training" }, { label: exercise.title }]} />
       <PageHeader
         eyebrow={trainingCategoryLabel(exercise.category)}
         title={exercise.title}

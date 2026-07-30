@@ -1,5 +1,5 @@
 import { AvailabilityForm } from "@/app/abwesenheiten/availability-form";
-import { AvailabilityRow } from "@/app/abwesenheiten/availability-row";
+import { AvailabilityList } from "@/app/abwesenheiten/availability-list";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
@@ -73,30 +73,16 @@ export default async function AvailabilityPage() {
             <p className="mt-1 text-sm text-muted">Die letzten Eintraege fuer dieses Team.</p>
           </div>
           {availabilities.length > 0 ? (
-            <div className="overflow-x-auto">
-              <div className="hidden min-w-[760px] grid-cols-[1fr_140px_1fr_1fr_auto] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
-                <span>Spieler</span>
-                <span>Typ</span>
-                <span>Zeitraum</span>
-                <span>Notiz</span>
-                <span>Aktionen</span>
-              </div>
-              <div className="min-w-[760px] divide-y divide-border md:min-w-0">
-                {availabilities.map((availability) => (
-                  <AvailabilityRow
-                    availability={{
-                      id: availability.id,
-                      type: availability.type,
-                      startsAt: availability.startsAt,
-                      endsAt: availability.endsAt,
-                      note: availability.note,
-                      playerName: `${availability.playerProfile.firstName} ${availability.playerProfile.lastName}`,
-                    }}
-                    key={availability.id}
-                  />
-                ))}
-              </div>
-            </div>
+            <AvailabilityList
+              availabilities={availabilities.map((availability) => ({
+                id: availability.id,
+                type: availability.type,
+                startsAt: availability.startsAt,
+                endsAt: availability.endsAt,
+                note: availability.note,
+                playerName: `${availability.playerProfile.firstName} ${availability.playerProfile.lastName}`,
+              }))}
+            />
           ) : (
             <div className="p-5">
               <EmptyState title="Keine Abwesenheiten" description="Aktuell sind keine Abwesenheiten eingetragen." />

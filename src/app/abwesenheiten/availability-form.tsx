@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { createPlayerAvailability, type ActionState } from "@/lib/actions";
+import { toDateInputValue } from "@/lib/format";
 
 export function AvailabilityForm({
   players,
@@ -40,9 +41,12 @@ export function AvailabilityForm({
         </select>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <DateTimeField error={state?.fieldErrors?.startsAt?.[0]} label="Start" name="startsAt" />
-        <DateTimeField error={state?.fieldErrors?.endsAt?.[0]} label="Ende" name="endsAt" />
+        <DateTimeField defaultValue={`${toDateInputValue(new Date())}T00:00`} error={state?.fieldErrors?.startsAt?.[0]} label="Start" name="startsAt" required />
+        <DateTimeField error={state?.fieldErrors?.endsAt?.[0]} label="Ende (optional)" name="endsAt" />
       </div>
+      <p className="text-xs text-muted">
+        &quot;Ende&quot; leer lassen, wenn der Zeitraum noch nicht feststeht (z.B. bei einer Verletzung).
+      </p>
       <div>
         <label className="text-sm font-semibold text-foreground" htmlFor="note">
           Notiz
@@ -60,13 +64,32 @@ export function AvailabilityForm({
   );
 }
 
-function DateTimeField({ error, label, name }: { error?: string; label: string; name: string }) {
+function DateTimeField({
+  defaultValue,
+  error,
+  label,
+  name,
+  required,
+}: {
+  defaultValue?: string;
+  error?: string;
+  label: string;
+  name: string;
+  required?: boolean;
+}) {
   return (
     <div>
       <label className="text-sm font-semibold text-foreground" htmlFor={name}>
         {label}
       </label>
-      <input className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm" id={name} name={name} required type="datetime-local" />
+      <input
+        className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm"
+        defaultValue={defaultValue}
+        id={name}
+        name={name}
+        required={required}
+        type="datetime-local"
+      />
       {error ? <p className="mt-1 text-xs font-semibold text-danger">{error}</p> : null}
     </div>
   );

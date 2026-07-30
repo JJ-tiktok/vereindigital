@@ -54,6 +54,13 @@ enum MatchStatus {
   CANCELLED
 }
 
+enum MatchCompetition {
+  LEAGUE
+  CUP
+  FRIENDLY
+  OTHER
+}
+
 enum LineupStatus {
   STARTER
   SUBSTITUTE
@@ -202,18 +209,18 @@ model Club {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teams             Team[]
-  seasons           Season[]
-  playerProfiles    PlayerProfile[]
-  roles             Role[]
-  memberships       ClubMembership[]
-  invitations       Invitation[]
-  trainingExercises TrainingExercise[]
+  teams                Team[]
+  seasons              Season[]
+  playerProfiles       PlayerProfile[]
+  roles                Role[]
+  memberships          ClubMembership[]
+  invitations          Invitation[]
+  trainingExercises    TrainingExercise[]
   attributeDefinitions PlayerAttributeDefinition[]
-  importJobs        ImportJob[]
-  feedbackItems     FeedbackItem[]
-  tactics           Tactic[]
-  scoutingProspects ScoutingProspect[]
+  importJobs           ImportJob[]
+  feedbackItems        FeedbackItem[]
+  tactics              Tactic[]
+  scoutingProspects    ScoutingProspect[]
 
   @@map("clubs")
 }
@@ -228,9 +235,9 @@ model Season {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club  Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  teams Team[]
-  importJobs ImportJob[]
+  club          Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  teams         Team[]
+  importJobs    ImportJob[]
   feedbackItems FeedbackItem[]
 
   @@unique([clubId, name])
@@ -247,19 +254,19 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  seasonRef      Season          @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  memberships    TeamMembership[]
-  calendarEvents CalendarEvent[]
-  matches        Match[]
-  invitations    Invitation[]
+  club               Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  seasonRef          Season                    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  memberships        TeamMembership[]
+  calendarEvents     CalendarEvent[]
+  matches            Match[]
+  invitations        Invitation[]
   attributeSnapshots PlayerAttributeSnapshot[]
-  formSnapshots  PlayerFormSnapshot[]
-  fileEntries    PlayerFileEntry[]
-  trainingExercises TrainingExercise[]
-  importJobs      ImportJob[]
-  feedbackItems   FeedbackItem[]
-  tactics         Tactic[]
+  formSnapshots      PlayerFormSnapshot[]
+  fileEntries        PlayerFileEntry[]
+  trainingExercises  TrainingExercise[]
+  importJobs         ImportJob[]
+  feedbackItems      FeedbackItem[]
+  tactics            Tactic[]
 
   @@unique([clubId, seasonId, name])
   @@index([clubId])
@@ -275,23 +282,23 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  playerProfiles    PlayerProfile[]
-  clubMemberships   ClubMembership[]
-  memberships       TeamMembership[]
-  attendancesSet    EventAttendance[]  @relation("AttendanceSetBy")
-  eventsCreated     CalendarEvent[]    @relation("CalendarEventCreatedBy")
-  invitationsCreated Invitation[]      @relation("InvitationCreatedBy")
-  exercisesCreated  TrainingExercise[] @relation("TrainingExerciseCreatedBy")
-  attributeSnapshotsCreated PlayerAttributeSnapshot[] @relation("PlayerAttributeSnapshotCreatedBy")
-  trainingPerformancesCreated PlayerTrainingPerformance[] @relation("PlayerTrainingPerformanceCreatedBy")
-  fileEntriesCreated PlayerFileEntry[] @relation("PlayerFileEntryCreatedBy")
-  fileEntriesUpdated PlayerFileEntry[] @relation("PlayerFileEntryUpdatedBy")
-  importJobsCreated ImportJob[] @relation("ImportJobCreatedBy")
-  feedbackItemsCreated FeedbackItem[] @relation("FeedbackItemCreatedBy")
-  tacticsCreated    Tactic[] @relation("TacticCreatedBy")
-  scoutingProspectsCreated ScoutingProspect[] @relation("ScoutingProspectCreatedBy")
-  scoutingEventsCreated ScoutingEvent[] @relation("ScoutingEventCreatedBy")
-  scoutingEventsUpdated ScoutingEvent[] @relation("ScoutingEventUpdatedBy")
+  playerProfiles                    PlayerProfile[]
+  clubMemberships                   ClubMembership[]
+  memberships                       TeamMembership[]
+  attendancesSet                    EventAttendance[]           @relation("AttendanceSetBy")
+  eventsCreated                     CalendarEvent[]             @relation("CalendarEventCreatedBy")
+  invitationsCreated                Invitation[]                @relation("InvitationCreatedBy")
+  exercisesCreated                  TrainingExercise[]          @relation("TrainingExerciseCreatedBy")
+  attributeSnapshotsCreated         PlayerAttributeSnapshot[]   @relation("PlayerAttributeSnapshotCreatedBy")
+  trainingPerformancesCreated       PlayerTrainingPerformance[] @relation("PlayerTrainingPerformanceCreatedBy")
+  fileEntriesCreated                PlayerFileEntry[]           @relation("PlayerFileEntryCreatedBy")
+  fileEntriesUpdated                PlayerFileEntry[]           @relation("PlayerFileEntryUpdatedBy")
+  importJobsCreated                 ImportJob[]                 @relation("ImportJobCreatedBy")
+  feedbackItemsCreated              FeedbackItem[]              @relation("FeedbackItemCreatedBy")
+  tacticsCreated                    Tactic[]                    @relation("TacticCreatedBy")
+  scoutingProspectsCreated          ScoutingProspect[]          @relation("ScoutingProspectCreatedBy")
+  scoutingEventsCreated             ScoutingEvent[]             @relation("ScoutingEventCreatedBy")
+  scoutingEventsUpdated             ScoutingEvent[]             @relation("ScoutingEventUpdatedBy")
   scoutingAttributeSnapshotsCreated ScoutingAttributeSnapshot[] @relation("ScoutingAttributeSnapshotCreatedBy")
 
   @@index([email])
@@ -299,29 +306,29 @@ model User {
 }
 
 model PlayerProfile {
-  id        String   @id @default(cuid())
-  clubId    String
-  userId    String?
-  firstName String
-  lastName  String
-  birthDate DateTime?
-  position  String?
+  id           String    @id @default(cuid())
+  clubId       String
+  userId       String?
+  firstName    String
+  lastName     String
+  birthDate    DateTime?
+  position     String?
   jerseyNumber Int?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  club          Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  memberships   TeamMembership[]
-  attendances   EventAttendance[]
-  availabilities PlayerAvailability[]
-  matchStats    PlayerMatchStat[]
-  attributeSnapshots PlayerAttributeSnapshot[]
-  formSnapshots PlayerFormSnapshot[]
-  fileEntries   PlayerFileEntry[]
+  club                 Club                        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user                 User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  memberships          TeamMembership[]
+  attendances          EventAttendance[]
+  availabilities       PlayerAvailability[]
+  matchStats           PlayerMatchStat[]
+  attributeSnapshots   PlayerAttributeSnapshot[]
+  formSnapshots        PlayerFormSnapshot[]
+  fileEntries          PlayerFileEntry[]
   trainingPerformances PlayerTrainingPerformance[]
-  tacticSlots   TacticSlot[]
-  scoutedFrom   ScoutingProspect?
+  tacticSlots          TacticSlot[]
+  scoutedFrom          ScoutingProspect?
 
   @@index([clubId])
   @@index([userId])
@@ -408,12 +415,12 @@ model TeamMembership {
   playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
   role          Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
+  @@unique([teamId, userId, roleId])
+  @@unique([teamId, playerProfileId, roleId])
   @@index([teamId])
   @@index([userId])
   @@index([playerProfileId])
   @@index([roleId])
-  @@unique([teamId, userId, roleId])
-  @@unique([teamId, playerProfileId, roleId])
   @@map("team_memberships")
 }
 
@@ -456,13 +463,13 @@ model CalendarEvent {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
-  team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  createdByUser User?             @relation("CalendarEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  attendances   EventAttendance[]
-  match         Match?
-  trainingPlan  TrainingPlan?
+  team                 Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser        User?                       @relation("CalendarEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  attendances          EventAttendance[]
+  match                Match?
+  trainingPlan         TrainingPlan?
   trainingPerformances PlayerTrainingPerformance[]
-  scoutingEvents ScoutingEvent[]
+  scoutingEvents       ScoutingEvent[]
 
   @@index([teamId, startsAt])
   @@index([type])
@@ -494,7 +501,7 @@ model PlayerAvailability {
   playerProfileId String
   type            AvailabilityType
   startsAt        DateTime
-  endsAt          DateTime
+  endsAt          DateTime?
   note            String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -506,22 +513,26 @@ model PlayerAvailability {
 }
 
 model Match {
-  id              String      @id @default(cuid())
+  id              String           @id @default(cuid())
   teamId          String
-  calendarEventId String?     @unique
+  calendarEventId String?          @unique
+  tacticId        String?
   opponent        String
-  isHomeGame      Boolean     @default(true)
+  isHomeGame      Boolean          @default(true)
+  competition     MatchCompetition @default(LEAGUE)
   goalsFor        Int?
   goalsAgainst    Int?
-  status          MatchStatus @default(PLANNED)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  status          MatchStatus      @default(PLANNED)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   calendarEvent CalendarEvent?    @relation(fields: [calendarEventId], references: [id], onDelete: SetNull)
+  tactic        Tactic?           @relation(fields: [tacticId], references: [id], onDelete: SetNull)
   playerStats   PlayerMatchStat[]
 
   @@index([teamId])
+  @@index([tacticId])
   @@map("matches")
 }
 
@@ -561,8 +572,8 @@ model PlayerAttributeDefinition {
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
-  club    Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  ratings PlayerAttributeRating[]
+  club            Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  ratings         PlayerAttributeRating[]
   scoutingRatings ScoutingAttributeRating[]
 
   @@unique([clubId, key])
@@ -694,10 +705,10 @@ model ImportJob {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  team          Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  createdByUser User?   @relation("ImportJobCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  club          Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season        Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  createdByUser User?  @relation("ImportJobCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
 
   @@index([clubId, createdAt])
   @@index([teamId, type, status])
@@ -739,7 +750,7 @@ model FeedbackItem {
 }
 
 model TrainingExercise {
-  id              String                   @id @default(cuid())
+  id              String                     @id @default(cuid())
   clubId          String
   teamId          String?
   createdByUserId String?
@@ -759,14 +770,14 @@ model TrainingExercise {
   visibility      TrainingExerciseVisibility @default(TEAM)
   pitchType       TrainingPitchType          @default(FREE_AREA)
   sketchData      Json?
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
 
-  club             Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  team             Team?                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  createdByUser    User?                  @relation("TrainingExerciseCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  planExercises    TrainingPlanExercise[]
-  sketches         TrainingExerciseSketch[]
+  club          Club                     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team?                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?                    @relation("TrainingExerciseCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  planExercises TrainingPlanExercise[]
+  sketches      TrainingExerciseSketch[]
 
   @@index([clubId])
   @@index([teamId])
@@ -826,26 +837,27 @@ model TrainingPlanExercise {
 }
 
 model Tactic {
-  id              String   @id @default(cuid())
-  clubId          String
-  teamId          String
-  name            String
-  formation       String
-  defenseFormation String  @default("4-4-2")
-  styleValue      Int      @default(2)
-  lineValue       Int      @default(2)
-  pressingValue   Int      @default(2)
-  widthValue      Int      @default(2)
-  tempoValue      Int      @default(2)
-  createdByUserId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String   @id @default(cuid())
+  clubId           String
+  teamId           String
+  name             String
+  formation        String
+  defenseFormation String   @default("4-4-2")
+  styleValue       Int      @default(2)
+  lineValue        Int      @default(2)
+  pressingValue    Int      @default(2)
+  widthValue       Int      @default(2)
+  tempoValue       Int      @default(2)
+  createdByUserId  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
   team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
   createdByUser User?         @relation("TacticCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   slots         TacticSlot[]
   arrows        TacticArrow[]
+  matches       Match[]
 
   @@index([clubId])
   @@index([teamId])
@@ -853,16 +865,16 @@ model Tactic {
 }
 
 model TacticSlot {
-  id              String     @id @default(cuid())
+  id              String      @id @default(cuid())
   tacticId        String
   phase           TacticPhase @default(OFFENSE)
   positionCode    String
   x               Float
   y               Float
   role            String
-  duty            TacticDuty @default(BALANCED)
+  duty            TacticDuty  @default(BALANCED)
   playerProfileId String?
-  sortOrder       Int        @default(0)
+  sortOrder       Int         @default(0)
 
   tactic        Tactic         @relation(fields: [tacticId], references: [id], onDelete: Cascade)
   playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: SetNull)

@@ -2,7 +2,7 @@ import { MailPlus, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 
-import { MembershipRow } from "@/app/mitglieder/membership-row";
+import { MembershipTable } from "@/app/mitglieder/membership-table";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { type AppTeam, hasPermission, requireAppContext } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
@@ -134,39 +134,21 @@ export default async function MembersPage({
             </div>
 
             {clubMemberships.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-[760px] w-full text-left text-sm">
-                  <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
-                    <tr>
-                      <th className="px-5 py-3">Mitglied</th>
-                      <th className="px-5 py-3">Rolle</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Typ</th>
-                      <th className="px-5 py-3">Seit / Aktionen</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {clubMemberships.map((membership: ClubMembershipRow) => (
-                      <MembershipRow
-                        canEdit={canManageClub}
-                        key={membership.id}
-                        kind="club"
-                        membership={{
-                          id: membership.id,
-                          label: membership.user.displayName ?? membership.user.email,
-                          email: membership.user.email,
-                          roleId: membership.roleId,
-                          roleName: membership.role.name,
-                          status: membership.status,
-                          typeLabel: "Vereinsrolle",
-                          createdAt: membership.createdAt,
-                        }}
-                        roles={roleOptions}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <MembershipTable
+                canEdit={canManageClub}
+                kind="club"
+                memberships={clubMemberships.map((membership: ClubMembershipRow) => ({
+                  id: membership.id,
+                  label: membership.user.displayName ?? membership.user.email,
+                  email: membership.user.email,
+                  roleId: membership.roleId,
+                  roleName: membership.role.name,
+                  status: membership.status,
+                  typeLabel: "Vereinsrolle",
+                  createdAt: membership.createdAt,
+                }))}
+                roles={roleOptions}
+              />
             ) : (
               <div className="p-5">
                 <EmptyState
@@ -196,43 +178,25 @@ export default async function MembersPage({
                   </div>
 
                   {teamMemberships.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-[760px] w-full text-left text-sm">
-                        <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted">
-                          <tr>
-                            <th className="px-5 py-3">Mitglied</th>
-                            <th className="px-5 py-3">Rolle</th>
-                            <th className="px-5 py-3">Status</th>
-                            <th className="px-5 py-3">Typ</th>
-                            <th className="px-5 py-3">Seit / Aktionen</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                          {teamMemberships.map((membership: TeamMembershipRow) => (
-                            <MembershipRow
-                              canEdit={hasPermission(context, "team.members.manage", team.id)}
-                              key={membership.id}
-                              kind="team"
-                              membership={{
-                                id: membership.id,
-                                label:
-                                  membership.user?.displayName ??
-                                  playerName(membership.playerProfile) ??
-                                  membership.user?.email ??
-                                  "Unbekannt",
-                                email: membership.user?.email ?? null,
-                                roleId: membership.roleId,
-                                roleName: membership.role.name,
-                                status: membership.status,
-                                typeLabel: membership.userId ? "App-Nutzer" : "Kaderprofil",
-                                createdAt: membership.createdAt,
-                              }}
-                              roles={roleOptions}
-                            />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <MembershipTable
+                      canEdit={hasPermission(context, "team.members.manage", team.id)}
+                      kind="team"
+                      memberships={teamMemberships.map((membership: TeamMembershipRow) => ({
+                        id: membership.id,
+                        label:
+                          membership.user?.displayName ??
+                          playerName(membership.playerProfile) ??
+                          membership.user?.email ??
+                          "Unbekannt",
+                        email: membership.user?.email ?? null,
+                        roleId: membership.roleId,
+                        roleName: membership.role.name,
+                        status: membership.status,
+                        typeLabel: membership.userId ? "App-Nutzer" : "Kaderprofil",
+                        createdAt: membership.createdAt,
+                      }))}
+                      roles={roleOptions}
+                    />
                   ) : (
                     <div className="p-5">
                       <EmptyState

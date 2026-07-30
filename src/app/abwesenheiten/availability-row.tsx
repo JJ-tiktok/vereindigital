@@ -9,12 +9,12 @@ type Availability = {
   id: string;
   type: string;
   startsAt: Date;
-  endsAt: Date;
+  endsAt: Date | null;
   note: string | null;
   playerName: string;
 };
 
-export function AvailabilityRow({ availability }: { availability: Availability }) {
+export function AvailabilityRow({ availability, redirectTo }: { availability: Availability; redirectTo?: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(updatePlayerAvailability, null);
 
@@ -22,6 +22,7 @@ export function AvailabilityRow({ availability }: { availability: Availability }
     return (
       <form action={formAction} className="grid gap-3 p-5 md:grid-cols-[1fr_140px_1fr_1fr_auto] md:items-start">
         <input name="availabilityId" type="hidden" value={availability.id} />
+        {redirectTo ? <input name="redirectTo" type="hidden" value={redirectTo} /> : null}
         <p className="pt-2 font-semibold text-foreground">{availability.playerName}</p>
         <select className="h-10 rounded-lg border border-border px-2 text-sm" defaultValue={availability.type} name="type">
           <option value="VACATION">Urlaub</option>
@@ -39,9 +40,9 @@ export function AvailabilityRow({ availability }: { availability: Availability }
           />
           <input
             className="h-10 rounded-lg border border-border px-2 text-sm"
-            defaultValue={toDateTimeLocalValue(availability.endsAt)}
+            defaultValue={availability.endsAt ? toDateTimeLocalValue(availability.endsAt) : ""}
             name="endsAt"
-            required
+            placeholder="Unbefristet"
             type="datetime-local"
           />
         </div>
@@ -79,7 +80,7 @@ export function AvailabilityRow({ availability }: { availability: Availability }
         {availabilityTypeLabel(availability.type)}
       </span>
       <p className="text-sm text-muted">
-        {formatRange(availability.startsAt)} bis {formatRange(availability.endsAt)}
+        {formatRange(availability.startsAt)} bis {availability.endsAt ? formatRange(availability.endsAt) : "auf Weiteres"}
       </p>
       <p className="text-sm text-muted">{availability.note || "Keine Notiz"}</p>
       <div className="flex items-center gap-2">
@@ -95,6 +96,7 @@ export function AvailabilityRow({ availability }: { availability: Availability }
           }}
         >
           <input name="availabilityId" type="hidden" value={availability.id} />
+          {redirectTo ? <input name="redirectTo" type="hidden" value={redirectTo} /> : null}
           <button className="h-9 rounded-lg border border-danger-soft px-3 text-xs font-semibold text-danger" type="submit">
             Loeschen
           </button>
