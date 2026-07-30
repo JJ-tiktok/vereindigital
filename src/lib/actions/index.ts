@@ -1,16 +1,19 @@
-export { createSeason, setActiveSeason } from "./seasons";
+export { createSeason, setActiveSeason, updateSeason } from "./seasons";
 export { setActiveTeam } from "./team";
 export { setActiveClub } from "./club";
-export { createRole, deleteRole, updateRolePermissions } from "./roles";
-export { acceptInvitation, createInvitation, revokeInvitation } from "./invitations";
+export { updateClubMembershipRole, updateTeamMembershipRole } from "./members";
+export { createRole, deleteRole, updateAllRolePermissions, updateRolePermissions } from "./roles";
+export { acceptInvitation, createInvitation, revokeInvitation, updateInvitation } from "./invitations";
 export {
   createPlayerAvailability,
   createPlayerProfile,
+  deletePlayerAvailability,
   removePlayerFromActiveTeam,
+  updatePlayerAvailability,
   updatePlayerProfile,
 } from "./players";
 export { bulkAcceptEventAttendance, createCalendarEvent, updateCalendarEvent, updateEventAttendance } from "./calendar";
-export { updateMatchResult, updatePlayerMatchStat } from "./matches";
+export { updateAllPlayerMatchStats, updateMatchResult, updatePlayerMatchStat } from "./matches";
 export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";
 export {
   addExerciseToTrainingPlan,

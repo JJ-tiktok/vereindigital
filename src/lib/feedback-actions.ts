@@ -110,6 +110,50 @@ export async function updateFeedbackStatus(formData: FormData) {
   redirect(`/feedback/${feedbackId}`);
 }
 
+export async function markFeedbackTriaged(formData: FormData) {
+  const context = await requireAppContext();
+
+  if (!context.isClubAdmin) {
+    redirect("/feedback");
+  }
+
+  const feedbackId = readString(formData, "feedbackId");
+
+  await prisma.feedbackItem.update({
+    where: {
+      clubId: context.club.id,
+      id: feedbackId,
+    },
+    data: {
+      status: FeedbackStatus.TRIAGED,
+    },
+  });
+
+  revalidatePath("/feedback");
+  revalidatePath(`/feedback/${feedbackId}`);
+  redirect("/feedback");
+}
+
+export async function deleteFeedbackItem(formData: FormData) {
+  const context = await requireAppContext();
+
+  if (!context.isClubAdmin) {
+    redirect("/feedback");
+  }
+
+  const feedbackId = readString(formData, "feedbackId");
+
+  await prisma.feedbackItem.delete({
+    where: {
+      clubId: context.club.id,
+      id: feedbackId,
+    },
+  });
+
+  revalidatePath("/feedback");
+  redirect("/feedback");
+}
+
 function parseFeedbackType(value: string) {
   if (Object.values(FeedbackType).includes(value as FeedbackType)) {
     return value as FeedbackType;

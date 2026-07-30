@@ -130,6 +130,68 @@ export async function createSeason(formData: FormData) {
   redirect("/saisons");
 }
 
+const updateSeasonSchema = z.object({
+  seasonId: zOptionalString,
+  name: zOptionalString,
+  startsAt: zDate,
+  endsAt: zDate,
+});
+
+export async function updateSeason(formData: FormData) {
+  const context = await requireAppContext();
+  requirePermission(context, "club.manage");
+
+  const parsed = parseForm(formData, updateSeasonSchema);
+
+  if (!parsed.success) {
+    redirect("/saisons?error=invalid-fields");
+  }
+
+  const { seasonId, startsAt, endsAt } = parsed.data;
+  const name = parsed.data.name;
+
+  if (!seasonId || !name) {
+    redirect("/saisons?error=invalid-fields");
+  }
+
+  if (endsAt <= startsAt) {
+    redirect("/saisons?error=invalid-range");
+  }
+
+  const [season, duplicate] = await Promise.all([
+    prisma.season.findFirst({
+      where: {
+        id: seasonId,
+        clubId: context.club.id,
+      },
+    }),
+    prisma.season.findUnique({
+      where: {
+        clubId_name: {
+          clubId: context.club.id,
+          name,
+        },
+      },
+    }),
+  ]);
+
+  if (!season) {
+    redirect("/saisons?error=missing-season");
+  }
+
+  if (duplicate && duplicate.id !== seasonId) {
+    redirect("/saisons?error=duplicate");
+  }
+
+  await prisma.season.update({
+    where: { id: seasonId },
+    data: { name, startsAt, endsAt },
+  });
+
+  revalidateSeasons();
+  redirect("/saisons");
+}
+
 export async function setActiveSeason(formData: FormData) {
   const context = await requireAppContext();
   requirePermission(context, "club.manage");

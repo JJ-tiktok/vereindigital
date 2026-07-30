@@ -911,3 +911,31 @@ async function ensureMatchForImport(
 
   return match.id;
 }
+
+export async function deleteImportJob(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  const jobId = String(formData.get("jobId") ?? "");
+
+  const job = await prisma.importJob.findFirst({
+    where: {
+      id: jobId,
+      teamId: activeTeam.id,
+    },
+    select: {
+      id: true,
+      type: true,
+    },
+  });
+
+  if (!job) {
+    redirect("/importe");
+  }
+
+  requireImportPermission(context, activeTeam.id, job.type);
+
+  await prisma.importJob.delete({ where: { id: job.id } });
+
+  revalidatePath("/importe");
+  redirect("/importe");
+}

@@ -1,7 +1,7 @@
 import { AvailabilityForm } from "@/app/abwesenheiten/availability-form";
+import { AvailabilityRow } from "@/app/abwesenheiten/availability-row";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
-import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export default async function AvailabilityPage() {
@@ -73,23 +73,29 @@ export default async function AvailabilityPage() {
             <p className="mt-1 text-sm text-muted">Die letzten Eintraege fuer dieses Team.</p>
           </div>
           {availabilities.length > 0 ? (
-            <div className="divide-y divide-border">
-              {availabilities.map((availability) => (
-                <div className="grid gap-3 p-5 md:grid-cols-[1fr_140px_220px]" key={availability.id}>
-                  <div>
-                    <p className="font-semibold text-foreground">
-                      {availability.playerProfile.firstName} {availability.playerProfile.lastName}
-                    </p>
-                    <p className="text-sm text-muted">{availability.note || "Keine Notiz"}</p>
-                  </div>
-                  <span className="rounded-full bg-surface-muted px-3 py-1 text-center text-xs font-semibold text-foreground">
-                    {availabilityTypeLabel(availability.type)}
-                  </span>
-                  <p className="text-sm text-muted">
-                    {formatDateTime(availability.startsAt)} bis {formatDateTime(availability.endsAt)}
-                  </p>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <div className="hidden min-w-[760px] grid-cols-[1fr_140px_1fr_1fr_auto] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
+                <span>Spieler</span>
+                <span>Typ</span>
+                <span>Zeitraum</span>
+                <span>Notiz</span>
+                <span>Aktionen</span>
+              </div>
+              <div className="min-w-[760px] divide-y divide-border md:min-w-0">
+                {availabilities.map((availability) => (
+                  <AvailabilityRow
+                    availability={{
+                      id: availability.id,
+                      type: availability.type,
+                      startsAt: availability.startsAt,
+                      endsAt: availability.endsAt,
+                      note: availability.note,
+                      playerName: `${availability.playerProfile.firstName} ${availability.playerProfile.lastName}`,
+                    }}
+                    key={availability.id}
+                  />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="p-5">
@@ -100,17 +106,4 @@ export default async function AvailabilityPage() {
       </div>
     </AppShell>
   );
-}
-
-function availabilityTypeLabel(type: string) {
-  switch (type) {
-    case "VACATION":
-      return "Urlaub";
-    case "INJURY":
-      return "Verletzung";
-    case "ILLNESS":
-      return "Krankheit";
-    default:
-      return "Sonstiges";
-  }
 }

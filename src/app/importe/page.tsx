@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarRange, FileSpreadsheet, Link2, Upload } from "lucide-react";
 import Link from "next/link";
 
+import { DeleteImportJobButton } from "@/app/importe/delete-import-job-button";
 import { AppShell, EmptyState, PageHeader } from "@/components/app-shell";
 import { requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime } from "@/lib/format";
@@ -70,15 +71,16 @@ export default async function ImportsPage() {
           <div className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
             <div className="divide-y divide-border">
               {jobs.map((job) => (
-                <Link className="grid gap-3 p-5 transition hover:bg-surface-muted md:grid-cols-[1fr_160px_180px_140px]" href={`/importe/${job.id}`} key={job.id}>
-                  <div>
+                <div className="grid gap-3 p-5 md:grid-cols-[1fr_160px_180px_140px_auto] md:items-center" key={job.id}>
+                  <Link className="transition hover:opacity-80" href={`/importe/${job.id}`}>
                     <p className="font-semibold text-foreground">{jobTypeLabel(job.type)}</p>
                     <p className="mt-1 text-sm text-muted">{job.sourceUrl ?? job.fileName ?? sourceTypeLabel(job.sourceType)}</p>
-                  </div>
+                  </Link>
                   <p className="text-sm text-muted">{sourceTypeLabel(job.sourceType)}</p>
                   <p className="text-sm text-muted">{formatDateTime(job.createdAt)}</p>
                   <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${statusClass(job.status)}`}>{statusLabel(job.status)}</span>
-                </Link>
+                  <DeleteImportJobButton jobId={job.id} />
+                </div>
               ))}
             </div>
           </div>

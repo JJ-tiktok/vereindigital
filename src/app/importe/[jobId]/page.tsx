@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { DeleteImportJobButton } from "@/app/importe/delete-import-job-button";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import {
   confirmFixturesImportJob,
@@ -67,6 +68,7 @@ export default async function ImportReviewPage({
   return (
     <AppShell context={context} activePath="/importe">
       <PageHeader
+        action={<DeleteImportJobButton jobId={job.id} />}
         description={`${sourceTypeLabel(job.sourceType)} / ${formatDateTime(job.createdAt)} / Status: ${statusLabel(job.status)}`}
         eyebrow="Import Review"
         title={

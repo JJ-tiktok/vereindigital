@@ -2,7 +2,7 @@ import { Lock, Trash2 } from "lucide-react";
 
 import { CreateRoleForm } from "@/app/rollen/create-role-form";
 import { AppShell, PageHeader } from "@/components/app-shell";
-import { deleteRole, updateRolePermissions } from "@/lib/actions";
+import { deleteRole, updateAllRolePermissions } from "@/lib/actions";
 import { requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 import { permissionDefinitions } from "@/lib/rbac";
@@ -55,13 +55,24 @@ export default async function RolesPage({
       ) : null}
 
       <section className="grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-4">
+        <form action={updateAllRolePermissions} className="space-y-4">
+          <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-border bg-surface p-4">
+            <p className="text-sm font-semibold text-foreground">Aenderungen an allen Rollen gemeinsam speichern.</p>
+            <button
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong"
+              type="submit"
+            >
+              Alle Rollen speichern
+            </button>
+          </div>
+
           {roles.map((role) => {
             const activePermissionKeys = new Set(role.rolePermissions.map((entry) => entry.permission.key));
             const inUse = role._count.clubMemberships + role._count.memberships + role._count.invitations > 0;
 
             return (
               <article className="rounded-lg border border-border bg-surface p-5" key={role.id}>
+                <input name="bulkRoleId" type="hidden" value={role.id} />
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-foreground">{role.name}</h2>
@@ -74,47 +85,39 @@ export default async function RolesPage({
                   </div>
 
                   {!role.isSystemRole ? (
-                    <form action={deleteRole}>
-                      <input name="roleId" type="hidden" value={role.id} />
-                      <button
-                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={inUse}
-                        title={inUse ? "Rolle wird noch verwendet und kann nicht geloescht werden." : undefined}
-                        type="submit"
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                        Loeschen
-                      </button>
-                    </form>
+                    <button
+                      className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={inUse}
+                      formAction={deleteRole}
+                      formNoValidate
+                      name="roleId"
+                      title={inUse ? "Rolle wird noch verwendet und kann nicht geloescht werden." : undefined}
+                      type="submit"
+                      value={role.id}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      Loeschen
+                    </button>
                   ) : null}
                 </div>
 
-                <form action={updateRolePermissions} className="mt-4">
-                  <input name="roleId" type="hidden" value={role.id} />
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {permissionDefinitions.map(([key, description]) => (
-                      <label className="flex items-start gap-2 text-sm text-foreground" key={key}>
-                        <input
-                          className="mt-0.5 size-4 accent-primary"
-                          defaultChecked={activePermissionKeys.has(key)}
-                          name={`permission-${key}`}
-                          type="checkbox"
-                        />
-                        <span>{description}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <button
-                    className="mt-4 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong"
-                    type="submit"
-                  >
-                    Berechtigungen speichern
-                  </button>
-                </form>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {permissionDefinitions.map(([key, description]) => (
+                    <label className="flex items-start gap-2 text-sm text-foreground" key={key}>
+                      <input
+                        className="mt-0.5 size-4 accent-primary"
+                        defaultChecked={activePermissionKeys.has(key)}
+                        name={`permission-${key}-${role.id}`}
+                        type="checkbox"
+                      />
+                      <span>{description}</span>
+                    </label>
+                  ))}
+                </div>
               </article>
             );
           })}
-        </div>
+        </form>
 
         <aside className="space-y-6">
           <CreateRoleForm />
