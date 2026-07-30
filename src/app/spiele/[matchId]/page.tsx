@@ -2,13 +2,12 @@ import { BarChart3, CalendarClock, ClipboardPen, LayoutGrid, Save } from "lucide
 import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs } from "@/components/app-shell";
-import { MatchdaySquadTable } from "@/app/spiele/[matchId]/matchday-squad-table";
+import { MatchLineupEditor } from "@/app/spiele/[matchId]/matchday-lineup-editor";
 import { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic } from "@/lib/actions";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime, getInitials } from "@/lib/format";
 import { matchCompetitionLabel } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
-import { positionCodeLabel } from "@/lib/tactics";
 
 export default async function MatchDetailPage({
   params,
@@ -138,23 +137,15 @@ export default async function MatchDetailPage({
   const goalsFor = match.goalsFor ?? null;
   const goalsAgainst = match.goalsAgainst ?? null;
   const eventDate = match.calendarEvent ? formatDateTime(match.calendarEvent.startsAt) : "Spiel ohne Kalendertermin";
-  const playerById = new Map(players.map((player) => [player.id, player]));
   const formationSlots = (match.tactic?.slots ?? [])
     .filter((slot) => slot.phase === "OFFENSE")
-    .map((slot) => {
-      const player = slot.playerProfileId ? playerById.get(slot.playerProfileId) : null;
-      const stat = player ? statByPlayer.get(player.id) : undefined;
-
-      return {
-        id: slot.id,
-        x: slot.x,
-        y: slot.y,
-        positionCode: slot.positionCode,
-        jerseyNumber: player?.jerseyNumber ?? null,
-        name: player ? `${player.firstName} ${player.lastName}` : null,
-        rating: stat?.rating ?? null,
-      };
-    });
+    .map((slot) => ({
+      id: slot.id,
+      x: slot.x,
+      y: slot.y,
+      positionCode: slot.positionCode,
+      playerProfileId: slot.playerProfileId,
+    }));
   const canManageMatch = hasPermission(context, "match.manage", activeTeam.id);
 
   return (
@@ -170,13 +161,6 @@ export default async function MatchDetailPage({
           isHomeGame={match.isHomeGame}
           opponent={match.opponent}
           status={match.status}
-        />
-
-        <FormationField
-          formationSlots={formationSlots}
-          players={playedRows}
-          tacticFormation={match.tactic?.formation ?? null}
-          tacticName={match.tactic?.name ?? null}
         />
 
         {query.imported ? (
@@ -272,29 +256,33 @@ export default async function MatchDetailPage({
             ) : null}
           </aside>
 
-          <form action={updateAllPlayerMatchStats} className="overflow-hidden rounded-lg border border-border bg-surface">
+          <form action={updateAllPlayerMatchStats} className="space-y-6">
             <input name="matchId" type="hidden" value={match.id} />
-            <div className="sticky top-0 z-10 border-b border-border bg-surface p-5">
-              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
-                  <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
-                  <p className="mt-1 text-sm text-muted">
-                    Eingesetzte Spieler oben, komplette Kaderpflege darunter. Abwesende Spieler (Verletzung, Urlaub etc.) werden ausgeblendet. Aenderungen fuer alle Spieler auf einmal speichern.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
-                  <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{playerRows.length - playedRows.length} ohne Einsatz</span>
-                  <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="submit">
-                    <Save className="size-4" aria-hidden="true" />
-                    Alle speichern
-                  </button>
-                </div>
+            <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
+                <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
+                <p className="mt-1 text-sm text-muted">
+                  Startelf oben im Feld anklicken, Einwechslungen unten in der Kaderliste festlegen. Abwesende Spieler
+                  (Verletzung, Urlaub etc.) werden ausgeblendet. Aenderungen fuer alle Spieler auf einmal speichern.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
+                <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{playerRows.length - playedRows.length} ohne Einsatz</span>
+                <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="submit">
+                  <Save className="size-4" aria-hidden="true" />
+                  Alle speichern
+                </button>
               </div>
             </div>
 
-            <MatchdaySquadTable players={playerRows} />
+            <MatchLineupEditor
+              formationSlots={formationSlots}
+              players={playerRows}
+              tacticFormation={match.tactic?.formation ?? null}
+              tacticName={match.tactic?.name ?? null}
+            />
           </form>
         </div>
       </div>
@@ -377,120 +365,6 @@ function TeamBadge({ name }: { name: string }) {
   );
 }
 
-function FormationField({
-  formationSlots,
-  players,
-  tacticFormation,
-  tacticName,
-}: {
-  formationSlots: {
-    id: string;
-    x: number;
-    y: number;
-    positionCode: string;
-    jerseyNumber: number | null;
-    name: string | null;
-    rating: number | null;
-  }[];
-  players: {
-    id: string;
-    jerseyNumber: number | null;
-    name: string;
-    position: string;
-    rating: number | null;
-  }[];
-  tacticFormation: string | null;
-  tacticName: string | null;
-}) {
-  const groups = [
-    { key: "attack", label: "Angriff", players: players.filter((player) => positionLine(player.position) === "attack") },
-    { key: "midfield", label: "Mittelfeld", players: players.filter((player) => positionLine(player.position) === "midfield") },
-    { key: "defense", label: "Abwehr", players: players.filter((player) => positionLine(player.position) === "defense") },
-    { key: "goalkeeper", label: "Tor", players: players.filter((player) => positionLine(player.position) === "goalkeeper") },
-  ];
-
-  return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <div className="flex flex-col gap-2 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">Aufstellung</p>
-          <h2 className="mt-1 text-xl font-bold text-foreground">{tacticName ?? "Positionsuebersicht"}</h2>
-        </div>
-        <p className="text-sm text-muted">
-          {tacticName
-            ? `Formation ${tacticFormation}, aus dem Aufstellungsplaner uebernommen.`
-            : "Eingesetzte Spieler nach Mannschaftsteil, ohne taktische Formation. Waehle links eine Taktik aus."}
-        </p>
-      </div>
-      <div className="relative mt-5 min-h-[340px] overflow-hidden rounded-lg border border-slate-200 bg-[linear-gradient(90deg,#78b66b_0_10%,#8bc77d_10%_20%,#78b66b_20%_30%,#8bc77d_30%_40%,#78b66b_40%_50%,#8bc77d_50%_60%,#78b66b_60%_70%,#8bc77d_70%_80%,#78b66b_80%_90%,#8bc77d_90%_100%)] p-4">
-        <div className="pointer-events-none absolute inset-4 top-1/2 border-t-2 border-white/70" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70" />
-        {formationSlots.length > 0 ? (
-          formationSlots.map((slot) => (
-            <div
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-              key={slot.id}
-              style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-            >
-              <div className="relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm bg-primary text-lg font-black tabular-nums text-white shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm before:bg-primary after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm after:bg-primary">
-                {slot.jerseyNumber ?? "-"}
-              </div>
-              <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">
-                {slot.name ? shortPlayerName(slot.name) : positionCodeLabel(slot.positionCode)}
-              </p>
-              <p className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                {positionCodeLabel(slot.positionCode)}
-                {slot.rating ? ` / ${slot.rating.toFixed(1)}` : ""}
-              </p>
-            </div>
-          ))
-        ) : (
-          <div className="relative grid min-h-[308px] gap-3 rounded-md p-0">
-            {groups.map((group) => (
-              <div className="relative z-10 grid grid-cols-[86px_1fr] items-center gap-3" key={group.key}>
-                <p className="rounded-full bg-white/85 px-3 py-1 text-center text-xs font-black uppercase tracking-wide text-slate-700 shadow-sm">
-                  {group.label}
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  {group.players.length > 0 ? (
-                    group.players.map((player) => <ShirtPlayer key={player.id} player={player} />)
-                  ) : (
-                    <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-white">Keine Spieler</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function ShirtPlayer({
-  player,
-}: {
-  player: {
-    jerseyNumber: number | null;
-    name: string;
-    position: string;
-    rating: number | null;
-  };
-}) {
-  return (
-    <div className="flex min-w-20 flex-col items-center gap-1">
-      <div className="relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm bg-primary text-lg font-black tabular-nums text-white shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm before:bg-primary after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm after:bg-primary">
-        {player.jerseyNumber ?? "-"}
-      </div>
-      <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">{shortPlayerName(player.name)}</p>
-      <p className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-        {player.position}
-        {player.rating ? ` / ${player.rating.toFixed(1)}` : ""}
-      </p>
-    </div>
-  );
-}
-
 function NumberField({
   label,
   name,
@@ -566,33 +440,6 @@ function positionRank(position: string) {
   return 4;
 }
 
-function positionLine(position: string) {
-  const rank = positionRank(position);
-
-  if (rank === 0) {
-    return "goalkeeper";
-  }
-
-  if (rank === 1) {
-    return "defense";
-  }
-
-  if (rank === 2) {
-    return "midfield";
-  }
-
-  return "attack";
-}
-
-function shortPlayerName(name: string) {
-  const parts = name.split(/\s+/).filter(Boolean);
-
-  if (parts.length <= 1) {
-    return name;
-  }
-
-  return parts.at(-1) ?? name;
-}
 
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
