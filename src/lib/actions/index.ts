@@ -13,7 +13,7 @@ export {
   updatePlayerProfile,
 } from "./players";
 export { bulkAcceptEventAttendance, createCalendarEvent, updateCalendarEvent, updateEventAttendance } from "./calendar";
-export { updateAllPlayerMatchStats, updateMatchResult, updatePlayerMatchStat } from "./matches";
+export { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic, updatePlayerMatchStat } from "./matches";
 export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";
 export {
   addExerciseToTrainingPlan,

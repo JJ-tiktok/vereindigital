@@ -1,6 +1,6 @@
 "use server";
 
-import { AttendanceStatus, CalendarEventType } from "@prisma/client";
+import { AttendanceStatus, CalendarEventType, MatchCompetition } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -28,6 +28,7 @@ const createEventSchema = z
     location: zOptionalString,
     opponent: zOptionalString,
     isHomeGame: zOptionalString,
+    competition: z.enum(MatchCompetition).optional(),
     startsAt: zDate,
     endsAt: zDate,
   })
@@ -59,6 +60,7 @@ const updateEventSchema = z
     location: zOptionalString,
     opponent: zOptionalString,
     isHomeGame: zOptionalString,
+    competition: z.enum(MatchCompetition).optional(),
     startsAt: zDate,
     endsAt: zDate,
   })
@@ -122,6 +124,7 @@ export async function updateCalendarEvent(_prevState: ActionState, formData: For
         data: {
           opponent: opponent ?? event.match.opponent,
           isHomeGame: parsed.data.isHomeGame !== "false",
+          competition: parsed.data.competition ?? event.match.competition,
         },
       });
     }
@@ -168,6 +171,7 @@ export async function createCalendarEvent(_prevState: ActionState, formData: For
           calendarEventId: calendarEvent.id,
           opponent: opponent ?? "",
           isHomeGame: parsed.data.isHomeGame !== "false",
+          competition: parsed.data.competition ?? "LEAGUE",
         },
       });
     }

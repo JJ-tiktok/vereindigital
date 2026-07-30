@@ -5,7 +5,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { DeleteFeedbackButton } from "@/app/feedback/[feedbackId]/delete-feedback-button";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
 import { requireAppContext } from "@/lib/app-context";
 import { updateFeedbackStatus } from "@/lib/feedback-actions";
 import { canUseFeedback } from "@/lib/feedback-permissions";
@@ -49,6 +49,7 @@ export default async function FeedbackDetailPage({
 
   return (
     <AppShell context={context} activePath="/feedback">
+      <Breadcrumbs items={[{ label: "Feedback", href: "/feedback" }, { label: item.title }]} />
       <PageHeader
         action={
           <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" href="/feedback">

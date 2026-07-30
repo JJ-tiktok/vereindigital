@@ -1,12 +1,14 @@
-import { CalendarDays, ClipboardEdit, FileText, Shield } from "lucide-react";
-import Link from "next/link";
+import { CalendarDays, ClipboardEdit, FileText, HeartPulse, Shield } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { AppShell } from "@/components/app-shell";
+import { AppShell, Breadcrumbs } from "@/components/app-shell";
 import { PlayerForm } from "@/app/kader/player-form";
+import { PlayerAvailabilityForm } from "@/app/kader/[playerId]/player-availability-form";
 import { RemovePlayerButton } from "@/app/kader/[playerId]/remove-player-button";
+import { AvailabilityRow } from "@/app/abwesenheiten/availability-row";
 import { createPlayerAttributeSnapshot, createPlayerFileEntry, removePlayerFromActiveTeam } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
+import { availabilityReason } from "@/lib/actions/helpers";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import {
   attributeCategoryLabel,
@@ -116,6 +118,19 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
+  const availabilities = await prisma.playerAvailability.findMany({
+    where: {
+      playerProfileId: player.id,
+    },
+    orderBy: {
+      startsAt: "desc",
+    },
+  });
+  const now = new Date();
+  const currentAbsence = availabilities.find(
+    (availability) => availability.startsAt <= now && (!availability.endsAt || availability.endsAt >= now),
+  );
+
   const seasonHistory = await getPlayerSeasonHistory(player.id);
   const positionGroup = mapPositionToGroup(player.position);
   const attributeDefinitions = await prisma.playerAttributeDefinition.findMany({
@@ -212,9 +227,9 @@ export default async function PlayerDetailPage({
   return (
     <AppShell context={context} activePath="/kader">
       <div className="space-y-6 py-2">
-        <Link className="inline-flex items-center text-sm font-semibold text-primary" href="/kader">
-          Zurueck zum Kader
-        </Link>
+        <Breadcrumbs
+          items={[{ label: "Kader", href: "/kader" }, { label: `${player.firstName} ${player.lastName}` }]}
+        />
 
         <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[180px_1fr] xl:grid-cols-[200px_1fr_260px]">
@@ -228,6 +243,13 @@ export default async function PlayerDetailPage({
                   {player.firstName} {player.lastName}
                 </h1>
                 <span className="rounded-lg bg-primary px-3 py-1 text-sm font-bold text-white">{player.position}</span>
+                {currentAbsence ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-danger-soft px-3 py-1 text-sm font-bold text-danger">
+                    <HeartPulse className="size-4" aria-hidden="true" />
+                    {availabilityReason(currentAbsence.type)}
+                    {currentAbsence.endsAt ? ` bis ${formatDate(currentAbsence.endsAt)}` : " (unbefristet)"}
+                  </span>
+                ) : null}
               </div>
               <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium text-muted">
                 <span className="inline-flex items-center gap-2">
@@ -263,6 +285,35 @@ export default async function PlayerDetailPage({
               label: "Uebersicht",
               content: (
                 <>
+                  <article className="overflow-hidden rounded-lg border border-border bg-surface">
+                    <SectionHeader
+                      action={<HeartPulse className="size-5 text-muted" aria-hidden="true" />}
+                      title="Verfuegbarkeit"
+                      description="Verletzungen, Krankheit und Urlaub erfassen. Termine im Zeitraum werden automatisch abgesagt."
+                    />
+                    {availabilities.length > 0 ? (
+                      <div className="divide-y divide-border">
+                        {availabilities.map((availability) => (
+                          <AvailabilityRow
+                            availability={{
+                              id: availability.id,
+                              type: availability.type,
+                              startsAt: availability.startsAt,
+                              endsAt: availability.endsAt,
+                              note: availability.note,
+                              playerName: `${player.firstName} ${player.lastName}`,
+                            }}
+                            key={availability.id}
+                            redirectTo={`/kader/${player.id}`}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="p-5 text-sm text-muted">Noch keine Abwesenheiten erfasst.</p>
+                    )}
+                    <PlayerAvailabilityForm playerId={player.id} />
+                  </article>
+
                   <section className="grid gap-6 xl:grid-cols-[390px_1fr_360px]">
                     <article className="rounded-lg border border-border bg-surface">
                       <SectionHeader title="Faehigkeiten" description="Top-Werte aus dem letzten Bewertungsstand." />

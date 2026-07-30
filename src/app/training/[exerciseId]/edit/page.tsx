@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { TrainingExerciseForm } from "@/app/training/exercise-form";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 
@@ -28,6 +28,13 @@ export default async function EditTrainingExercisePage({
 
   return (
     <AppShell context={context} activePath="/training">
+      <Breadcrumbs
+        items={[
+          { label: "Training", href: "/training" },
+          { label: exercise.title, href: `/training/${exercise.id}` },
+          { label: "Bearbeiten" },
+        ]}
+      />
       <PageHeader
         eyebrow="Trainingsbibliothek"
         title="Uebung bearbeiten"

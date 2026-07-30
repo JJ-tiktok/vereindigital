@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { bulkAcceptEventAttendance, updateEventAttendance } from "@/lib/actions";
 import { getInitials } from "@/lib/format";
+import { SortableHeader } from "@/components/sortable-header";
 
 type AttendanceStatus = "ACCEPTED" | "MAYBE" | "DECLINED";
 
@@ -25,7 +26,51 @@ const statusMeta: Record<AttendanceStatus, { label: string; dot: string }> = {
 
 const gridCols = "lg:grid-cols-[minmax(200px,1.3fr)_110px_150px_1fr]";
 
+type SortKey = "name" | "position" | "status" | "reason";
+
+const statusRank: Record<AttendanceStatus | "OPEN", number> = {
+  ACCEPTED: 0,
+  MAYBE: 1,
+  DECLINED: 2,
+  OPEN: 3,
+};
+
 export function AttendancePanel({ eventId, players }: { eventId: string; players: PlayerRow[] }) {
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  const sortedPlayers = useMemo(() => {
+    if (!sortKey) {
+      return players;
+    }
+
+    const dir = sortDir === "asc" ? 1 : -1;
+
+    return [...players].sort((a, b) => {
+      switch (sortKey) {
+        case "name":
+          return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`) * dir;
+        case "position":
+          return (a.position ?? "").localeCompare(b.position ?? "") * dir;
+        case "status":
+          return (statusRank[a.status ?? "OPEN"] - statusRank[b.status ?? "OPEN"]) * dir;
+        case "reason":
+          return (a.reason ?? "").localeCompare(b.reason ?? "") * dir;
+        default:
+          return 0;
+      }
+    });
+  }, [players, sortKey, sortDir]);
+
   const openPlayers = players.filter((player) => !player.status);
   const counts = players.reduce(
     (acc, player) => {
@@ -60,13 +105,13 @@ export function AttendancePanel({ eventId, players }: { eventId: string; players
 
       <div className="overflow-x-auto">
         <div className={`hidden min-w-[720px] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted lg:grid ${gridCols}`}>
-          <span>Spieler</span>
-          <span>Position</span>
-          <span>Status</span>
-          <span>Grund</span>
+          <SortableHeader label="Spieler" onClick={() => toggleSort("name")} sortDir={sortKey === "name" ? sortDir : null} />
+          <SortableHeader label="Position" onClick={() => toggleSort("position")} sortDir={sortKey === "position" ? sortDir : null} />
+          <SortableHeader label="Status" onClick={() => toggleSort("status")} sortDir={sortKey === "status" ? sortDir : null} />
+          <SortableHeader label="Grund" onClick={() => toggleSort("reason")} sortDir={sortKey === "reason" ? sortDir : null} />
         </div>
         <div className="divide-y divide-border">
-          {players.map((player) => (
+          {sortedPlayers.map((player) => (
             <AttendanceRow eventId={eventId} key={player.id} player={player} />
           ))}
         </div>

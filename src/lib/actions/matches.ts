@@ -20,6 +20,56 @@ function revalidateMatches(matchId?: string) {
   }
 }
 
+export async function updateMatchTactic(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "match.manage", activeTeam.id);
+
+  const matchId = String(formData.get("matchId") ?? "");
+  const tacticIdRaw = String(formData.get("tacticId") ?? "").trim();
+
+  if (!matchId) {
+    redirect("/spiele");
+  }
+
+  const match = await prisma.match.findFirst({
+    where: {
+      id: matchId,
+      teamId: activeTeam.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!match) {
+    redirect("/spiele");
+  }
+
+  let tacticId: string | null = null;
+
+  if (tacticIdRaw) {
+    const tactic = await prisma.tactic.findFirst({
+      where: {
+        id: tacticIdRaw,
+        teamId: activeTeam.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    tacticId = tactic?.id ?? null;
+  }
+
+  await prisma.match.update({
+    where: { id: matchId },
+    data: { tacticId },
+  });
+
+  revalidateMatches(matchId);
+}
+
 const matchResultSchema = z.object({
   matchId: zRequiredString,
   goalsFor: zOptionalInt,

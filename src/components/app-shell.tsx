@@ -3,6 +3,7 @@ import {
   Binoculars,
   CalendarDays,
   CalendarRange,
+  ChevronRight,
   ClipboardList,
   MailPlus,
   Dumbbell,
@@ -16,6 +17,7 @@ import {
   UserCog,
 } from "lucide-react";
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { ClubSwitcher } from "@/components/club-switcher";
 import { FeedbackWidget } from "@/components/feedback-widget";
@@ -130,6 +132,25 @@ export async function AppShell({
         </section>
       </div>
     </main>
+  );
+}
+
+export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
+  return (
+    <nav aria-label="Breadcrumb" className="mb-3 flex flex-wrap items-center gap-1.5 text-sm text-muted">
+      {items.map((item, index) => (
+        <span className="flex items-center gap-1.5" key={`${item.label}-${index}`}>
+          {index > 0 ? <ChevronRight className="size-3.5 shrink-0" aria-hidden="true" /> : null}
+          {item.href ? (
+            <Link className="transition hover:text-foreground hover:underline" href={item.href}>
+              {item.label}
+            </Link>
+          ) : (
+            <span className="font-semibold text-foreground">{item.label}</span>
+          )}
+        </span>
+      ))}
+    </nav>
   );
 }
 

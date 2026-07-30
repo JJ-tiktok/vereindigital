@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { SketchCanvasPanel, SketchEditorProvider, SketchToolPanel } from "@/app/training/[exerciseId]/sketch-editor";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
 import { createTrainingExerciseSketch, deleteTrainingExerciseSketch } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
@@ -54,6 +54,13 @@ export default async function TrainingSketchPage({
 
   return (
     <AppShell context={context} activePath="/training">
+      <Breadcrumbs
+        items={[
+          { label: "Training", href: "/training" },
+          { label: exercise.title, href: `/training/${exercise.id}` },
+          { label: "Skizzen-Editor" },
+        ]}
+      />
       <PageHeader
         eyebrow="Skizzen-Editor"
         title={exercise.title}
