@@ -23,3 +23,18 @@ export function matchCompetitionLabel(competition: string) {
       return "Sonstiges";
   }
 }
+
+export function tacticSceneCategoryLabel(category: string) {
+  switch (category) {
+    case "STANDARDS":
+      return "Standards";
+    case "DEFENSE":
+      return "Verteidigung";
+    case "ATTACK":
+      return "Angriff";
+    case "MATCH_SCENE":
+      return "Spielszene";
+    default:
+      return "Sonstiges";
+  }
+}

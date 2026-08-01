@@ -11,10 +11,11 @@ type PerformanceRow = {
   lastName: string;
   position: string | null;
   rating: number | null;
+  rpe: number | null;
   note: string | null;
 };
 
-type SortKey = "name" | "rating" | "note";
+type SortKey = "name" | "rating" | "rpe" | "note";
 
 export function TrainingPerformanceTable({ eventId, players }: { eventId: string; players: PerformanceRow[] }) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
@@ -45,6 +46,11 @@ export function TrainingPerformanceTable({ eventId, players }: { eventId: string
           const bValue = b.rating ?? -Infinity;
           return (aValue - bValue) * dir;
         }
+        case "rpe": {
+          const aValue = a.rpe ?? -Infinity;
+          const bValue = b.rpe ?? -Infinity;
+          return (aValue - bValue) * dir;
+        }
         case "note":
           return (a.note ?? "").localeCompare(b.note ?? "") * dir;
         default:
@@ -55,9 +61,10 @@ export function TrainingPerformanceTable({ eventId, players }: { eventId: string
 
   return (
     <div className="overflow-x-auto">
-      <div className="hidden min-w-[640px] grid-cols-[minmax(200px,1.3fr)_130px_1fr_110px] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
+      <div className="hidden min-w-[760px] grid-cols-[minmax(200px,1.3fr)_120px_120px_1fr_110px] gap-3 border-b border-border bg-surface-muted px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted lg:grid">
         <SortableHeader label="Spieler" onClick={() => toggleSort("name")} sortDir={sortKey === "name" ? sortDir : null} />
         <SortableHeader label="Bewertung" onClick={() => toggleSort("rating")} sortDir={sortKey === "rating" ? sortDir : null} />
+        <SortableHeader label="Belastung (RPE)" onClick={() => toggleSort("rpe")} sortDir={sortKey === "rpe" ? sortDir : null} />
         <SortableHeader label="Kommentar" onClick={() => toggleSort("note")} sortDir={sortKey === "note" ? sortDir : null} />
         <span />
       </div>
@@ -65,7 +72,7 @@ export function TrainingPerformanceTable({ eventId, players }: { eventId: string
         {sortedPlayers.map((player) => (
           <form
             action={updatePlayerTrainingPerformance}
-            className="grid min-w-[640px] gap-3 p-5 lg:min-w-0 lg:grid-cols-[minmax(200px,1.3fr)_130px_1fr_110px] lg:items-center"
+            className="grid min-w-[760px] gap-3 p-5 lg:min-w-0 lg:grid-cols-[minmax(200px,1.3fr)_120px_120px_1fr_110px] lg:items-center"
             key={player.id}
           >
             <input name="calendarEventId" type="hidden" value={eventId} />
@@ -86,6 +93,19 @@ export function TrainingPerformanceTable({ eventId, players }: { eventId: string
               step="0.1"
               type="number"
             />
+            <label className="text-xs font-semibold uppercase text-muted lg:sr-only">
+              Belastung (RPE)
+              <input
+                className="mt-1 h-10 w-full rounded-lg border border-border px-3 text-sm font-normal lg:mt-0"
+                defaultValue={player.rpe ?? ""}
+                max={10}
+                min={1}
+                name="rpe"
+                placeholder="1-10"
+                title="Belastungsempfinden: 1 = sehr leicht, 10 = maximal"
+                type="number"
+              />
+            </label>
             <input
               className="h-10 rounded-lg border border-border px-3 text-sm"
               defaultValue={player.note ?? ""}

@@ -39,6 +39,8 @@ export async function updateMatchTactic(formData: FormData) {
     },
     select: {
       id: true,
+      tacticId: true,
+      _count: { select: { lineupSlots: true } },
     },
   });
 
@@ -47,6 +49,7 @@ export async function updateMatchTactic(formData: FormData) {
   }
 
   let tacticId: string | null = null;
+  let offenseSlots: { positionCode: string; x: number; y: number; sortOrder: number; playerProfileId: string | null }[] = [];
 
   if (tacticIdRaw) {
     const tactic = await prisma.tactic.findFirst({
@@ -56,15 +59,86 @@ export async function updateMatchTactic(formData: FormData) {
       },
       select: {
         id: true,
+        slots: {
+          where: { phase: "OFFENSE" },
+          orderBy: { sortOrder: "asc" },
+        },
       },
     });
 
-    tacticId = tactic?.id ?? null;
+    if (tactic) {
+      tacticId = tactic.id;
+      offenseSlots = tactic.slots.map((slot) => ({
+        positionCode: slot.positionCode,
+        x: slot.x,
+        y: slot.y,
+        sortOrder: slot.sortOrder,
+        playerProfileId: slot.playerProfileId,
+      }));
+    }
   }
 
-  await prisma.match.update({
-    where: { id: matchId },
-    data: { tacticId },
+  // Assigning a Tactic snapshots its OFFENSE slots into match-owned MatchLineupSlot rows, so
+  // that assigning players to positions for this matchday never mutates the shared Tactic
+  // template (which other matches may also reference). Re-selecting the same Tactic again is a
+  // no-op for the snapshot, preserving any per-match player assignments already made - unless
+  // the match's tacticId was already set but never got a snapshot (e.g. matches that had a
+  // tactic assigned before MatchLineupSlot existed), in which case it's backfilled here.
+  const tacticChanged = tacticId !== match.tacticId;
+  const missingSnapshot = tacticId !== null && match._count.lineupSlots === 0;
+
+  if (tacticChanged || missingSnapshot) {
+    await prisma.$transaction(async (tx) => {
+      await tx.match.update({ where: { id: matchId }, data: { tacticId } });
+      await tx.matchLineupSlot.deleteMany({ where: { matchId } });
+
+      if (offenseSlots.length > 0) {
+        await tx.matchLineupSlot.createMany({
+          data: offenseSlots.map((slot) => ({ matchId, ...slot })),
+        });
+      }
+    });
+  }
+
+  revalidateMatches(matchId);
+}
+
+export async function assignMatchLineupSlotPlayer(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "match.manage", activeTeam.id);
+
+  const slotId = String(formData.get("slotId") ?? "").trim();
+  const matchId = String(formData.get("matchId") ?? "").trim();
+  const rawPlayerProfileId = String(formData.get("playerProfileId") ?? "").trim();
+
+  if (!slotId || !matchId) {
+    return;
+  }
+
+  const slot = await prisma.matchLineupSlot.findFirst({
+    where: { id: slotId, matchId, match: { teamId: activeTeam.id } },
+  });
+
+  if (!slot) {
+    return;
+  }
+
+  let playerProfileId: string | null = null;
+
+  if (rawPlayerProfileId) {
+    const player = await prisma.playerProfile.findFirst({
+      where: {
+        id: rawPlayerProfileId,
+        memberships: { some: { teamId: activeTeam.id } },
+      },
+    });
+    playerProfileId = player?.id ?? null;
+  }
+
+  await prisma.matchLineupSlot.update({
+    where: { id: slotId },
+    data: { playerProfileId },
   });
 
   revalidateMatches(matchId);
@@ -145,6 +219,7 @@ export async function updatePlayerMatchStat(formData: FormData) {
     },
     select: {
       id: true,
+      status: true,
     },
   });
 
@@ -154,6 +229,11 @@ export async function updatePlayerMatchStat(formData: FormData) {
 
   await ensurePlayerInTeam(playerProfileId, activeTeam.id, context.club.id);
 
+  // A rating is only meaningful once the match has actually been played - requiring it while
+  // still setting up the lineup for a PLANNED/LIVE match would force coaches to invent a score
+  // before kickoff just to save who's starting.
+  const ratingRequired = match.status === MatchStatus.FINISHED;
+
   if (
     goals < 0 ||
     assists < 0 ||
@@ -161,7 +241,7 @@ export async function updatePlayerMatchStat(formData: FormData) {
     redCards < 0 ||
     minutesPlayed < 0 ||
     minutesPlayed > 120 ||
-    (played && rating === null) ||
+    (ratingRequired && played && rating === null) ||
     (rating !== null && (rating < 1 || rating > 10))
   ) {
     redirect(`/spiele/${matchId}?error=stat-values`);
@@ -218,12 +298,18 @@ export async function updateAllPlayerMatchStats(formData: FormData) {
     },
     select: {
       id: true,
+      status: true,
     },
   });
 
   if (!match) {
     redirect("/spiele");
   }
+
+  // A rating is only meaningful once the match has actually been played - requiring it while
+  // still setting up the lineup for a PLANNED/LIVE match would force coaches to invent a score
+  // before kickoff just to save who's starting.
+  const ratingRequired = match.status === MatchStatus.FINISHED;
 
   const rows = playerProfileIds.map((playerProfileId) => {
     const readInt = (field: string, fallback: number) => {
@@ -254,7 +340,7 @@ export async function updateAllPlayerMatchStats(formData: FormData) {
       row.redCards < 0 ||
       row.minutesPlayed < 0 ||
       row.minutesPlayed > 120 ||
-      (row.played && row.rating === null) ||
+      (ratingRequired && row.played && row.rating === null) ||
       (row.rating !== null && (row.rating < 1 || row.rating > 10)),
   );
 

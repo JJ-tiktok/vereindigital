@@ -13,114 +13,54 @@ import {
 } from "react";
 import { Arrow, Circle, Ellipse, Group, Image as KonvaImageNode, Layer, Line, Path, Rect, Stage, Text, Transformer } from "react-konva";
 
-import { updateTrainingExerciseSketch } from "@/lib/actions";
+import { saveTacticSceneStep } from "@/lib/actions";
 
-// Elements store x/y (and width/height, x1/y1/x2/y2) as 0-100 percentages of the field.
-// The Konva Stage is sized to the actual container pixels (updated via ResizeObserver), so
-// percent -> pixel conversion always uses the current rendered size - no letterboxing, no
-// separate viewBox math. FIELD_WIDTH is only the logical unit space the hand-authored icon/
-// pitch geometry below was drawn in (a 150-wide x 100-tall canvas); unitScale converts those
-// fixed-size units into pixels at the current render size.
-const FIELD_WIDTH = 150;
+// Own, independent copy of the sketch-editor's coordinate model (see
+// src/app/training/[exerciseId]/sketch-editor.tsx): elements store x/y (and width/height,
+// x1/y1/x2/y2, or a points[] array) as 0-100 percentages of the pitch, the Konva Stage is sized
+// to the actual container pixels via ResizeObserver. Deliberately NOT shared/imported from the
+// training sketch editor (see the Szenen plan) to avoid any regression risk on that already
+// stable feature - a later consolidation is a separate, unscheduled effort.
+export const FIELD_WIDTH = 150;
 
-type PitchType = "FULL_FIELD" | "HALF_FIELD" | "PENALTY_AREA" | "SMALL_FIELD" | "FREE_AREA";
+export type PitchType = "FULL_FIELD" | "HALF_FIELD" | "PENALTY_AREA" | "SMALL_FIELD" | "FREE_AREA";
 
-type PointTool =
-  | "PLAYER_BLUE"
-  | "PLAYER_RED"
-  | "PLAYER_YELLOW"
-  | "GOALKEEPER"
-  | "BALL"
-  | "CONE"
-  | "PYLON"
-  | "DUMMY"
-  | "TACTIC_CIRCLE"
-  | "TACTIC_TRIANGLE"
-  | "TEXT";
+export type PointTool = "PLAYER_BLUE" | "PLAYER_RED" | "PLAYER_YELLOW" | "GOALKEEPER" | "BALL" | "CONE" | "PYLON" | "DUMMY" | "TACTIC_CIRCLE" | "TEXT";
+export type GoalTool = "GOAL" | "MINI_GOAL";
+export type PathTool = "ARROW" | "SHOT" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
+export type AreaTool = "ZONE_RECT" | "ZONE_CIRCLE";
+export type PolygonTool = "POLYGON";
+export type Tool = PointTool | GoalTool | PathTool | AreaTool | PolygonTool | "SELECT";
 
-type GoalTool = "GOAL" | "MINI_GOAL";
-type PathTool = "ARROW" | "SHOT" | "LINE" | "DRIBBLE" | "CURVED_ARROW";
-type AreaTool = "ZONE_RECT" | "ZONE_CIRCLE";
-type Tool = PointTool | GoalTool | PathTool | AreaTool | "SELECT";
+export type BaseElement = { id: string; type: Tool };
+export type PointElement = BaseElement & { type: PointTool; x: number; y: number; label?: string };
+export type PathElement = BaseElement & { type: PathTool; x1: number; y1: number; x2: number; y2: number };
+export type AreaElement = BaseElement & { type: AreaTool; x: number; y: number; width: number; height: number };
+export type GoalElement = BaseElement & { type: GoalTool; x: number; y: number; width: number; height: number };
+export type PolygonElement = BaseElement & { type: PolygonTool; points: { x: number; y: number }[] };
+export type SceneElement = PointElement | PathElement | AreaElement | GoalElement | PolygonElement;
 
-type BaseElement = {
-  id: string;
-  type: Tool;
-};
-
-type PointElement = BaseElement & {
-  type: PointTool;
-  x: number;
-  y: number;
-  label?: string;
-};
-
-type PathElement = BaseElement & {
-  type: PathTool;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
-
-type AreaElement = BaseElement & {
-  type: AreaTool;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-type GoalElement = BaseElement & {
-  type: GoalTool;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-type SketchElement = PointElement | PathElement | AreaElement | GoalElement;
-
-const goalDefaults: Record<GoalTool, { width: number; height: number }> = {
+export const goalDefaults: Record<GoalTool, { width: number; height: number }> = {
   GOAL: { width: 7, height: 5 },
   MINI_GOAL: { width: 5, height: 3.5 },
 };
 
-type SketchData = {
-  pitch: string;
-  elements: unknown[];
-};
-
-type SketchEditorProps = {
-  exerciseId: string;
-  sketchId: string | null;
-  initialTitle: string;
-  initialPitch: string;
-  initialSketch: SketchData | null;
-};
-
-const pitchOptions: Array<{ value: PitchType; label: string; description: string }> = [
-  { value: "FULL_FIELD", label: "Ganzes Feld", description: "Kompletter Platz im Querformat" },
-  { value: "HALF_FIELD", label: "Halbes Feld", description: "Eine Spielhaelfte fuer Spielformen" },
-  { value: "PENALTY_AREA", label: "Strafraum", description: "16er, Torraum und Abschlusszone" },
-  { value: "SMALL_FIELD", label: "Kleinfeld", description: "Kompakte Spielfeldform" },
-  { value: "FREE_AREA", label: "Freie Flaeche", description: "Raster fuer freie Organisationsformen" },
+const pitchOptions: Array<{ value: PitchType; label: string }> = [
+  { value: "FULL_FIELD", label: "Ganzes Feld" },
+  { value: "HALF_FIELD", label: "Halbes Feld" },
+  { value: "PENALTY_AREA", label: "Strafraum" },
+  { value: "SMALL_FIELD", label: "Kleinfeld" },
+  { value: "FREE_AREA", label: "Freie Flaeche" },
 ];
 
-const toolGroups: Array<{
-  title: string;
-  tools: Array<{ value: Tool; label: string; hint: string }>;
-}> = [
-  {
-    title: "Bearbeiten",
-    tools: [{ value: "SELECT", label: "Auswahl", hint: "Elemente anklicken und verschieben" }],
-  },
+const toolGroups: Array<{ title: string; tools: Array<{ value: Tool; label: string; hint: string }> }> = [
+  { title: "Bearbeiten", tools: [{ value: "SELECT", label: "Auswahl", hint: "Elemente anklicken und verschieben" }] },
   {
     title: "Spieler",
     tools: [
-      { value: "PLAYER_BLUE", label: "Spieler blau", hint: "Feldspieler blau platzieren" },
-      { value: "PLAYER_RED", label: "Spieler rot", hint: "Gegenspieler rot platzieren" },
-      { value: "PLAYER_YELLOW", label: "Spieler gelb", hint: "Neutraler Spieler platzieren" },
+      { value: "PLAYER_BLUE", label: "Spieler blau", hint: "Eigenes Team" },
+      { value: "PLAYER_RED", label: "Spieler rot", hint: "Gegner" },
+      { value: "PLAYER_YELLOW", label: "Spieler gelb", hint: "Neutral" },
       { value: "GOALKEEPER", label: "Torhueter", hint: "Torhueter platzieren" },
     ],
   },
@@ -131,28 +71,28 @@ const toolGroups: Array<{
       { value: "CONE", label: "Huetchen", hint: "Flaches Huetchen platzieren" },
       { value: "PYLON", label: "Pylon", hint: "Pylon platzieren" },
       { value: "DUMMY", label: "Dummy", hint: "Trainingsdummy platzieren" },
-      { value: "GOAL", label: "Tor", hint: "Grosses Tor platzieren, per Eckpunkt in der Groesse anpassbar" },
-      { value: "MINI_GOAL", label: "Minitor", hint: "Minitor platzieren, per Eckpunkt in der Groesse anpassbar" },
+      { value: "GOAL", label: "Tor", hint: "Grosses Tor, per Eckpunkt anpassbar" },
+      { value: "MINI_GOAL", label: "Minitor", hint: "Minitor, per Eckpunkt anpassbar" },
     ],
   },
   {
-    title: "Taktik",
+    title: "Analyse",
     tools: [
-      { value: "TACTIC_CIRCLE", label: "Kreis", hint: "Taktikmarker Kreis" },
-      { value: "TACTIC_TRIANGLE", label: "Dreieck", hint: "Taktikmarker Dreieck" },
+      { value: "TACTIC_CIRCLE", label: "Nummer", hint: "Nummerierter Kreis fuer Bewegungsreihenfolge" },
       { value: "ZONE_RECT", label: "Zone", hint: "Rechteckige Zone markieren" },
       { value: "ZONE_CIRCLE", label: "Kreiszone", hint: "Runde Zone markieren" },
+      { value: "POLYGON", label: "Freiflaeche", hint: "Mehrere Punkte anklicken, mit Doppelklick oder Enter schliessen - fuer Passdreiecke/Raeume" },
+      { value: "TEXT", label: "Text", hint: "Kurzen Hinweis platzieren" },
     ],
   },
   {
     title: "Ablauf",
     tools: [
-      { value: "ARROW", label: "Pfeil", hint: "Ziehen fuer Lauf-/Passweg, Vorschau live sichtbar" },
-      { value: "SHOT", label: "Torschuss", hint: "Ziehen fuer einen Torschuss, kraeftiger roter Pfeil" },
+      { value: "ARROW", label: "Pfeil", hint: "Laufweg/Passweg ziehen" },
+      { value: "SHOT", label: "Torschuss", hint: "Kraeftiger roter Pfeil" },
       { value: "LINE", label: "Linie", hint: "Gerade Verbindung ziehen" },
       { value: "DRIBBLE", label: "Dribbling", hint: "Gewellte Linie ziehen" },
       { value: "CURVED_ARROW", label: "Bogen", hint: "Gebogenen Laufweg ziehen" },
-      { value: "TEXT", label: "Text", hint: "Kurzen Hinweis platzieren" },
     ],
   },
 ];
@@ -162,212 +102,137 @@ const categoryTabs: Array<{ id: string; label: string }> = [
   ...toolGroups.map((group) => ({ id: group.title.toLowerCase(), label: group.title })),
 ];
 
-const pointToolTypes = new Set<Tool>([
-  "PLAYER_BLUE",
-  "PLAYER_RED",
-  "PLAYER_YELLOW",
-  "GOALKEEPER",
-  "BALL",
-  "CONE",
-  "PYLON",
-  "DUMMY",
-  "TACTIC_CIRCLE",
-  "TACTIC_TRIANGLE",
-  "TEXT",
-]);
+const pointToolTypes = new Set<Tool>(["PLAYER_BLUE", "PLAYER_RED", "PLAYER_YELLOW", "GOALKEEPER", "BALL", "CONE", "PYLON", "DUMMY", "TACTIC_CIRCLE", "TEXT"]);
 const pathToolTypes = new Set<Tool>(["ARROW", "SHOT", "LINE", "DRIBBLE", "CURVED_ARROW"]);
 const areaToolTypes = new Set<Tool>(["ZONE_RECT", "ZONE_CIRCLE"]);
 const goalToolTypes = new Set<Tool>(["GOAL", "MINI_GOAL"]);
 
-type SketchEditorContextValue = {
-  exerciseId: string;
-  sketchId: string | null;
-  initialTitle: string;
+type Point = { x: number; y: number };
+
+type SceneEditorContextValue = {
+  sceneId: string;
+  stepId: string | null;
   pitch: PitchType;
-  elements: SketchElement[];
+  elements: SceneElement[];
   tool: Tool;
   toolCategory: string;
   selectedId: string | null;
-  selectedElement: SketchElement | null | undefined;
-  sketchData: string;
-  multiPlace: boolean;
-  setMultiPlace: (value: boolean) => void;
+  selectedElement: SceneElement | null | undefined;
+  elementsData: string;
   selectPitch: (value: PitchType) => void;
   selectTool: (value: Tool) => void;
   setToolCategory: (value: string) => void;
-  addElement: (element: SketchElement) => void;
-  updateElement: (id: string, patch: Partial<SketchElement>) => void;
+  addElement: (element: SceneElement) => void;
+  updateElement: (id: string, patch: Partial<SceneElement>) => void;
   selectElement: (id: string | null) => void;
-  undo: () => void;
   deleteSelected: () => void;
-  duplicateSelected: () => void;
   editSelectedText: () => void;
-  clearSketch: () => void;
+  clearScene: () => void;
 };
 
-const SketchEditorContext = createContext<SketchEditorContextValue | null>(null);
+const SceneEditorContext = createContext<SceneEditorContextValue | null>(null);
 
-function useSketchEditorContext() {
-  const value = useContext(SketchEditorContext);
-
+function useSceneEditorContext() {
+  const value = useContext(SceneEditorContext);
   if (!value) {
-    throw new Error("SketchToolPanel/SketchCanvasPanel must be used within a SketchEditorProvider");
+    throw new Error("SceneToolPanel/SceneCanvasPanel must be used within a SceneEditorProvider");
   }
-
   return value;
 }
 
-export function SketchEditorProvider({
-  exerciseId,
-  sketchId,
-  initialTitle,
+export function SceneEditorProvider({
+  sceneId,
+  stepId,
   initialPitch,
-  initialSketch,
+  initialElements,
   children,
-}: SketchEditorProps & { children: ReactNode }) {
-  const [pitch, setPitch] = useState<PitchType>(() => normalizePitch(initialSketch?.pitch ?? initialPitch));
-  const [elements, setElements] = useState<SketchElement[]>(() => normalizeElements(initialSketch?.elements ?? []));
+}: {
+  sceneId: string;
+  stepId: string | null;
+  initialPitch: string;
+  initialElements: unknown[];
+  children: ReactNode;
+}) {
+  const [pitch, setPitch] = useState<PitchType>(() => normalizePitch(initialPitch));
+  const [elements, setElements] = useState<SceneElement[]>(() => normalizeElements(initialElements));
   const [tool, setTool] = useState<Tool>("SELECT");
   const [toolCategory, setToolCategory] = useState<string>("feldvorlage");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [multiPlace, setMultiPlace] = useState(false);
-  const [, setHistory] = useState<SketchElement[][]>([]);
 
-  const sketchData = useMemo(
-    () =>
-      JSON.stringify({
-        pitch,
-        elements,
-      }),
-    [elements, pitch],
-  );
+  const elementsData = useMemo(() => JSON.stringify(elements), [elements]);
   const selectedElement = selectedId ? elements.find((element) => element.id === selectedId) : null;
 
-  function pushHistory() {
-    setHistory((currentHistory) => [...currentHistory.slice(-24), elements]);
-  }
-
-  function addElement(element: SketchElement) {
-    pushHistory();
-    setElements((currentElements) => [...currentElements, element]);
+  function addElement(element: SceneElement) {
+    setElements((current) => [...current, element]);
     setSelectedId(element.id);
-    if (!multiPlace) {
-      setTool("SELECT");
-    }
+    setTool("SELECT");
   }
 
-  function updateElement(id: string, patch: Partial<SketchElement>) {
-    pushHistory();
-    setElements((currentElements) =>
-      currentElements.map((element) => (element.id === id ? ({ ...element, ...patch } as SketchElement) : element)),
-    );
+  function updateElement(id: string, patch: Partial<SceneElement>) {
+    setElements((current) => current.map((element) => (element.id === id ? ({ ...element, ...patch } as SceneElement) : element)));
   }
 
   function selectElement(id: string | null) {
     setSelectedId(id);
   }
 
-  function selectPitch(value: PitchType) {
-    setPitch(value);
-  }
-
-  function selectTool(value: Tool) {
-    setTool(value);
-  }
-
-  function undo() {
-    setHistory((currentHistory) => {
-      const previous = currentHistory.at(-1);
-      if (!previous) {
-        return currentHistory;
-      }
-
-      setElements(previous);
-      setSelectedId(null);
-      return currentHistory.slice(0, -1);
-    });
-  }
-
   function deleteSelected() {
     if (!selectedId) {
       return;
     }
-
-    pushHistory();
-    setElements((currentElements) => currentElements.filter((element) => element.id !== selectedId));
+    setElements((current) => current.filter((element) => element.id !== selectedId));
     setSelectedId(null);
-  }
-
-  function duplicateSelected() {
-    if (!selectedElement) {
-      return;
-    }
-
-    const duplicate = duplicateElement(selectedElement);
-    addElement(duplicate);
   }
 
   function editSelectedText() {
     if (!selectedElement || !isPointElement(selectedElement)) {
       return;
     }
-
     const label = window.prompt("Label bearbeiten", selectedElement.label ?? "")?.trim();
     if (!label) {
       return;
     }
-
-    pushHistory();
-    setElements((currentElements) =>
-      currentElements.map((element) => (element.id === selectedElement.id ? { ...element, label } : element)),
-    );
+    setElements((current) => current.map((element) => (element.id === selectedElement.id ? { ...element, label } : element)));
   }
 
-  function clearSketch() {
+  function clearScene() {
     if (elements.length === 0) {
       return;
     }
-
-    pushHistory();
     setElements([]);
     setSelectedId(null);
   }
 
   return (
-    <SketchEditorContext.Provider
+    <SceneEditorContext.Provider
       value={{
-        exerciseId,
-        sketchId,
-        initialTitle,
+        sceneId,
+        stepId,
         pitch,
         elements,
         tool,
         toolCategory,
         selectedId,
         selectedElement,
-        sketchData,
-        multiPlace,
-        setMultiPlace,
-        selectPitch,
-        selectTool,
+        elementsData,
+        selectPitch: setPitch,
+        selectTool: setTool,
         setToolCategory,
         addElement,
         updateElement,
         selectElement,
-        undo,
         deleteSelected,
-        duplicateSelected,
         editSelectedText,
-        clearSketch,
+        clearScene,
       }}
     >
       {children}
-    </SketchEditorContext.Provider>
+    </SceneEditorContext.Provider>
   );
 }
 
-export function SketchToolPanel() {
-  const { pitch, tool, toolCategory, multiPlace, setMultiPlace, selectPitch, selectTool, setToolCategory } = useSketchEditorContext();
+export function SceneToolPanel() {
+  const { pitch, tool, toolCategory, selectPitch, selectTool, setToolCategory } = useSceneEditorContext();
 
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-surface p-3 shadow-sm">
@@ -386,26 +251,18 @@ export function SketchToolPanel() {
         ))}
       </div>
 
-      <label className="flex items-center gap-2 text-xs font-semibold text-muted">
-        <input checked={multiPlace} className="accent-primary" onChange={(event) => setMultiPlace(event.target.checked)} type="checkbox" />
-        Mehrfach platzieren (Werkzeug nach dem Platzieren behalten)
-      </label>
-
       {toolCategory === "feldvorlage" ? (
         <div className="grid gap-1.5">
           {pitchOptions.map((option) => (
             <button
-              className={`rounded-lg border p-2 text-left transition ${
-                pitch === option.value
-                  ? "border-primary bg-primary-soft text-primary"
-                  : "border-border bg-surface text-foreground hover:border-primary"
+              className={`rounded-lg border p-2 text-left text-sm font-bold transition ${
+                pitch === option.value ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface text-foreground hover:border-primary"
               }`}
               key={option.value}
               onClick={() => selectPitch(option.value)}
               type="button"
             >
-              <span className="block text-sm font-bold">{option.label}</span>
-              <span className="mt-0.5 block text-xs text-muted">{option.description}</span>
+              {option.label}
             </button>
           ))}
         </div>
@@ -417,9 +274,7 @@ export function SketchToolPanel() {
               {group.tools.map((item) => (
                 <button
                   className={`min-h-10 rounded-lg border px-2.5 py-1.5 text-left text-xs font-semibold transition ${
-                    tool === item.value
-                      ? "border-primary bg-primary text-white shadow-sm"
-                      : "border-border bg-surface-muted text-foreground hover:border-primary hover:bg-surface"
+                    tool === item.value ? "border-primary bg-primary text-white shadow-sm" : "border-border bg-surface-muted text-foreground hover:border-primary hover:bg-surface"
                   }`}
                   key={item.value}
                   onClick={() => selectTool(item.value)}
@@ -436,28 +291,9 @@ export function SketchToolPanel() {
   );
 }
 
-type Point = { x: number; y: number };
-
-export function SketchCanvasPanel() {
-  const {
-    exerciseId,
-    sketchId,
-    initialTitle,
-    pitch,
-    elements,
-    tool,
-    selectedId,
-    selectedElement,
-    sketchData,
-    addElement,
-    updateElement,
-    selectElement,
-    undo,
-    deleteSelected,
-    duplicateSelected,
-    editSelectedText,
-    clearSketch,
-  } = useSketchEditorContext();
+export function SceneCanvasPanel() {
+  const { sceneId, stepId, pitch, elements, tool, selectedId, selectedElement, elementsData, addElement, updateElement, selectElement, deleteSelected, editSelectedText, clearScene } =
+    useSceneEditorContext();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -466,15 +302,12 @@ export function SketchCanvasPanel() {
 
   const [mounted, setMounted] = useState(false);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [drawStart, setDrawStart] = useState<Point | null>(null);
   const [drawPreview, setDrawPreview] = useState<Point | null>(null);
+  const [polygonPoints, setPolygonPoints] = useState<Point[]>([]);
   const [pitchImage, setPitchImage] = useState<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    // Konva needs a real DOM/canvas, so the Stage must only ever render on the client -
-    // this mount-gate intentionally differs between the SSR pass and the first client
-    // render to avoid handing Konva to the server.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
@@ -484,19 +317,13 @@ export function SketchCanvasPanel() {
     if (!element) {
       return;
     }
-
-    // Measure synchronously up front - some environments (or a ResizeObserver that only
-    // fires on genuine size *changes*, not on initial observe) would otherwise leave the
-    // Stage stuck at 0x0 forever since nothing else would ever trigger a re-measure.
     const rect = element.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
       setSize({ width: rect.width, height: rect.height });
     }
-
     if (typeof ResizeObserver === "undefined") {
       return;
     }
-
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
@@ -512,7 +339,6 @@ export function SketchCanvasPanel() {
     if (typeof window === "undefined") {
       return;
     }
-
     const uri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pitchSvgMarkup(pitch))}`;
     const image = new window.Image();
     image.onload = () => setPitchImage(image);
@@ -524,10 +350,8 @@ export function SketchCanvasPanel() {
     if (!transformer) {
       return;
     }
-
     const selected = elements.find((element) => element.id === selectedId);
     const node = selectedId ? shapeRefs.current[selectedId] : null;
-
     if (node && selected && isResizableElement(selected)) {
       transformer.nodes([node]);
     } else {
@@ -542,27 +366,28 @@ export function SketchCanvasPanel() {
       if (activeTag === "INPUT" || activeTag === "TEXTAREA") {
         return;
       }
-
       if (event.key === "Delete" || event.key === "Backspace") {
         event.preventDefault();
         deleteSelected();
+      } else if (event.key === "Enter" && polygonPoints.length >= 3) {
+        finalizePolygon();
       } else if (event.key === "Escape") {
         setDrawStart(null);
         setDrawPreview(null);
+        setPolygonPoints([]);
         selectElement(null);
       }
     }
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deleteSelected, selectElement]);
-
-  const unitScale = size.width > 0 ? size.width / FIELD_WIDTH : 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deleteSelected, selectElement, polygonPoints]);
 
   const toStageX = useCallback((percent: number) => (percent / 100) * size.width, [size.width]);
   const toStageY = useCallback((percent: number) => (percent / 100) * size.height, [size.height]);
   const toPercentX = useCallback((px: number) => (size.width ? (px / size.width) * 100 : 0), [size.width]);
   const toPercentY = useCallback((px: number) => (size.height ? (px / size.height) * 100 : 0), [size.height]);
+  const unitScale = size.width > 0 ? size.width / FIELD_WIDTH : 0;
 
   function getRelativePoint(): Point | null {
     const stage = stageRef.current;
@@ -580,16 +405,17 @@ export function SketchCanvasPanel() {
     if (!drawStart) {
       return;
     }
-    addElement({
-      id: createId(),
-      type: tool as PathTool,
-      x1: drawStart.x,
-      y1: drawStart.y,
-      x2: endPoint.x,
-      y2: endPoint.y,
-    });
+    addElement({ id: createId(), type: tool as PathTool, x1: drawStart.x, y1: drawStart.y, x2: endPoint.x, y2: endPoint.y });
     setDrawStart(null);
     setDrawPreview(null);
+  }
+
+  function finalizePolygon() {
+    if (polygonPoints.length < 3) {
+      return;
+    }
+    addElement({ id: createId(), type: "POLYGON", points: polygonPoints });
+    setPolygonPoints([]);
   }
 
   function handleStageMouseDown(event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
@@ -599,14 +425,25 @@ export function SketchCanvasPanel() {
     }
 
     if (tool === "SELECT") {
-      // A mousedown on a shape (or on the Transformer's own resize/anchor handles) bubbles up
-      // to the Stage just like a click on empty background does. Without this guard, grabbing
-      // a resize handle would immediately clear the selection here, detaching the Transformer
-      // mid-gesture and making the drag look like it "loses focus". Only clear the selection
-      // when the empty Stage background itself was hit.
+      // Only clear selection on an actual empty-background click - a mousedown on a shape
+      // (or the Transformer's own resize handles) also bubbles up to the Stage, and clearing
+      // selection there would detach the Transformer mid-drag (see sketch-editor.tsx fix).
       if (event.target === event.target.getStage()) {
         selectElement(null);
       }
+      return;
+    }
+
+    if (tool === "POLYGON") {
+      if (polygonPoints.length >= 3) {
+        const first = polygonPoints[0];
+        const distance = Math.hypot(point.x - first.x, point.y - first.y);
+        if (distance < 3) {
+          finalizePolygon();
+          return;
+        }
+      }
+      setPolygonPoints((current) => [...current, point]);
       return;
     }
 
@@ -634,40 +471,25 @@ export function SketchCanvasPanel() {
 
     if (goalToolTypes.has(tool)) {
       const { width, height } = goalDefaults[tool as GoalTool];
-      addElement({
-        id: createId(),
-        type: tool as GoalTool,
-        x: clamp(point.x - width / 2, 1, 99 - width),
-        y: clamp(point.y - height / 2, 1, 99 - height),
-        width,
-        height,
-      });
+      addElement({ id: createId(), type: tool as GoalTool, x: clamp(point.x - width / 2, 1, 99 - width), y: clamp(point.y - height / 2, 1, 99 - height), width, height });
       return;
     }
 
     if (pointToolTypes.has(tool)) {
-      const label = tool === "TEXT" ? window.prompt("Text fuer die Skizze", "Coachingpunkt")?.trim() : undefined;
+      const label = tool === "TEXT" ? window.prompt("Text fuer die Szene", "Coachingpunkt")?.trim() : undefined;
       if (tool === "TEXT" && !label) {
         return;
       }
-
-      addElement({
-        id: createId(),
-        type: tool as PointTool,
-        x: point.x,
-        y: point.y,
-        label: tool === "TEXT" ? label : defaultLabel(tool),
-      });
+      addElement({ id: createId(), type: tool as PointTool, x: point.x, y: point.y, label: tool === "TEXT" ? label : defaultLabel(tool) });
     }
   }
 
   function handleStageMouseMove() {
-    if (!drawStart) {
-      return;
-    }
-    const point = getRelativePoint();
-    if (point) {
-      setDrawPreview(point);
+    if (drawStart) {
+      const point = getRelativePoint();
+      if (point) {
+        setDrawPreview(point);
+      }
     }
   }
 
@@ -681,43 +503,28 @@ export function SketchCanvasPanel() {
     }
   }
 
-  function handleDownload() {
-    const stage = stageRef.current;
-    if (!stage) {
-      return;
+  function handleStageDoubleClick() {
+    if (tool === "POLYGON" && polygonPoints.length >= 3) {
+      finalizePolygon();
     }
-    const uri = stage.toDataURL({ pixelRatio: 2 });
-    const link = document.createElement("a");
-    link.download = `training-skizze-${sketchId ?? exerciseId}.png`;
-    link.href = uri;
-    link.click();
   }
 
   const hint = drawStart
     ? "Loslassen oder zweiten Punkt setzen, um das Element abzuschliessen."
-    : selectedElement
-      ? `Ausgewaehlt: ${elementLabel(selectedElement.type)}`
-      : "Werkzeug waehlen, aufs Feld ziehen/klicken und Elemente direkt verschieben.";
+    : polygonPoints.length > 0
+      ? `${polygonPoints.length} Punkte gesetzt - weiter klicken, am Startpunkt klicken oder Enter zum Schliessen.`
+      : selectedElement
+        ? `Ausgewaehlt: ${elementLabel(selectedElement.type)}`
+        : "Werkzeug waehlen, aufs Feld klicken und Elemente direkt verschieben.";
 
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-foreground">Trainingsgrafik</p>
-          <p className="min-h-10 text-sm text-muted">{hint}</p>
+          <p className="text-sm font-bold text-foreground">Szenen-Zeichenflaeche</p>
+          <p className="text-sm text-muted">{hint}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground" onClick={undo} type="button">
-            Rueckgaengig
-          </button>
-          <button
-            className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground disabled:opacity-40"
-            disabled={!selectedElement}
-            onClick={duplicateSelected}
-            type="button"
-          >
-            Duplizieren
-          </button>
           <button
             className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground disabled:opacity-40"
             disabled={!selectedElement || !isPointElement(selectedElement)}
@@ -734,11 +541,8 @@ export function SketchCanvasPanel() {
           >
             Loeschen
           </button>
-          <button className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground" onClick={clearSketch} type="button">
+          <button className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground" onClick={clearScene} type="button">
             Leeren
-          </button>
-          <button className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground" onClick={handleDownload} type="button">
-            Bild exportieren
           </button>
         </div>
       </div>
@@ -747,6 +551,7 @@ export function SketchCanvasPanel() {
         {mounted && size.width > 0 && size.height > 0 ? (
           <Stage
             height={size.height}
+            onDblClick={handleStageDoubleClick}
             onMouseDown={handleStageMouseDown}
             onMouseMove={handleStageMouseMove}
             onMouseUp={handleStageMouseUp}
@@ -761,10 +566,8 @@ export function SketchCanvasPanel() {
               {elements.map((element) => (
                 <ElementNode
                   element={element}
-                  hovered={element.id === hoveredId}
                   key={element.id}
                   onDragEnd={(patch) => updateElement(element.id, patch)}
-                  onHover={(isHovered) => setHoveredId(isHovered ? element.id : null)}
                   onSelect={() => selectElement(element.id)}
                   onTransformEnd={(patch) => updateElement(element.id, patch)}
                   registerRef={(node) => {
@@ -779,13 +582,15 @@ export function SketchCanvasPanel() {
                 />
               ))}
               {drawStart && drawPreview ? (
-                <PreviewPath
-                  end={drawPreview}
-                  start={drawStart}
-                  toStageX={toStageX}
-                  toStageY={toStageY}
-                  type={tool as PathTool}
-                  unitScale={unitScale}
+                <PreviewPath end={drawPreview} start={drawStart} toStageX={toStageX} toStageY={toStageY} type={tool as PathTool} unitScale={unitScale} />
+              ) : null}
+              {polygonPoints.length > 0 ? (
+                <Line
+                  closed={false}
+                  dash={[3, 3]}
+                  points={polygonPoints.flatMap((point) => [toStageX(point.x), toStageY(point.y)])}
+                  stroke="#0b63ce"
+                  strokeWidth={2}
                 />
               ) : null}
               <Transformer ref={transformerRef} rotateEnabled={false} />
@@ -794,25 +599,12 @@ export function SketchCanvasPanel() {
         ) : null}
       </div>
 
-      <form action={updateTrainingExerciseSketch} className="flex flex-wrap justify-end gap-3">
-        <input name="exerciseId" type="hidden" value={exerciseId} />
-        <input name="sketchId" type="hidden" value={sketchId ?? ""} />
-        <input name="pitchType" type="hidden" value={pitch} />
-        <input name="sketchData" type="hidden" value={sketchData} />
-        <label className="mr-auto w-full sm:max-w-xs">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Skizzentitel</span>
-          <input
-            className="mt-2 h-11 w-full rounded-xl border border-border px-3 text-sm font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-            defaultValue={initialTitle}
-            name="title"
-            placeholder="z.B. Phase 1: Aufbau"
-          />
-        </label>
-        <button className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-foreground" onClick={undo} type="button">
-          Rueckgaengig
-        </button>
+      <form action={saveTacticSceneStep} className="flex flex-wrap justify-end gap-3">
+        <input name="sceneId" type="hidden" value={sceneId} />
+        <input name="stepId" type="hidden" value={stepId ?? ""} />
+        <input name="elementsData" type="hidden" value={elementsData} />
         <button className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-strong" type="submit">
-          Skizze speichern
+          Szene speichern
         </button>
       </form>
     </section>
@@ -820,9 +612,8 @@ export function SketchCanvasPanel() {
 }
 
 type ElementNodeProps = {
-  element: SketchElement;
+  element: SceneElement;
   selected: boolean;
-  hovered: boolean;
   unitScale: number;
   toStageX: (percent: number) => number;
   toStageY: (percent: number) => number;
@@ -830,26 +621,11 @@ type ElementNodeProps = {
   toPercentY: (px: number) => number;
   registerRef: (node: Konva.Node | null) => void;
   onSelect: () => void;
-  onHover: (hovered: boolean) => void;
-  onDragEnd: (patch: Partial<SketchElement>) => void;
-  onTransformEnd: (patch: Partial<SketchElement>) => void;
+  onDragEnd: (patch: Partial<SceneElement>) => void;
+  onTransformEnd: (patch: Partial<SceneElement>) => void;
 };
 
-function ElementNode({
-  element,
-  selected,
-  hovered,
-  unitScale,
-  toStageX,
-  toStageY,
-  toPercentX,
-  toPercentY,
-  registerRef,
-  onSelect,
-  onHover,
-  onDragEnd,
-  onTransformEnd,
-}: ElementNodeProps) {
+function ElementNode({ element, selected, unitScale, toStageX, toStageY, toPercentX, toPercentY, registerRef, onSelect, onDragEnd, onTransformEnd }: ElementNodeProps) {
   if (isPointElement(element)) {
     const iconScale = unitScale * 0.7;
     const hitRadius = Math.max(16, 6 * unitScale);
@@ -860,17 +636,14 @@ function ElementNode({
         onClick={onSelect}
         onDragEnd={(event) => onDragEnd({ x: toPercentX(event.target.x()), y: toPercentY(event.target.y()) })}
         onDragStart={onSelect}
-        onMouseEnter={() => onHover(true)}
-        onMouseLeave={() => onHover(false)}
         onTap={onSelect}
         ref={registerRef}
         x={toStageX(element.x)}
         y={toStageY(element.y)}
       >
         <Circle fill="transparent" radius={hitRadius} />
-        {hovered && !selected ? <Circle radius={4.6 * iconScale} stroke="#0b63ce" strokeWidth={1} /> : null}
         <Group scaleX={iconScale} scaleY={iconScale}>
-          <PointSymbolKonva element={element} />
+          <PointSymbol element={element} />
         </Group>
         {selected ? <Circle dash={[2, 2]} radius={5.1 * iconScale} stroke="#0b63ce" strokeWidth={1} /> : null}
       </Group>
@@ -883,8 +656,7 @@ function ElementNode({
     const dx = toStageX(element.x2) - x1px;
     const dy = toStageY(element.y2) - y1px;
     const points = pathPoints(element.type, dx, dy, unitScale);
-    const stroke =
-      element.type === "DRIBBLE" ? "#f97316" : element.type === "LINE" ? "#334155" : element.type === "SHOT" ? "#dc2626" : "#0f172a";
+    const stroke = element.type === "DRIBBLE" ? "#f97316" : element.type === "LINE" ? "#334155" : element.type === "SHOT" ? "#dc2626" : "#0f172a";
     const showArrowHead = element.type !== "LINE";
     const strokeWidth = element.type === "SHOT" ? Math.max(1.6, 1.2 * unitScale) : Math.max(1, 0.7 * unitScale);
     const arrowHeadSize = element.type === "SHOT" ? Math.max(7, 4.2 * unitScale) : Math.max(5, 3 * unitScale);
@@ -897,16 +669,9 @@ function ElementNode({
         onDragEnd={(event) => {
           const newX1 = toPercentX(event.target.x());
           const newY1 = toPercentY(event.target.y());
-          onDragEnd({
-            x1: newX1,
-            y1: newY1,
-            x2: newX1 + (element.x2 - element.x1),
-            y2: newY1 + (element.y2 - element.y1),
-          });
+          onDragEnd({ x1: newX1, y1: newY1, x2: newX1 + (element.x2 - element.x1), y2: newY1 + (element.y2 - element.y1) });
         }}
         onDragStart={onSelect}
-        onMouseEnter={() => onHover(true)}
-        onMouseLeave={() => onHover(false)}
         onTap={onSelect}
         ref={registerRef}
         x={x1px}
@@ -925,58 +690,30 @@ function ElementNode({
           strokeWidth={strokeWidth}
           tension={element.type === "CURVED_ARROW" ? 0.5 : 0}
         />
-        {selected ? (
-          <>
-            <Circle
-              draggable
-              fill="#fff"
-              onDragEnd={(event) => {
-                event.cancelBubble = true;
-                const newX1 = toPercentX(x1px + event.target.x());
-                const newY1 = toPercentY(y1px + event.target.y());
-                onDragEnd({ x1: newX1, y1: newY1 });
-              }}
-              onDragMove={(event) => {
-                event.cancelBubble = true;
-              }}
-              onDragStart={(event) => {
-                event.cancelBubble = true;
-              }}
-              onMouseDown={(event) => {
-                event.cancelBubble = true;
-              }}
-              radius={Math.max(4.5, 1.6 * unitScale)}
-              stroke="#0b63ce"
-              strokeWidth={1.5}
-              x={0}
-              y={0}
-            />
-            <Circle
-              draggable
-              fill="#fff"
-              onDragEnd={(event) => {
-                event.cancelBubble = true;
-                const newX2 = toPercentX(x1px + event.target.x());
-                const newY2 = toPercentY(y1px + event.target.y());
-                onDragEnd({ x2: newX2, y2: newY2 });
-              }}
-              onDragMove={(event) => {
-                event.cancelBubble = true;
-              }}
-              onDragStart={(event) => {
-                event.cancelBubble = true;
-              }}
-              onMouseDown={(event) => {
-                event.cancelBubble = true;
-              }}
-              radius={Math.max(4.5, 1.6 * unitScale)}
-              stroke="#0b63ce"
-              strokeWidth={1.5}
-              x={dx}
-              y={dy}
-            />
-          </>
-        ) : null}
+      </Group>
+    );
+  }
+
+  if (isPolygonElement(element)) {
+    const stagePoints = element.points.flatMap((point) => [toStageX(point.x), toStageY(point.y)]);
+    const centerX = element.points.reduce((total, point) => total + point.x, 0) / element.points.length;
+    const centerY = element.points.reduce((total, point) => total + point.y, 0) / element.points.length;
+
+    return (
+      <Group
+        draggable
+        onClick={onSelect}
+        onDragEnd={(event) => {
+          const deltaX = toPercentX(event.target.x()) - centerX;
+          const deltaY = toPercentY(event.target.y()) - centerY;
+          event.target.position({ x: 0, y: 0 });
+          onDragEnd({ points: element.points.map((point) => ({ x: clamp(point.x + deltaX, 0, 100), y: clamp(point.y + deltaY, 0, 100) })) });
+        }}
+        onDragStart={onSelect}
+        onTap={onSelect}
+        ref={registerRef}
+      >
+        <Line closed dash={selected ? [4, 3] : undefined} fill="#0b63ce22" points={stagePoints} stroke="#0b63ce" strokeWidth={Math.max(1, 0.55 * unitScale)} />
       </Group>
     );
   }
@@ -995,8 +732,6 @@ function ElementNode({
         onClick={onSelect}
         onDragEnd={(event) => onDragEnd({ x: toPercentX(event.target.x()), y: toPercentY(event.target.y()) })}
         onDragStart={onSelect}
-        onMouseEnter={() => onHover(true)}
-        onMouseLeave={() => onHover(false)}
         onTap={onSelect}
         onTransformEnd={(event) => {
           const node = event.target;
@@ -1004,12 +739,7 @@ function ElementNode({
           const newHeightPx = heightPx * node.scaleY();
           node.scaleX(1);
           node.scaleY(1);
-          onTransformEnd({
-            x: toPercentX(node.x()),
-            y: toPercentY(node.y()),
-            width: clamp(toPercentX(newWidthPx), 2, 100),
-            height: clamp(toPercentY(newHeightPx), 2, 100),
-          });
+          onTransformEnd({ x: toPercentX(node.x()), y: toPercentY(node.y()), width: clamp(toPercentX(newWidthPx), 2, 100), height: clamp(toPercentY(newHeightPx), 2, 100) });
         }}
         ref={registerRef}
         x={xPx}
@@ -1021,9 +751,7 @@ function ElementNode({
           stroke="#cbd5e1"
           strokeWidth={postWidth * 0.5}
         />
-        {selected ? (
-          <Rect dash={[3, 3]} fill="transparent" height={heightPx} listening={false} stroke="#0b63ce" strokeWidth={Math.max(1, 0.35 * unitScale)} width={widthPx} />
-        ) : null}
+        {selected ? <Rect dash={[3, 3]} fill="transparent" height={heightPx} listening={false} stroke="#0b63ce" strokeWidth={Math.max(1, 0.35 * unitScale)} width={widthPx} /> : null}
       </Group>
     );
   }
@@ -1040,8 +768,6 @@ function ElementNode({
       onClick={onSelect}
       onDragEnd={(event) => onDragEnd({ x: toPercentX(event.target.x()), y: toPercentY(event.target.y()) })}
       onDragStart={onSelect}
-      onMouseEnter={() => onHover(true)}
-      onMouseLeave={() => onHover(false)}
       onTap={onSelect}
       onTransformEnd={(event) => {
         const node = event.target;
@@ -1049,34 +775,18 @@ function ElementNode({
         const newHeightPx = heightPx * node.scaleY();
         node.scaleX(1);
         node.scaleY(1);
-        onTransformEnd({
-          x: toPercentX(node.x()),
-          y: toPercentY(node.y()),
-          width: clamp(toPercentX(newWidthPx), 4, 100),
-          height: clamp(toPercentY(newHeightPx), 4, 100),
-        });
+        onTransformEnd({ x: toPercentX(node.x()), y: toPercentY(node.y()), width: clamp(toPercentX(newWidthPx), 4, 100), height: clamp(toPercentY(newHeightPx), 4, 100) });
       }}
       ref={registerRef}
       x={xPx}
       y={yPx}
     >
       {isCircle ? (
-        <Ellipse
-          dash={dash}
-          fill={fill}
-          radiusX={widthPx / 2}
-          radiusY={heightPx / 2}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          x={widthPx / 2}
-          y={heightPx / 2}
-        />
+        <Ellipse dash={dash} fill={fill} radiusX={widthPx / 2} radiusY={heightPx / 2} stroke={stroke} strokeWidth={strokeWidth} x={widthPx / 2} y={heightPx / 2} />
       ) : (
         <Rect cornerRadius={4 * unitScale} dash={dash} fill={fill} height={heightPx} stroke={stroke} strokeWidth={strokeWidth} width={widthPx} />
       )}
-      {selected ? (
-        <Rect dash={[3, 3]} fill="transparent" height={heightPx} listening={false} stroke="#0b63ce" strokeWidth={Math.max(1, 0.35 * unitScale)} width={widthPx} />
-      ) : null}
+      {selected ? <Rect dash={[3, 3]} fill="transparent" height={heightPx} listening={false} stroke="#0b63ce" strokeWidth={Math.max(1, 0.35 * unitScale)} width={widthPx} /> : null}
     </Group>
   );
 }
@@ -1127,7 +837,6 @@ function pathPoints(type: PathTool, dx: number, dy: number, unitScale: number): 
   if (type === "CURVED_ARROW") {
     return [0, 0, dx / 2, dy / 2 - 10 * unitScale, dx, dy];
   }
-
   if (type === "DRIBBLE") {
     const segments = 8;
     const length = Math.hypot(dx, dy) || 1;
@@ -1135,20 +844,17 @@ function pathPoints(type: PathTool, dx: number, dy: number, unitScale: number): 
     const normalY = dx / length;
     const amplitude = 1.2 * unitScale;
     const points: number[] = [];
-
     for (let index = 0; index <= segments; index += 1) {
       const t = index / segments;
       const offset = (index % 2 === 0 ? 1 : -1) * amplitude;
       points.push(dx * t + normalX * offset, dy * t + normalY * offset);
     }
-
     return points;
   }
-
   return [0, 0, dx, dy];
 }
 
-function PointSymbolKonva({ element }: { element: PointElement }) {
+function PointSymbol({ element }: { element: PointElement }) {
   if (element.type === "BALL") {
     return (
       <>
@@ -1157,7 +863,6 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
       </>
     );
   }
-
   if (element.type === "CONE") {
     return (
       <>
@@ -1166,7 +871,6 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
       </>
     );
   }
-
   if (element.type === "PYLON") {
     return (
       <>
@@ -1175,7 +879,6 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
       </>
     );
   }
-
   if (element.type === "DUMMY") {
     return (
       <>
@@ -1184,27 +887,14 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
       </>
     );
   }
-
   if (element.type === "TACTIC_CIRCLE") {
     return (
       <>
         <Circle fill="#ef4444" radius={3.2} stroke="#111827" strokeWidth={0.35} />
-        <Path data="M-3.2 0 A3.2 3.2 0 0 1 3.2 0 L-3.2 0 Z" fill="#111827" />
         <Text align="center" fill="#fff" fontSize={3.2} fontStyle="bold" height={6.4} text={element.label ?? "1"} verticalAlign="middle" width={6.4} x={-3.2} y={-3.2} />
       </>
     );
   }
-
-  if (element.type === "TACTIC_TRIANGLE") {
-    return (
-      <>
-        <Path data="M0 -4 L3.7 3.2 H-3.7 Z" fill="#0b63ce" stroke="#111827" strokeWidth={0.25} />
-        <Path data="M0 -4 L1.1 -1.8 H-1.1 Z" fill="#111827" />
-        <Text align="center" fill="#fff" fontSize={3.2} fontStyle="bold" height={5} text={element.label ?? "1"} verticalAlign="middle" width={7.4} x={-3.7} y={-1} />
-      </>
-    );
-  }
-
   if (element.type === "TEXT") {
     const width = Math.max(10, (element.label?.length ?? 1) * 2.2);
     return (
@@ -1229,15 +919,8 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
       <Circle fill="#f2c29c" radius={1.05} stroke="#111827" strokeWidth={0.18} x={0} y={-3.1} />
       <Path data="M-1.8 -1.6 Q0 -2.5 1.8 -1.6 L1.15 1.4 H-1.15 Z" fill={palette.shirt} stroke="#111827" strokeWidth={0.2} />
       <Path data="M-1.1 1.4 H1.1 L0.7 2.8 H-0.7 Z" fill={palette.shorts} stroke="#111827" strokeWidth={0.16} />
-      <Path
-        data="M-1.4 2.8 L-2.1 4.2 M1.4 2.8 L2.1 4.2 M-1.8 -0.8 L-3.1 0.8 M1.8 -0.8 L3.1 0.8"
-        lineCap="round"
-        stroke="#111827"
-        strokeWidth={0.35}
-      />
-      {element.label ? (
-        <Text align="center" fill="#fff" fontSize={2} fontStyle="bold" height={2} text={element.label} verticalAlign="middle" width={4} x={-2} y={-1.1} />
-      ) : null}
+      <Path data="M-1.4 2.8 L-2.1 4.2 M1.4 2.8 L2.1 4.2 M-1.8 -0.8 L-3.1 0.8 M1.8 -0.8 L3.1 0.8" lineCap="round" stroke="#111827" strokeWidth={0.35} />
+      {element.label ? <Text align="center" fill="#fff" fontSize={2} fontStyle="bold" height={2} text={element.label} verticalAlign="middle" width={4} x={-2} y={-1.1} /> : null}
     </>
   );
 }
@@ -1245,16 +928,14 @@ function PointSymbolKonva({ element }: { element: PointElement }) {
 function fieldStripesMarkup(): string {
   const stripeWidth = FIELD_WIDTH / 20;
   let markup = `<rect fill="#a8d08d" width="${FIELD_WIDTH}" height="100" />`;
-
   for (let index = 0; index < 20; index += 1) {
     const fill = index % 2 === 0 ? "#7dbb68" : "#a8d08d";
     markup += `<rect fill="${fill}" width="${stripeWidth}" height="100" x="${index * stripeWidth}" />`;
   }
-
   return markup;
 }
 
-function pitchSvgMarkup(pitch: PitchType): string {
+export function pitchSvgMarkup(pitch: PitchType): string {
   let inner: string;
 
   if (pitch === "FREE_AREA") {
@@ -1269,10 +950,6 @@ function pitchSvgMarkup(pitch: PitchType): string {
       <path d="M63 14 V10 H87 V14" fill="none" stroke="#fff" stroke-width="0.65" />
     `;
   } else if (pitch === "HALF_FIELD") {
-    // The centre circle only ever shows as a half-circle sitting ON the halfway line
-    // (y=91), bulging up into the field - not a full circle floating mid-height, which
-    // used to overlap the penalty box's D-arc (box bottom edge at y=32, D bulges down
-    // to y=51.5; a circle centred at y=50 collided with that).
     inner = `${fieldStripesMarkup()}
       <rect fill="none" width="132" height="82" x="9" y="9" stroke="#fff" stroke-width="0.65" />
       <line x1="9" x2="141" y1="91" y2="91" stroke="#fff" stroke-width="0.65" />
@@ -1291,8 +968,6 @@ function pitchSvgMarkup(pitch: PitchType): string {
       <circle cx="75" cy="50" r="0.55" fill="#fff" />
       <rect fill="none" width="24" height="18" x="12" y="41" stroke="#fff" stroke-width="0.65" />
       <rect fill="none" width="24" height="18" x="114" y="41" stroke="#fff" stroke-width="0.65" />
-      <path d="M12 45 H9.6 V55 H12" fill="none" stroke="#fff" stroke-width="0.65" />
-      <path d="M138 45 H140.4 V55 H138" fill="none" stroke="#fff" stroke-width="0.65" />
     `;
   } else {
     inner = `${fieldStripesMarkup()}
@@ -1303,122 +978,69 @@ function pitchSvgMarkup(pitch: PitchType): string {
       <rect fill="none" width="24" height="43" x="9" y="28.5" stroke="#fff" stroke-width="0.65" />
       <rect fill="none" width="9" height="20" x="9" y="40" stroke="#fff" stroke-width="0.65" />
       <path d="M33 39 A13 13 0 0 1 33 61" fill="none" stroke="#fff" stroke-width="0.65" />
-      <circle cx="22.5" cy="50" r="0.55" fill="#fff" />
       <rect fill="none" width="24" height="43" x="117" y="28.5" stroke="#fff" stroke-width="0.65" />
       <rect fill="none" width="9" height="20" x="132" y="40" stroke="#fff" stroke-width="0.65" />
       <path d="M117 39 A13 13 0 0 0 117 61" fill="none" stroke="#fff" stroke-width="0.65" />
-      <circle cx="127.5" cy="50" r="0.55" fill="#fff" />
-      <path d="M9 45 H5.5 V55 H9" fill="none" stroke="#fff" stroke-width="0.65" />
-      <path d="M141 45 H144.5 V55 H141" fill="none" stroke="#fff" stroke-width="0.65" />
     `;
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${FIELD_WIDTH} 100">${inner}</svg>`;
 }
 
-function normalizeElements(elements: unknown[]): SketchElement[] {
-  const normalized: Array<SketchElement | null> = elements.map((element) => {
+export function normalizeElements(elements: unknown[]): SceneElement[] {
+  const normalized: Array<SceneElement | null> = (Array.isArray(elements) ? elements : []).map((element) => {
     if (!element || typeof element !== "object") {
       return null;
     }
-
     const value = element as Record<string, unknown>;
     if (!value.id || typeof value.id !== "string" || !value.type || typeof value.type !== "string") {
       return null;
     }
 
+    if (value.type === "POLYGON" && Array.isArray(value.points)) {
+      const points = (value.points as unknown[])
+        .map((point) => {
+          if (!point || typeof point !== "object") {
+            return null;
+          }
+          const pointValue = point as Record<string, unknown>;
+          return hasNumber(pointValue, "x") && hasNumber(pointValue, "y") ? { x: Number(pointValue.x), y: Number(pointValue.y) } : null;
+        })
+        .filter((point): point is Point => point !== null);
+      return points.length >= 3 ? { id: value.id, type: "POLYGON", points } : null;
+    }
+
     if (pathToolTypes.has(value.type as Tool) && hasNumber(value, "x1") && hasNumber(value, "y1") && hasNumber(value, "x2") && hasNumber(value, "y2")) {
-      return {
-        id: value.id,
-        type: value.type as PathTool,
-        x1: Number(value.x1),
-        y1: Number(value.y1),
-        x2: Number(value.x2),
-        y2: Number(value.y2),
-      };
+      return { id: value.id, type: value.type as PathTool, x1: Number(value.x1), y1: Number(value.y1), x2: Number(value.x2), y2: Number(value.y2) };
     }
 
     if (areaToolTypes.has(value.type as Tool) && hasNumber(value, "x") && hasNumber(value, "y") && hasNumber(value, "width") && hasNumber(value, "height")) {
-      return {
-        id: value.id,
-        type: value.type as AreaTool,
-        x: Number(value.x),
-        y: Number(value.y),
-        width: Number(value.width),
-        height: Number(value.height),
-      };
+      return { id: value.id, type: value.type as AreaTool, x: Number(value.x), y: Number(value.y), width: Number(value.width), height: Number(value.height) };
     }
 
     if (goalToolTypes.has(value.type as Tool) && hasNumber(value, "x") && hasNumber(value, "y")) {
-      // Older saved sketches stored GOAL/MINI_GOAL as a fixed-size point (x/y only, no
-      // width/height) - fall back to the type's default size and re-center that box on
-      // the saved point so existing sketches keep rendering in the same spot.
       const goalType = value.type as GoalTool;
       const defaults = goalDefaults[goalType];
       const hasSize = hasNumber(value, "width") && hasNumber(value, "height");
       const width = hasSize ? Number(value.width) : defaults.width;
       const height = hasSize ? Number(value.height) : defaults.height;
-
-      return {
-        id: value.id,
-        type: goalType,
-        x: hasSize ? Number(value.x) : clamp(Number(value.x) - width / 2, 0, 100 - width),
-        y: hasSize ? Number(value.y) : clamp(Number(value.y) - height / 2, 0, 100 - height),
-        width,
-        height,
-      };
+      return { id: value.id, type: goalType, x: Number(value.x), y: Number(value.y), width, height };
     }
 
     if (pointToolTypes.has(value.type as Tool) && hasNumber(value, "x") && hasNumber(value, "y")) {
-      return {
-        id: value.id,
-        type: value.type as PointTool,
-        x: Number(value.x),
-        y: Number(value.y),
-        label: typeof value.label === "string" ? value.label : defaultLabel(value.type as Tool),
-      };
+      return { id: value.id, type: value.type as PointTool, x: Number(value.x), y: Number(value.y), label: typeof value.label === "string" ? value.label : defaultLabel(value.type as Tool) };
     }
 
     return null;
   });
 
-  return normalized.filter((element): element is SketchElement => Boolean(element));
-}
-
-function duplicateElement(element: SketchElement): SketchElement {
-  if (isPathElement(element)) {
-    return {
-      ...element,
-      id: createId(),
-      x1: clamp(element.x1 + 4, 0, 100),
-      y1: clamp(element.y1 + 4, 0, 100),
-      x2: clamp(element.x2 + 4, 0, 100),
-      y2: clamp(element.y2 + 4, 0, 100),
-    };
-  }
-
-  if (isAreaElement(element) || isGoalElement(element)) {
-    return {
-      ...element,
-      id: createId(),
-      x: clamp(element.x + 4, 0, 100 - element.width),
-      y: clamp(element.y + 4, 0, 100 - element.height),
-    };
-  }
-
-  return {
-    ...element,
-    id: createId(),
-    x: clamp(element.x + 4, 0, 100),
-    y: clamp(element.y + 4, 0, 100),
-  };
+  return normalized.filter((element): element is SceneElement => Boolean(element));
 }
 
 function defaultLabel(toolType: Tool) {
-  if (toolType === "TACTIC_CIRCLE" || toolType === "TACTIC_TRIANGLE") {
+  if (toolType === "TACTIC_CIRCLE") {
     return "1";
   }
-
   return undefined;
 }
 
@@ -1429,27 +1051,30 @@ function elementLabel(type: Tool) {
       return item.label;
     }
   }
-
   return type;
 }
 
-function isPointElement(element: SketchElement): element is PointElement {
+export function isPointElement(element: SceneElement): element is PointElement {
   return pointToolTypes.has(element.type);
 }
 
-function isPathElement(element: SketchElement): element is PathElement {
+export function isPathElement(element: SceneElement): element is PathElement {
   return pathToolTypes.has(element.type);
 }
 
-function isAreaElement(element: SketchElement): element is AreaElement {
+export function isAreaElement(element: SceneElement): element is AreaElement {
   return areaToolTypes.has(element.type);
 }
 
-function isGoalElement(element: SketchElement): element is GoalElement {
+export function isGoalElement(element: SceneElement): element is GoalElement {
   return goalToolTypes.has(element.type);
 }
 
-function isResizableElement(element: SketchElement): element is AreaElement | GoalElement {
+export function isPolygonElement(element: SceneElement): element is PolygonElement {
+  return element.type === "POLYGON";
+}
+
+function isResizableElement(element: SceneElement): element is AreaElement | GoalElement {
   return isAreaElement(element) || isGoalElement(element);
 }
 
@@ -1457,7 +1082,7 @@ function hasNumber(value: object, key: string) {
   return key in value && typeof (value as Record<string, unknown>)[key] === "number";
 }
 
-function normalizePitch(value: string): PitchType {
+export function normalizePitch(value: string): PitchType {
   return pitchOptions.some((option) => option.value === value) ? (value as PitchType) : "FULL_FIELD";
 }
 

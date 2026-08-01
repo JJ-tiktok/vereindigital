@@ -1,4 +1,4 @@
-import { BarChart3, CalendarClock, ClipboardPen, LayoutGrid, Save } from "lucide-react";
+import { BarChart3, CalendarClock, LayoutGrid, Save } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs } from "@/components/app-shell";
@@ -33,11 +33,14 @@ export default async function MatchDetailPage({
         },
       },
       tactic: {
-        include: {
-          slots: {
-            orderBy: { sortOrder: "asc" },
-          },
+        select: {
+          id: true,
+          name: true,
+          formation: true,
         },
+      },
+      lineupSlots: {
+        orderBy: { sortOrder: "asc" },
       },
     },
   });
@@ -137,15 +140,13 @@ export default async function MatchDetailPage({
   const goalsFor = match.goalsFor ?? null;
   const goalsAgainst = match.goalsAgainst ?? null;
   const eventDate = match.calendarEvent ? formatDateTime(match.calendarEvent.startsAt) : "Spiel ohne Kalendertermin";
-  const formationSlots = (match.tactic?.slots ?? [])
-    .filter((slot) => slot.phase === "OFFENSE")
-    .map((slot) => ({
-      id: slot.id,
-      x: slot.x,
-      y: slot.y,
-      positionCode: slot.positionCode,
-      playerProfileId: slot.playerProfileId,
-    }));
+  const formationSlots = match.lineupSlots.map((slot) => ({
+    id: slot.id,
+    x: slot.x,
+    y: slot.y,
+    positionCode: slot.positionCode,
+    playerProfileId: slot.playerProfileId,
+  }));
   const canManageMatch = hasPermission(context, "match.manage", activeTeam.id);
 
   return (
@@ -154,11 +155,13 @@ export default async function MatchDetailPage({
         <Breadcrumbs items={[{ label: "Spieltage", href: "/spiele" }, { label: `vs. ${match.opponent}` }]} />
         <MatchHero
           activeTeamName={activeTeam.name}
+          canManageMatch={canManageMatch}
           competition={match.competition}
           eventDate={eventDate}
           goalsAgainst={goalsAgainst}
           goalsFor={goalsFor}
           isHomeGame={match.isHomeGame}
+          matchId={match.id}
           opponent={match.opponent}
           status={match.status}
         />
@@ -181,28 +184,6 @@ export default async function MatchDetailPage({
 
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <aside className="space-y-4">
-            <form action={updateMatchResult} className="rounded-lg border border-border bg-surface p-5">
-              <input name="matchId" type="hidden" value={match.id} />
-              <SectionTitle icon={<ClipboardPen className="size-5 text-primary" aria-hidden="true" />} title="Match Result" />
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <NumberField label="Tore fuer" name="goalsFor" defaultValue={match.goalsFor} />
-                <NumberField label="Tore gegen" name="goalsAgainst" defaultValue={match.goalsAgainst} />
-              </div>
-              <label className="mt-4 block text-sm font-semibold text-foreground" htmlFor="status">
-                Status
-                <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" defaultValue={match.status} id="status" name="status">
-                  <option value="PLANNED">Geplant</option>
-                  <option value="LIVE">Live</option>
-                  <option value="FINISHED">Beendet</option>
-                  <option value="CANCELLED">Abgesagt</option>
-                </select>
-              </label>
-              <button className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
-                <Save className="size-4" aria-hidden="true" />
-                Ergebnis speichern
-              </button>
-            </form>
-
             <article className="rounded-lg border border-border bg-surface p-5">
               <SectionTitle icon={<BarChart3 className="size-5 text-primary" aria-hidden="true" />} title="Spielstatus" />
               <div className="mt-5 grid gap-3">
@@ -217,7 +198,7 @@ export default async function MatchDetailPage({
             </article>
 
             {canManageMatch ? (
-              <form action={updateMatchTactic} className="rounded-lg border border-border bg-surface p-5">
+              <form action={updateMatchTactic} className="rounded-lg border border-border bg-surface p-5" id="taktik-form">
                 <input name="matchId" type="hidden" value={match.id} />
                 <SectionTitle icon={<LayoutGrid className="size-5 text-primary" aria-hidden="true" />} title="Taktik" />
                 {tactics.length > 0 ? (
@@ -263,7 +244,8 @@ export default async function MatchDetailPage({
                 <p className="text-xs font-bold uppercase tracking-wide text-primary">Spielerstatistiken</p>
                 <h2 className="mt-1 text-2xl font-bold text-foreground">Matchday Squad</h2>
                 <p className="mt-1 text-sm text-muted">
-                  Startelf oben im Feld anklicken, Einwechslungen unten in der Kaderliste festlegen. Abwesende Spieler
+                  Im Tab &quot;Aufstellung&quot; Spieler im Feld anklicken, um die Startelf festzulegen. Im Tab
+                  &quot;Statistiken&quot; Einwechslungen, Minuten, Karten und Noten pflegen. Abwesende Spieler
                   (Verletzung, Urlaub etc.) werden ausgeblendet. Aenderungen fuer alle Spieler auf einmal speichern.
                 </p>
               </div>
@@ -278,7 +260,9 @@ export default async function MatchDetailPage({
             </div>
 
             <MatchLineupEditor
+              canManageMatch={canManageMatch}
               formationSlots={formationSlots}
+              matchId={match.id}
               players={playerRows}
               tacticFormation={match.tactic?.formation ?? null}
               tacticName={match.tactic?.name ?? null}
@@ -292,20 +276,24 @@ export default async function MatchDetailPage({
 
 function MatchHero({
   activeTeamName,
+  canManageMatch,
   competition,
   eventDate,
   goalsAgainst,
   goalsFor,
   isHomeGame,
+  matchId,
   opponent,
   status,
 }: {
   activeTeamName: string;
+  canManageMatch: boolean;
   competition: string;
   eventDate: string;
   goalsAgainst: number | null;
   goalsFor: number | null;
   isHomeGame: boolean;
+  matchId: string;
   opponent: string;
   status: string;
 }) {
@@ -313,6 +301,8 @@ function MatchHero({
   const awayName = isHomeGame ? opponent : activeTeamName;
   const homeGoals = isHomeGame ? goalsFor : goalsAgainst;
   const awayGoals = isHomeGame ? goalsAgainst : goalsFor;
+  const homeFieldName = isHomeGame ? "goalsFor" : "goalsAgainst";
+  const awayFieldName = isHomeGame ? "goalsAgainst" : "goalsFor";
 
   return (
     <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950 p-5 text-white shadow-sm">
@@ -329,16 +319,71 @@ function MatchHero({
           <CalendarClock className="size-4" aria-hidden="true" />
           {eventDate}
         </p>
-        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-8">
-          <TeamBlock align="right" name={homeName} />
-          <div className="text-center">
-            <p className="text-4xl font-black tabular-nums tracking-normal md:text-5xl">
-              {homeGoals ?? "-"} - {awayGoals ?? "-"}
-            </p>
-            <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-400">FT</p>
+        {canManageMatch ? (
+          <form action={updateMatchResult} className="mt-5">
+            <input name="matchId" type="hidden" value={matchId} />
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-8">
+              <TeamBlock align="right" name={homeName} />
+              <div className="flex items-center gap-2 text-center">
+                <label className="sr-only" htmlFor="goalsFor-hero">
+                  Tore {homeName}
+                </label>
+                <input
+                  className="h-14 w-14 rounded-lg border border-white/20 bg-white/10 text-center text-3xl font-black tabular-nums text-white outline-none focus:border-primary md:text-4xl"
+                  defaultValue={homeGoals ?? ""}
+                  id="goalsFor-hero"
+                  min={0}
+                  name={homeFieldName}
+                  type="number"
+                />
+                <span className="text-3xl font-black text-slate-500 md:text-4xl">:</span>
+                <label className="sr-only" htmlFor="goalsAgainst-hero">
+                  Tore {awayName}
+                </label>
+                <input
+                  className="h-14 w-14 rounded-lg border border-white/20 bg-white/10 text-center text-3xl font-black tabular-nums text-white outline-none focus:border-primary md:text-4xl"
+                  defaultValue={awayGoals ?? ""}
+                  id="goalsAgainst-hero"
+                  min={0}
+                  name={awayFieldName}
+                  type="number"
+                />
+              </div>
+              <TeamBlock align="left" name={awayName} />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <label className="sr-only" htmlFor="status-hero">
+                Status
+              </label>
+              <select
+                className="h-9 rounded-lg border border-white/20 bg-white/10 px-3 text-xs font-bold uppercase tracking-wide text-white"
+                defaultValue={status}
+                id="status-hero"
+                name="status"
+              >
+                <option value="PLANNED">Geplant</option>
+                <option value="LIVE">Live</option>
+                <option value="FINISHED">Beendet</option>
+                <option value="CANCELLED">Abgesagt</option>
+              </select>
+              <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-xs font-bold text-white" type="submit">
+                <Save className="size-3.5" aria-hidden="true" />
+                Ergebnis speichern
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-8">
+            <TeamBlock align="right" name={homeName} />
+            <div className="text-center">
+              <p className="text-4xl font-black tabular-nums tracking-normal md:text-5xl">
+                {homeGoals ?? "-"} - {awayGoals ?? "-"}
+              </p>
+              <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-400">FT</p>
+            </div>
+            <TeamBlock align="left" name={awayName} />
           </div>
-          <TeamBlock align="left" name={awayName} />
-        </div>
+        )}
       </div>
     </section>
   );
@@ -362,29 +407,6 @@ function TeamBadge({ name }: { name: string }) {
     <div className="hidden size-14 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-sm font-black text-white sm:flex">
       {getInitialsFromName(name)}
     </div>
-  );
-}
-
-function NumberField({
-  label,
-  name,
-  defaultValue,
-}: {
-  label: string;
-  name: string;
-  defaultValue?: number | null;
-}) {
-  return (
-    <label className="text-sm font-semibold text-foreground">
-      {label}
-      <input
-        className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm font-bold tabular-nums"
-        defaultValue={defaultValue ?? ""}
-        min={0}
-        name={name}
-        type="number"
-      />
-    </label>
   );
 }
 

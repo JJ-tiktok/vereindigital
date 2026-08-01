@@ -10,7 +10,7 @@ import { mapPositionToGroup } from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
 
 import { ensurePlayerInTeam } from "./guards";
-import { parseForm, zDate, zOptionalDate, zOptionalFloat, zOptionalString, zRequiredString } from "./helpers";
+import { parseForm, zDate, zOptionalDate, zOptionalFloat, zOptionalInt, zOptionalString, zRequiredString } from "./helpers";
 
 export async function updatePlayerTrainingPerformance(formData: FormData) {
   const context = await requireAppContext();
@@ -23,6 +23,7 @@ export async function updatePlayerTrainingPerformance(formData: FormData) {
       calendarEventId: zRequiredString,
       playerProfileId: zRequiredString,
       rating: zOptionalFloat,
+      rpe: zOptionalInt,
       note: zOptionalString,
     }),
   );
@@ -31,7 +32,7 @@ export async function updatePlayerTrainingPerformance(formData: FormData) {
     redirect("/kalender");
   }
 
-  const { calendarEventId, playerProfileId, rating, note } = parsed.data;
+  const { calendarEventId, playerProfileId, rating, rpe, note } = parsed.data;
 
   const event = await prisma.calendarEvent.findFirst({
     where: {
@@ -44,7 +45,7 @@ export async function updatePlayerTrainingPerformance(formData: FormData) {
     },
   });
 
-  if (!event || rating === null || rating < 1 || rating > 10) {
+  if (!event || rating === null || rating < 1 || rating > 10 || (rpe !== null && (rpe < 1 || rpe > 10))) {
     redirect(`/kalender/${calendarEventId}?error=training-rating`);
   }
 
@@ -61,11 +62,13 @@ export async function updatePlayerTrainingPerformance(formData: FormData) {
       calendarEventId,
       playerProfileId,
       rating,
+      rpe,
       note,
       createdByUserId: context.appUser.id,
     },
     update: {
       rating,
+      rpe,
       note,
       createdByUserId: context.appUser.id,
     },
