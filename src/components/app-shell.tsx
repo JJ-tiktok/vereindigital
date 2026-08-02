@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   MessageSquare,
+  Presentation,
   ShieldCheck,
   Trophy,
   Users,
@@ -31,9 +32,14 @@ const primaryNavItems = [
   { label: "Kader", href: "/kader", icon: Users },
   { label: "Kalender", href: "/kalender", icon: CalendarDays },
   { label: "Training", href: "/training", icon: Dumbbell },
-  { label: "Taktik", href: "/taktik", icon: LayoutGrid },
   { label: "Spieltage", href: "/spiele", icon: Trophy },
   { label: "Scouting", href: "/scouting", icon: Binoculars },
+];
+
+const taktikNavItem = { label: "Taktik", href: "/taktik", icon: LayoutGrid };
+const taktikSubNavItems = [
+  { label: "Taktikmodul", href: "/taktik", icon: LayoutGrid },
+  { label: "Analysemodul", href: "/taktik/szenen", icon: Presentation },
 ];
 
 const managementNavItems = [
@@ -69,13 +75,22 @@ export async function AppShell({
 
     return true;
   });
-  const toEntry = (item: (typeof primaryNavItems)[number]): SidebarNavEntry => ({
+  const toEntry = (item: { href: string; label: string; icon: typeof LayoutGrid }): SidebarNavEntry => ({
     href: item.href,
     label: item.label,
     icon: <item.icon className="size-4 shrink-0" aria-hidden="true" />,
     active: activePath === item.href,
   });
-  const primaryEntries: SidebarNavEntry[] = primaryNavItems.map(toEntry);
+  const taktikEntry: SidebarNavEntry = {
+    ...toEntry(taktikNavItem),
+    active: activePath === "/taktik" || activePath.startsWith("/taktik/szenen"),
+    children: taktikSubNavItems.map(toEntry),
+  };
+  const primaryEntries: SidebarNavEntry[] = [
+    ...primaryNavItems.slice(0, 4).map(toEntry),
+    taktikEntry,
+    ...primaryNavItems.slice(4).map(toEntry),
+  ];
   const managementEntries: SidebarNavEntry[] = visibleManagementItems.map(toEntry);
 
   const cookieStore = await cookies();

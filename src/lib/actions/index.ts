@@ -13,7 +13,13 @@ export {
   updatePlayerProfile,
 } from "./players";
 export { bulkAcceptEventAttendance, createCalendarEvent, updateCalendarEvent, updateEventAttendance } from "./calendar";
-export { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic, updatePlayerMatchStat } from "./matches";
+export {
+  assignMatchLineupSlotPlayer,
+  updateAllPlayerMatchStats,
+  updateMatchResult,
+  updateMatchTactic,
+  updatePlayerMatchStat,
+} from "./matches";
 export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";
 export {
   addExerciseToTrainingPlan,
@@ -26,6 +32,16 @@ export {
   upsertTrainingPlan,
 } from "./training";
 export { deleteTactic, ensureTacticsPermissions, renameTactic, saveTactic, saveTacticAsNew } from "./tactics";
+export {
+  createTacticScene,
+  deleteTacticScene,
+  deleteTacticSceneStep,
+  duplicateTacticScene,
+  duplicateTacticSceneStep,
+  reorderTacticSceneSteps,
+  saveTacticSceneStep,
+  updateTacticSceneMeta,
+} from "./scenes";
 export {
   convertScoutingProspectToPlayer,
   createScoutingAttributeSnapshot,

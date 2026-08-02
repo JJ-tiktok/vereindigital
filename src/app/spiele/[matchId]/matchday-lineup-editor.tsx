@@ -1,8 +1,10 @@
 "use client";
 
-import { CircleDot, X } from "lucide-react";
+import { CircleDot, LayoutGrid, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { assignMatchLineupSlotPlayer } from "@/lib/actions";
 import { SortableHeader } from "@/components/sortable-header";
 import { positionCodeLabel } from "@/lib/tactics";
 
@@ -37,12 +39,16 @@ type SortKey = "name" | "minutesPlayed" | "goals" | "assists" | "yellowCards" | 
 const gridCols = "lg:grid-cols-[minmax(220px,1fr)_120px_62px_52px_52px_58px_58px_70px]";
 
 export function MatchLineupEditor({
+  canManageMatch,
   formationSlots,
+  matchId,
   players,
   tacticFormation,
   tacticName,
 }: {
+  canManageMatch: boolean;
   formationSlots: FormationSlot[];
+  matchId: string;
   players: PlayerRow[];
   tacticFormation: string | null;
   tacticName: string | null;
@@ -78,6 +84,8 @@ export function MatchLineupEditor({
       setSortDir("asc");
     }
   }
+
+  const [activeTab, setActiveTab] = useState<"aufstellung" | "statistiken">("aufstellung");
 
   const usedPlayers = players.filter((player) => getStatus(player.id) !== "NOT_USED");
   const benchPlayers = players.filter((player) => getStatus(player.id) === "NOT_USED");
@@ -120,18 +128,36 @@ export function MatchLineupEditor({
   );
 
   return (
-    <div className="space-y-6">
-      <FormationPitch
-        formationSlots={formationSlots}
-        getStatus={getStatus}
-        onToggleStarter={toggleStarter}
-        playerById={playerById}
-        players={players}
-        tacticFormation={tacticFormation}
-        tacticName={tacticName}
-      />
+    <div className="space-y-4">
+      <div className="flex gap-1 border-b border-border">
+        <TabButton
+          active={activeTab === "aufstellung"}
+          label="Aufstellung"
+          onClick={() => setActiveTab("aufstellung")}
+        />
+        <TabButton
+          active={activeTab === "statistiken"}
+          label={`Statistiken (${sortedUsedPlayers.length})`}
+          onClick={() => setActiveTab("statistiken")}
+        />
+      </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      <div className={activeTab === "aufstellung" ? "" : "hidden"}>
+        <FormationPitch
+          canManageMatch={canManageMatch}
+          formationSlots={formationSlots}
+          getStatus={getStatus}
+          matchId={matchId}
+          onSetStatus={setStatus}
+          onToggleStarter={toggleStarter}
+          playerById={playerById}
+          players={players}
+          tacticFormation={tacticFormation}
+          tacticName={tacticName}
+        />
+      </div>
+
+      <div className={activeTab === "statistiken" ? "overflow-hidden rounded-lg border border-border bg-surface" : "hidden"}>
         {sortedUsedPlayers.length > 0 ? (
           <>
             <div className={`hidden gap-3 border-b border-border bg-surface-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted lg:grid ${gridCols}`}>
@@ -158,7 +184,8 @@ export function MatchLineupEditor({
           </>
         ) : (
           <p className="p-5 text-sm text-muted">
-            Noch niemand aufgestellt. Klicke oben im Feld auf Spieler, um sie als Startelf festzulegen.
+            Noch niemand aufgestellt. Wechsle zum Tab &quot;Aufstellung&quot; und klicke Spieler im Feld an, um sie als
+            Startelf festzulegen.
           </p>
         )}
 
@@ -179,29 +206,76 @@ export function MatchLineupEditor({
   );
 }
 
+function TabButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-bold transition ${
+        active ? "border-primary text-primary" : "border-transparent text-muted hover:text-foreground"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
+  );
+}
+
 function FormationPitch({
+  canManageMatch,
   formationSlots,
   getStatus,
+  matchId,
+  onSetStatus,
   onToggleStarter,
   playerById,
   players,
   tacticFormation,
   tacticName,
 }: {
+  canManageMatch: boolean;
   formationSlots: FormationSlot[];
   getStatus: (playerId: string) => string;
+  matchId: string;
+  onSetStatus: (playerId: string, status: string) => void;
   onToggleStarter: (playerId: string) => void;
   playerById: Map<string, PlayerRow>;
   players: PlayerRow[];
   tacticFormation: string | null;
   tacticName: string | null;
 }) {
-  const groups = [
-    { key: "attack", label: "Angriff", players: players.filter((player) => positionLine(player.position) === "attack") },
-    { key: "midfield", label: "Mittelfeld", players: players.filter((player) => positionLine(player.position) === "midfield") },
-    { key: "defense", label: "Abwehr", players: players.filter((player) => positionLine(player.position) === "defense") },
-    { key: "goalkeeper", label: "Tor", players: players.filter((player) => positionLine(player.position) === "goalkeeper") },
-  ];
+  const router = useRouter();
+  const [assigningSlotId, setAssigningSlotId] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const assignedPlayerIds = useMemo(
+    () => new Set(formationSlots.map((slot) => slot.playerProfileId).filter((id): id is string => Boolean(id))),
+    [formationSlots],
+  );
+
+  async function handleAssign(slotId: string, previousPlayerProfileId: string | null, playerProfileId: string) {
+    setPending(true);
+    const formData = new FormData();
+    formData.set("slotId", slotId);
+    formData.set("matchId", matchId);
+    formData.set("playerProfileId", playerProfileId);
+
+    try {
+      await assignMatchLineupSlotPlayer(formData);
+      // Assigning a player to a position slot puts them straight into the Startelf - no extra
+      // click on the jersey needed. Clearing a slot (or replacing its player) drops whoever
+      // used to occupy it back out of the lineup.
+      if (previousPlayerProfileId && previousPlayerProfileId !== playerProfileId) {
+        onSetStatus(previousPlayerProfileId, "NOT_USED");
+      }
+      if (playerProfileId) {
+        onSetStatus(playerProfileId, "STARTER");
+      }
+      router.refresh();
+    } finally {
+      setPending(false);
+      setAssigningSlotId(null);
+    }
+  }
 
   return (
     <section className="rounded-lg border border-border bg-surface p-5">
@@ -212,17 +286,38 @@ function FormationPitch({
         </div>
         <p className="text-sm text-muted">
           {tacticName
-            ? `Formation ${tacticFormation}. Klicke einen Spieler an, um ihn als Startelf zu setzen oder zu entfernen.`
-            : "Klicke einen Spieler an, um ihn als Startelf zu setzen oder zu entfernen. Waehle links eine Taktik fuer die echte Formation."}
+            ? canManageMatch
+              ? `Formation ${tacticFormation}. Trikot anklicken setzt/entfernt die Startelf, Positionsbeschriftung anklicken weist einen Spieler zu.`
+              : `Formation ${tacticFormation}. Klicke einen Spieler an, um ihn als Startelf zu setzen oder zu entfernen.`
+            : "Noch keine Taktik fuer dieses Spiel ausgewaehlt."}
         </p>
       </div>
-      <div className="relative mt-5 min-h-[340px] overflow-hidden rounded-lg border border-slate-200 bg-[linear-gradient(90deg,#78b66b_0_10%,#8bc77d_10%_20%,#78b66b_20%_30%,#8bc77d_30%_40%,#78b66b_40%_50%,#8bc77d_50%_60%,#78b66b_60%_70%,#8bc77d_70%_80%,#78b66b_80%_90%,#8bc77d_90%_100%)] p-4">
-        <div className="pointer-events-none absolute inset-4 top-1/2 border-t-2 border-white/70" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70" />
-        {formationSlots.length > 0 ? (
-          formationSlots.map((slot) => {
+      {formationSlots.length > 0 ? (
+        <div
+          className="relative mx-auto mt-5 w-full max-w-[520px] overflow-hidden rounded-lg border border-slate-800 shadow-sm"
+          style={{ aspectRatio: "700 / 1000" }}
+        >
+          <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 700 1000">
+            <rect fill="#2f5f3a" height={1000} width={700} x="0" y="0" />
+            {[0, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((y) => (
+              <rect fill="#33643d" height={50} key={y} width={700} x="0" y={y} />
+            ))}
+            <rect fill="none" height={980} stroke="#ffffff" strokeWidth={2} width={680} x={10} y={10} />
+            <line stroke="#ffffff" strokeWidth={2} x1={10} x2={690} y1={500} y2={500} />
+            <circle cx={350} cy={500} fill="none" r={70} stroke="#ffffff" strokeWidth={2} />
+            <circle cx={350} cy={500} fill="#ffffff" r={4} />
+            <rect fill="none" height={120} stroke="#ffffff" strokeWidth={2} width={300} x={200} y={10} />
+            <rect fill="none" height={120} stroke="#ffffff" strokeWidth={2} width={300} x={200} y={870} />
+            <path d="M 260 130 A 90 90 0 0 0 440 130" fill="none" stroke="#ffffff" strokeWidth={2} />
+            <path d="M 260 870 A 90 90 0 0 1 440 870" fill="none" stroke="#ffffff" strokeWidth={2} />
+          </svg>
+          {formationSlots.map((slot) => {
             const player = slot.playerProfileId ? playerById.get(slot.playerProfileId) : null;
             const isStarter = player ? getStatus(player.id) === "STARTER" : false;
+            const isAssigning = assigningSlotId === slot.id;
+            const candidates = players
+              .filter((candidate) => candidate.id === slot.playerProfileId || !assignedPlayerIds.has(candidate.id))
+              .sort((a, b) => a.name.localeCompare(b.name));
 
             return (
               <div
@@ -230,81 +325,87 @@ function FormationPitch({
                 key={slot.id}
                 style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
               >
-                {player ? (
-                  <button
-                    className="flex flex-col items-center gap-1"
-                    onClick={() => onToggleStarter(player.id)}
-                    type="button"
+                {isAssigning ? (
+                  <select
+                    autoFocus
+                    className="w-36 rounded-lg border border-primary bg-white px-2 py-1.5 text-xs font-semibold text-slate-900 shadow-lg"
+                    defaultValue={slot.playerProfileId ?? ""}
+                    disabled={pending}
+                    onBlur={() => setAssigningSlotId(null)}
+                    onChange={(event) => handleAssign(slot.id, slot.playerProfileId, event.target.value)}
                   >
-                    <div
-                      className={`relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm text-lg font-black tabular-nums shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm ${
-                        isStarter
-                          ? "bg-primary text-white before:bg-primary after:bg-primary"
-                          : "border-2 border-dashed border-white/70 bg-white/20 text-white/80 before:bg-white/20 after:bg-white/20"
-                      }`}
+                    <option value="">Kein Spieler</option>
+                    {candidates.map((candidate) => (
+                      <option key={candidate.id} value={candidate.id}>
+                        {candidate.jerseyNumber ? `#${candidate.jerseyNumber} ` : ""}
+                        {candidate.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : player ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <button className="flex flex-col items-center gap-1" onClick={() => onToggleStarter(player.id)} type="button">
+                      <div
+                        className={`relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm text-lg font-black tabular-nums shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm ${
+                          isStarter
+                            ? "bg-primary text-white before:bg-primary after:bg-primary"
+                            : "border-2 border-dashed border-white/70 bg-white/20 text-white/80 before:bg-white/20 after:bg-white/20"
+                        }`}
+                      >
+                        {player.jerseyNumber ?? "-"}
+                      </div>
+                      <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">
+                        {shortPlayerName(player.name)}
+                      </p>
+                    </button>
+                    <button
+                      className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white hover:bg-slate-950"
+                      disabled={!canManageMatch}
+                      onClick={() => setAssigningSlotId(slot.id)}
+                      title={canManageMatch ? "Spieler fuer diese Position wechseln" : undefined}
+                      type="button"
                     >
-                      {player.jerseyNumber ?? "-"}
-                    </div>
-                    <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">
-                      {shortPlayerName(player.name)}
-                    </p>
-                    <p className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                       {positionCodeLabel(slot.positionCode)}
                       {player.rating ? ` / ${player.rating.toFixed(1)}` : ""}
-                    </p>
-                  </button>
+                    </button>
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-1 opacity-60">
+                  <button
+                    className="flex flex-col items-center gap-1 opacity-70 disabled:cursor-default"
+                    disabled={!canManageMatch}
+                    onClick={() => setAssigningSlotId(slot.id)}
+                    title={canManageMatch ? "Spieler fuer diese Position waehlen" : undefined}
+                    type="button"
+                  >
                     <div className="flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm border-2 border-dashed border-white/60 text-lg font-black text-white/70">
-                      -
+                      +
                     </div>
                     <p className="rounded-full bg-slate-950/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                       {positionCodeLabel(slot.positionCode)}
                     </p>
-                  </div>
+                  </button>
                 )}
               </div>
             );
-          })
-        ) : (
-          <div className="relative grid min-h-[308px] gap-3 rounded-md p-0">
-            {groups.map((group) => (
-              <div className="relative z-10 grid grid-cols-[86px_1fr] items-center gap-3" key={group.key}>
-                <p className="rounded-full bg-white/85 px-3 py-1 text-center text-xs font-black uppercase tracking-wide text-slate-700 shadow-sm">
-                  {group.label}
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  {group.players.length > 0 ? (
-                    group.players.map((player) => (
-                      <button
-                        className="flex min-w-20 flex-col items-center gap-1"
-                        key={player.id}
-                        onClick={() => onToggleStarter(player.id)}
-                        type="button"
-                      >
-                        <div
-                          className={`relative flex h-12 w-14 items-center justify-center rounded-b-lg rounded-t-sm text-lg font-black tabular-nums shadow-md before:absolute before:-left-2 before:top-1 before:size-5 before:rounded-sm after:absolute after:-right-2 after:top-1 after:size-5 after:rounded-sm ${
-                            getStatus(player.id) === "STARTER"
-                              ? "bg-primary text-white before:bg-primary after:bg-primary"
-                              : "border-2 border-dashed border-white/70 bg-white/20 text-white/80 before:bg-white/20 after:bg-white/20"
-                          }`}
-                        >
-                          {player.jerseyNumber ?? "-"}
-                        </div>
-                        <p className="max-w-24 truncate rounded-full bg-white/90 px-2 py-0.5 text-xs font-bold text-slate-900">
-                          {shortPlayerName(player.name)}
-                        </p>
-                      </button>
-                    ))
-                  ) : (
-                    <span className="rounded-full bg-white/50 px-3 py-1 text-xs font-semibold text-white">Keine Spieler</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          })}
+        </div>
+      ) : (
+        <div className="mt-5 flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface-muted p-8 text-center">
+          <LayoutGrid className="size-8 text-muted" aria-hidden="true" />
+          <p className="max-w-sm text-sm text-muted">
+            Waehle links eine Taktik aus, um die Formation auf dem Feld anzuzeigen. Danach kannst du Spieler den
+            Positionen zuweisen - sie zaehlen dann automatisch als Startelf.
+          </p>
+          {canManageMatch ? (
+            <a
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-white"
+              href="#taktik-form"
+            >
+              Taktik auswaehlen
+            </a>
+          ) : null}
+        </div>
+      )}
     </section>
   );
 }
@@ -447,46 +548,6 @@ function CompactNumber({
       />
     </label>
   );
-}
-
-function positionRank(position: string) {
-  const normalized = position.toUpperCase();
-
-  if (normalized === "TW" || normalized === "GK") {
-    return 0;
-  }
-
-  if (["IV", "AV", "LV", "RV", "CB", "LB", "RB"].includes(normalized)) {
-    return 1;
-  }
-
-  if (["DM", "ZM", "OM", "CM", "CDM", "CAM", "LM", "RM"].includes(normalized)) {
-    return 2;
-  }
-
-  if (["FL", "ST", "LA", "RA", "LW", "RW", "CF"].includes(normalized)) {
-    return 3;
-  }
-
-  return 4;
-}
-
-function positionLine(position: string) {
-  const rank = positionRank(position);
-
-  if (rank === 0) {
-    return "goalkeeper";
-  }
-
-  if (rank === 1) {
-    return "defense";
-  }
-
-  if (rank === 2) {
-    return "midfield";
-  }
-
-  return "attack";
 }
 
 function shortPlayerName(name: string) {

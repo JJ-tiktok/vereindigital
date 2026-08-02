@@ -94,7 +94,7 @@ export default async function CalendarEventDetailPage({
         ) : null}
         {query.error === "training-rating" ? (
           <p className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-sm font-semibold text-danger">
-            Trainingsbewertungen muessen zwischen 1.0 und 10.0 liegen.
+            Trainingsbewertungen muessen zwischen 1.0 und 10.0 liegen, die Belastung (RPE) zwischen 1 und 10.
           </p>
         ) : null}
       </div>
@@ -229,8 +229,9 @@ export default async function CalendarEventDetailPage({
       <div className="border-b border-border p-5">
         <h2 className="text-xl font-semibold">Trainingsleistung</h2>
         <p className="mt-1 text-sm text-muted">
-          Bewertung pro Spieler fuer diese Einheit. Nur Spieler mit Zusage werden hier angezeigt. Diese Werte werden
-          getrennt von Spielbewertungen gespeichert.
+          Bewertung und Belastungsempfinden (RPE) pro Spieler fuer diese Einheit. Nur Spieler mit Zusage werden hier
+          angezeigt. RPE (1 = sehr leicht, 10 = maximal) fliesst zusammen mit der Einheitsdauer in die
+          Belastungsintensitaet auf dem Dashboard ein. Diese Werte werden getrennt von Spielbewertungen gespeichert.
         </p>
       </div>
       {presentPlayers.length > 0 ? (
@@ -244,6 +245,7 @@ export default async function CalendarEventDetailPage({
               lastName: player.lastName,
               position: player.position,
               rating: performance?.rating ?? null,
+              rpe: performance?.rpe ?? null,
               note: performance?.note ?? null,
             };
           })}

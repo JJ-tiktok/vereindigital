@@ -37,7 +37,7 @@ export default async function DashboardPage() {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-  const [players, upcomingEvents, todayEvents, nextTraining, matches] = await Promise.all([
+  const [players, upcomingEvents, todayEvents, nextTraining, lastTraining, matches] = await Promise.all([
     prisma.playerProfile.findMany({
       where: {
         memberships: {
@@ -127,6 +127,24 @@ export default async function DashboardPage() {
         startsAt: "asc",
       },
     }),
+    prisma.calendarEvent.findFirst({
+      where: {
+        teamId: activeTeam.id,
+        type: "TRAINING",
+        startsAt: {
+          lt: now,
+        },
+      },
+      include: {
+        attendances: true,
+        trainingPerformances: {
+          select: { rpe: true },
+        },
+      },
+      orderBy: {
+        startsAt: "desc",
+      },
+    }),
     prisma.match.findMany({
       where: {
         teamId: activeTeam.id,
@@ -148,13 +166,39 @@ export default async function DashboardPage() {
 
   const unavailableCount = players.filter((player) => player.availabilities.length > 0).length;
   const fitCount = Math.max(players.length - unavailableCount, 0);
-  const squadFitRate = percent(fitCount, players.length);
-  const trainingAttendanceRate = nextTraining ? percent(nextTraining.attendances.length, players.length) : squadFitRate;
+
+  // Trainingsbeteiligung: RSVP quota (ACCEPTED only - MAYBE/DECLINED never counted as
+  // "attending") for the next upcoming training, or the most recent past one if none is
+  // scheduled yet. Falls back to 0 (not squad availability) when there is no training at all,
+  // so the number always means the same thing regardless of which session it points at.
+  const attendanceTraining = nextTraining ?? lastTraining;
+  const attendanceTrainingLabel = nextTraining ? "naechstes Training" : lastTraining ? "letztes Training" : null;
+  const acceptedAttendance = attendanceTraining
+    ? attendanceTraining.attendances.filter((attendance) => attendance.status === "ACCEPTED").length
+    : 0;
+  const trainingAttendanceRate = attendanceTraining ? percent(acceptedAttendance, players.length) : 0;
+
   const playerRatings = players.flatMap((player) =>
     player.matchStats.map((stat) => stat.rating).filter((rating): rating is number => rating !== null),
   );
   const teamFormValue = Math.round((average(playerRatings) ?? 0) * 10);
-  const loadValue = Math.max(0, Math.min(100, Math.round((trainingAttendanceRate + squadFitRate) / 2)));
+
+  // Belastungsintensitaet: session-RPE training load (Foster et al.) for the most recently
+  // completed training - durationMinutes x average perceived exertion (RPE, Borg CR10 1-10)
+  // reported per player in the Trainingsleistung tab. 700 AU is used as the "very high load"
+  // reference point from the sports-science literature, mapped to a 100% ring fill.
+  const SESSION_LOAD_REFERENCE_AU = 700;
+  const rpeValues = lastTraining?.trainingPerformances
+    .map((performance) => performance.rpe)
+    .filter((rpe): rpe is number => rpe !== null) ?? [];
+  const averageRpe = average(rpeValues);
+  const lastTrainingDurationMinutes = lastTraining
+    ? Math.round((lastTraining.endsAt.getTime() - lastTraining.startsAt.getTime()) / 60000)
+    : 0;
+  const sessionLoad = averageRpe !== null ? averageRpe * lastTrainingDurationMinutes : null;
+  const loadValue =
+    sessionLoad !== null ? Math.max(0, Math.min(100, Math.round((sessionLoad / SESSION_LOAD_REFERENCE_AU) * 100))) : 0;
+
   const finishedMatches = matches.filter((match) => match.status === "FINISHED");
   const wins = finishedMatches.filter((match) => (match.goalsFor ?? 0) > (match.goalsAgainst ?? 0)).length;
   const draws = finishedMatches.filter((match) => (match.goalsFor ?? 0) === (match.goalsAgainst ?? 0)).length;
@@ -165,6 +209,16 @@ export default async function DashboardPage() {
   const goalDifference = goalsFor - goalsAgainst;
   const topPerformers = buildTopPerformers(matches).slice(0, 3);
   const lastMatches = finishedMatches.slice(0, 3);
+
+  const attendanceDetail = attendanceTraining
+    ? `${acceptedAttendance}/${players.length} Zusagen (${attendanceTrainingLabel})`
+    : "Noch kein Training geplant";
+  const loadDetail =
+    averageRpe !== null
+      ? `Ø RPE ${averageRpe.toFixed(1)} / ${lastTrainingDurationMinutes} Min / letzte Einheit`
+      : lastTraining
+        ? `Belastung fuer "${lastTraining.title}" noch nicht erfasst`
+        : "Noch kein Training abgeschlossen";
 
   return (
     <AppShell context={context} activePath="/dashboard">
@@ -222,10 +276,10 @@ export default async function DashboardPage() {
         <section className="grid gap-4 xl:grid-cols-3">
           <RingCard
             color="blue"
-            detail={`${fitCount}/${players.length} Spieler bereit`}
+            detail={attendanceDetail}
             icon={<Users className="size-5" aria-hidden="true" />}
             label="Trainingsbeteiligung"
-            sublabel="Squad Fit"
+            sublabel="Zusagen"
             value={trainingAttendanceRate}
           />
           <RingCard
@@ -238,10 +292,10 @@ export default async function DashboardPage() {
           />
           <RingCard
             color="orange"
-            detail={`${unavailableCount} aktuell abwesend`}
+            detail={loadDetail}
             icon={<Activity className="size-5" aria-hidden="true" />}
             label="Belastungsintensitaet"
-            sublabel="Verfuegbarkeit"
+            sublabel="Session Load"
             value={loadValue}
           />
         </section>

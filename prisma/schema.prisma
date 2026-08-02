@@ -220,6 +220,7 @@ model Club {
   importJobs           ImportJob[]
   feedbackItems        FeedbackItem[]
   tactics              Tactic[]
+  tacticScenes         TacticScene[]
   scoutingProspects    ScoutingProspect[]
 
   @@map("clubs")
@@ -267,6 +268,7 @@ model Team {
   importJobs         ImportJob[]
   feedbackItems      FeedbackItem[]
   tactics            Tactic[]
+  tacticScenes       TacticScene[]
 
   @@unique([clubId, seasonId, name])
   @@index([clubId])
@@ -296,6 +298,7 @@ model User {
   importJobsCreated                 ImportJob[]                 @relation("ImportJobCreatedBy")
   feedbackItemsCreated              FeedbackItem[]              @relation("FeedbackItemCreatedBy")
   tacticsCreated                    Tactic[]                    @relation("TacticCreatedBy")
+  tacticScenesCreated                TacticScene[]              @relation("TacticSceneCreatedBy")
   scoutingProspectsCreated          ScoutingProspect[]          @relation("ScoutingProspectCreatedBy")
   scoutingEventsCreated             ScoutingEvent[]             @relation("ScoutingEventCreatedBy")
   scoutingEventsUpdated             ScoutingEvent[]             @relation("ScoutingEventUpdatedBy")
@@ -328,6 +331,7 @@ model PlayerProfile {
   fileEntries          PlayerFileEntry[]
   trainingPerformances PlayerTrainingPerformance[]
   tacticSlots          TacticSlot[]
+  matchLineupSlots     MatchLineupSlot[]
   scoutedFrom          ScoutingProspect?
 
   @@index([clubId])
@@ -530,6 +534,7 @@ model Match {
   calendarEvent CalendarEvent?    @relation(fields: [calendarEventId], references: [id], onDelete: SetNull)
   tactic        Tactic?           @relation(fields: [tacticId], references: [id], onDelete: SetNull)
   playerStats   PlayerMatchStat[]
+  lineupSlots   MatchLineupSlot[]
 
   @@index([teamId])
   @@index([tacticId])
@@ -627,6 +632,10 @@ model PlayerTrainingPerformance {
   calendarEventId String
   playerProfileId String
   rating          Float
+  // Rate of Perceived Exertion (Borg CR10, 1-10): how hard this session felt to the player.
+  // Combined with the session's duration (CalendarEvent.startsAt/endsAt), this drives the
+  // Belastungsintensitaet (training load) metric on the dashboard - see dashboard/page.tsx.
+  rpe             Int?
   note            String?
   createdByUserId String?
   createdAt       DateTime @default(now())
@@ -882,6 +891,79 @@ model TacticSlot {
   @@index([tacticId])
   @@index([playerProfileId])
   @@map("tactic_slots")
+}
+
+// A per-match, editable copy of a Tactic's OFFENSE slots. Snapshotted when a coach assigns a
+// Tactic to a Match (see updateMatchTactic), so that assigning players to positions for a
+// specific matchday never mutates the shared Tactic template used across other matches.
+model MatchLineupSlot {
+  id              String  @id @default(cuid())
+  matchId         String
+  positionCode    String
+  x               Float
+  y               Float
+  sortOrder       Int     @default(0)
+  playerProfileId String?
+
+  match         Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: SetNull)
+
+  @@index([matchId])
+  @@index([playerProfileId])
+  @@map("match_lineup_slots")
+}
+
+enum TacticSceneCategory {
+  STANDARDS
+  DEFENSE
+  ATTACK
+  MATCH_SCENE
+  CUSTOM
+}
+
+// An animated tactical scene (corner routine, defensive shape, reconstructed match situation)
+// built from a sequence of TacticSceneStep keyframes with its own generic element set - distinct
+// from Tactic/TacticSlot (real formation planning) and TrainingExerciseSketch (single static
+// training diagram). Presented fullscreen via ScenePresentation for the beamer.
+model TacticScene {
+  id                    String              @id @default(cuid())
+  clubId                String
+  teamId                String
+  title                 String
+  category              TacticSceneCategory @default(CUSTOM)
+  pitchType             TrainingPitchType   @default(FULL_FIELD)
+  description           String?
+  defaultStepDurationMs Int                 @default(1500)
+  createdByUserId       String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  club          Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  team          Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdByUser User?             @relation("TacticSceneCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  steps         TacticSceneStep[]
+
+  @@index([clubId])
+  @@index([teamId])
+  @@index([category])
+  @@map("tactic_scenes")
+}
+
+model TacticSceneStep {
+  id            String   @id @default(cuid())
+  tacticSceneId String
+  sortOrder     Int      @default(0)
+  label         String?
+  elementsData  Json
+  transitionMs  Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tacticScene TacticScene @relation(fields: [tacticSceneId], references: [id], onDelete: Cascade)
+
+  @@unique([tacticSceneId, sortOrder])
+  @@index([tacticSceneId])
+  @@map("tactic_scene_steps")
 }
 
 model ScoutingProspect {
