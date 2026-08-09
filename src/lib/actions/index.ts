@@ -20,7 +20,13 @@ export {
   updateMatchTactic,
   updatePlayerMatchStat,
 } from "./matches";
-export { createPlayerAttributeSnapshot, createPlayerFileEntry, updatePlayerTrainingPerformance } from "./development";
+export {
+  createPlayerAttributeSnapshot,
+  createPlayerFileEntry,
+  deletePlayerFileEntry,
+  updatePlayerFileEntry,
+  updatePlayerTrainingPerformance,
+} from "./development";
 export {
   addExerciseToTrainingPlan,
   createTrainingExercise,

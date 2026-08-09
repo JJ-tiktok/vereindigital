@@ -9,6 +9,7 @@ import { hasPermission, requireActiveTeam, requireAppContext, requirePermission 
 import { mapPositionToGroup } from "@/lib/player-development";
 import { prisma } from "@/lib/prisma";
 import { permissionDefinitions } from "@/lib/rbac";
+import { scoutingPositions } from "@/lib/scouting";
 
 import {
   parseForm,
@@ -84,7 +85,6 @@ const scoutingProspectSchema = z.object({
   firstName: zRequiredString,
   lastName: zRequiredString,
   birthDate: zOptionalDate,
-  position: zOptionalString,
   currentClub: zOptionalString,
   phone: zOptionalString,
   email: zOptionalString,
@@ -92,6 +92,13 @@ const scoutingProspectSchema = z.object({
   interestLevel: zOptionalInt,
   notes: zOptionalString,
 });
+
+function parsePositions(formData: FormData) {
+  return formData
+    .getAll("positions")
+    .map(String)
+    .filter((value) => scoutingPositions.includes(value as (typeof scoutingPositions)[number]));
+}
 
 export async function createScoutingProspect(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const context = await requireAppContext();
@@ -110,6 +117,7 @@ export async function createScoutingProspect(_prevState: ActionState, formData: 
     data: {
       clubId: context.club.id,
       createdByUserId: context.appUser.id,
+      positions: parsePositions(formData),
       ...parsed.data,
     },
   });
@@ -150,7 +158,10 @@ export async function updateScoutingProspect(_prevState: ActionState, formData: 
     where: {
       id: prospect.id,
     },
-    data: parsed.data,
+    data: {
+      positions: parsePositions(formData),
+      ...parsed.data,
+    },
   });
 
   revalidateScouting(prospect.id);
@@ -269,7 +280,7 @@ export async function createScoutingAttributeSnapshot(formData: FormData) {
     },
     select: {
       id: true,
-      position: true,
+      positions: true,
     },
   });
 
@@ -277,13 +288,13 @@ export async function createScoutingAttributeSnapshot(formData: FormData) {
     redirect("/scouting");
   }
 
-  const positionGroup = mapPositionToGroup(prospect.position);
+  const positionGroups = Array.from(new Set(prospect.positions.map(mapPositionToGroup)));
 
   const definitions = await prisma.playerAttributeDefinition.findMany({
     where: {
       clubId: context.club.id,
       positionGroup: {
-        in: ["ALL", positionGroup],
+        in: ["ALL", ...positionGroups],
       },
     },
     select: {
@@ -359,7 +370,7 @@ export async function convertScoutingProspectToPlayer(formData: FormData) {
         firstName: prospect.firstName,
         lastName: prospect.lastName,
         birthDate: prospect.birthDate,
-        position: prospect.position,
+        position: prospect.positions[0] ?? null,
       },
     });
 

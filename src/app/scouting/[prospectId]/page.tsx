@@ -84,12 +84,12 @@ export default async function ScoutingProspectPage({
   }
 
   const canManage = hasPermission(context, "scouting.manage", context.activeTeam?.id);
-  const positionGroup = mapPositionToGroup(prospect.position);
+  const positionGroups = Array.from(new Set(prospect.positions.map(mapPositionToGroup)));
   const attributeDefinitions = await prisma.playerAttributeDefinition.findMany({
     where: {
       clubId: context.club.id,
       positionGroup: {
-        in: ["ALL", positionGroup],
+        in: ["ALL", ...positionGroups],
       },
     },
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
@@ -133,9 +133,11 @@ export default async function ScoutingProspectPage({
                 <h1 className="text-4xl font-bold tracking-normal text-foreground sm:text-5xl">
                   {prospect.firstName} {prospect.lastName}
                 </h1>
-                {prospect.position ? (
-                  <span className="rounded-lg bg-primary px-3 py-1 text-sm font-bold text-white">{prospect.position}</span>
-                ) : null}
+                {prospect.positions.map((position) => (
+                  <span className="rounded-lg bg-primary px-3 py-1 text-sm font-bold text-white" key={position}>
+                    {position}
+                  </span>
+                ))}
                 <StatusBadge status={prospect.status} />
               </div>
               <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium text-muted">

@@ -36,7 +36,7 @@ export default async function ScoutingPage() {
     id: prospect.id,
     name: `${prospect.firstName} ${prospect.lastName}`,
     initials: getInitials(prospect.firstName, prospect.lastName),
-    position: prospect.position,
+    positions: prospect.positions,
     currentClub: prospect.currentClub,
     status: prospect.status,
     interestLevel: prospect.interestLevel,
