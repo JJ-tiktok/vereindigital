@@ -15,7 +15,7 @@ export function ScoutingProspectForm({
     firstName: string;
     lastName: string;
     birthDate: Date | null;
-    position: string | null;
+    positions: string[];
     currentClub: string | null;
     phone: string | null;
     email: string | null;
@@ -65,23 +65,26 @@ export function ScoutingProspectForm({
             type="date"
           />
         </div>
-        <div>
-          <label className="text-sm font-semibold text-foreground" htmlFor="position">
-            Position
-          </label>
-          <select
-            className="mt-2 h-11 w-full rounded-lg border border-border px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-soft"
-            defaultValue={prospect?.position ?? ""}
-            id="position"
-            name="position"
-          >
-            <option value="">Unbekannt</option>
+        <div className="sm:col-span-2">
+          <span className="text-sm font-semibold text-foreground">Positionen</span>
+          <p className="mt-1 text-xs text-muted">Mehrfachauswahl moeglich, z.B. OM oder ST. Erste Auswahl gilt als Hauptposition.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             {scoutingPositions.map((position) => (
-              <option key={position} value={position}>
+              <label
+                className="flex h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-foreground transition has-checked:border-primary has-checked:bg-primary-soft has-checked:text-primary"
+                key={position}
+              >
+                <input
+                  className="size-4"
+                  defaultChecked={prospect?.positions.includes(position) ?? false}
+                  name="positions"
+                  type="checkbox"
+                  value={position}
+                />
                 {position}
-              </option>
+              </label>
             ))}
-          </select>
+          </div>
         </div>
         <Field defaultValue={prospect?.currentClub ?? undefined} label="Aktueller Verein" name="currentClub" />
         <Field defaultValue={prospect?.phone ?? undefined} label="Telefon" name="phone" type="tel" />

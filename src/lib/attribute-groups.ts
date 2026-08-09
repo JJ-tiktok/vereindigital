@@ -174,3 +174,12 @@ export function fileEntryTypeLabel(type: string) {
       return "Sonstige Notiz";
   }
 }
+
+export function fileEntryVisibilityLabel(visibility: string) {
+  switch (visibility) {
+    case "PLAYER":
+      return "Spieler-Notiz";
+    default:
+      return "Intern";
+  }
+}

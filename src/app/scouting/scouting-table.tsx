@@ -11,7 +11,7 @@ export type ScoutingRow = {
   id: string;
   name: string;
   initials: string;
-  position: string | null;
+  positions: string[];
   currentClub: string | null;
   status: ScoutingStatus;
   interestLevel: number | null;
@@ -26,8 +26,8 @@ export function ScoutingTable({ prospects }: { prospects: ScoutingRow[] }) {
   const positionOptions = useMemo(() => {
     const values = new Set<string>();
     for (const prospect of prospects) {
-      if (prospect.position) {
-        values.add(prospect.position);
+      for (const value of prospect.positions) {
+        values.add(value);
       }
     }
     return Array.from(values).sort((a, b) => a.localeCompare(b));
@@ -40,7 +40,7 @@ export function ScoutingTable({ prospects }: { prospects: ScoutingRow[] }) {
       if (term && !prospect.name.toLowerCase().includes(term)) {
         return false;
       }
-      if (position && prospect.position !== position) {
+      if (position && !prospect.positions.includes(position)) {
         return false;
       }
       if (status && prospect.status !== status) {
@@ -118,13 +118,13 @@ export function ScoutingTable({ prospects }: { prospects: ScoutingRow[] }) {
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-foreground">{prospect.name}</p>
                       <p className="mt-1 text-sm text-muted lg:hidden">
-                        {prospect.position ?? "?"} · {prospect.currentClub ?? "Verein unbekannt"} ·{" "}
-                        {scoutingStatusLabel(prospect.status)}
+                        {prospect.positions.length > 0 ? prospect.positions.join(" / ") : "?"} ·{" "}
+                        {prospect.currentClub ?? "Verein unbekannt"} · {scoutingStatusLabel(prospect.status)}
                       </p>
                     </div>
                   </div>
                   <span className="hidden w-max rounded-lg bg-surface-muted px-3 py-1 text-center text-xs font-semibold text-foreground lg:block">
-                    {prospect.position ?? "-"}
+                    {prospect.positions.length > 0 ? prospect.positions.join(" / ") : "-"}
                   </span>
                   <span className="hidden text-sm text-foreground lg:block">{prospect.currentClub ?? "-"}</span>
                   <span className="hidden lg:block">

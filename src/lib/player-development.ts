@@ -7,6 +7,7 @@ export {
   defaultAttributes,
   deprecatedAttributeKeys,
   fileEntryTypeLabel,
+  fileEntryVisibilityLabel,
   goalkeeperDetailSections,
   goalkeeperOverviewGroups,
   goalkeeperSubgroups,

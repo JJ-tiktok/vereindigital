@@ -1,6 +1,6 @@
 "use server";
 
-import { CalendarEventType, PlayerFileEntryType } from "@prisma/client";
+import { CalendarEventType, PlayerFileEntryType, PlayerFileEntryVisibility } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -91,6 +91,7 @@ export async function createPlayerFileEntry(formData: FormData) {
     z.object({
       playerProfileId: zRequiredString,
       type: z.enum(PlayerFileEntryType),
+      visibility: z.enum(PlayerFileEntryVisibility),
       title: zRequiredString,
       body: zRequiredString,
       occurredAt: zDate,
@@ -102,7 +103,7 @@ export async function createPlayerFileEntry(formData: FormData) {
     redirect("/kader");
   }
 
-  const { playerProfileId, type, title, body, occurredAt, followUpAt } = parsed.data;
+  const { playerProfileId, type, visibility, title, body, occurredAt, followUpAt } = parsed.data;
 
   await ensurePlayerInTeam(playerProfileId, activeTeam.id, context.club.id);
 
@@ -111,6 +112,7 @@ export async function createPlayerFileEntry(formData: FormData) {
       playerProfileId,
       teamId: activeTeam.id,
       type,
+      visibility,
       title,
       body,
       occurredAt,
@@ -119,6 +121,72 @@ export async function createPlayerFileEntry(formData: FormData) {
       createdByUserId: context.appUser.id,
       updatedByUserId: context.appUser.id,
     },
+  });
+
+  revalidatePath(`/kader/${playerProfileId}`);
+  redirect(`/kader/${playerProfileId}`);
+}
+
+export async function updatePlayerFileEntry(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "player.profile.manage", activeTeam.id);
+
+  const parsed = parseForm(
+    formData,
+    z.object({
+      entryId: zRequiredString,
+      playerProfileId: zRequiredString,
+      type: z.enum(PlayerFileEntryType),
+      visibility: z.enum(PlayerFileEntryVisibility),
+      title: zRequiredString,
+      body: zRequiredString,
+      occurredAt: zDate,
+      followUpAt: zOptionalDate,
+    }),
+  );
+
+  if (!parsed.success) {
+    redirect("/kader");
+  }
+
+  const { entryId, playerProfileId, type, visibility, title, body, occurredAt, followUpAt } = parsed.data;
+
+  await ensurePlayerInTeam(playerProfileId, activeTeam.id, context.club.id);
+
+  await prisma.playerFileEntry.update({
+    where: { id: entryId, playerProfileId, teamId: activeTeam.id },
+    data: {
+      type,
+      visibility,
+      title,
+      body,
+      occurredAt,
+      followUpAt,
+      updatedByUserId: context.appUser.id,
+    },
+  });
+
+  revalidatePath(`/kader/${playerProfileId}`);
+  redirect(`/kader/${playerProfileId}`);
+}
+
+export async function deletePlayerFileEntry(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "player.profile.manage", activeTeam.id);
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const playerProfileId = String(formData.get("playerProfileId") ?? "");
+
+  if (!entryId || !playerProfileId) {
+    redirect("/kader");
+  }
+
+  await ensurePlayerInTeam(playerProfileId, activeTeam.id, context.club.id);
+
+  await prisma.playerFileEntry.deleteMany({
+    where: { id: entryId, playerProfileId, teamId: activeTeam.id },
   });
 
   revalidatePath(`/kader/${playerProfileId}`);

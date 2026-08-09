@@ -6,6 +6,7 @@ import { PlayerForm } from "@/app/kader/player-form";
 import { PlayerAvailabilityForm } from "@/app/kader/[playerId]/player-availability-form";
 import { RemovePlayerButton } from "@/app/kader/[playerId]/remove-player-button";
 import { AvailabilityRow } from "@/app/abwesenheiten/availability-row";
+import { FileEntryRow } from "@/app/kader/[playerId]/file-entry-row";
 import { createPlayerAttributeSnapshot, createPlayerFileEntry, removePlayerFromActiveTeam } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { availabilityReason } from "@/lib/actions/helpers";
@@ -13,7 +14,6 @@ import { formatDate, toDateInputValue } from "@/lib/format";
 import {
   attributeCategoryLabel,
   ensureDefaultAttributeDefinitions,
-  fileEntryTypeLabel,
   getPlayerSeasonHistory,
   goalkeeperDetailSections,
   goalkeeperOverviewGroups,
@@ -345,9 +345,17 @@ export default async function PlayerDetailPage({
                         <SectionHeader
                           action={<FileText className="size-5 text-muted" aria-hidden="true" />}
                           title="Spielerakte & Notizen"
-                          description="Letzte interne Eintraege aus dem Trainerteam."
+                          description="Interne Eintraege und Spieler-Notizen aus dem Trainerteam."
                         />
-                        <NotesList entries={player.fileEntries.slice(0, 4)} />
+                        <div className="flex justify-end px-5 pt-4">
+                          <a
+                            className="text-xs font-semibold text-primary hover:underline"
+                            href={`/kader/${player.id}/druck/notizen`}
+                          >
+                            Gespraechsnotizen exportieren
+                          </a>
+                        </div>
+                        <NotesList entries={player.fileEntries.slice(0, 4)} playerProfileId={player.id} />
                         <form action={createPlayerFileEntry} className="grid gap-3 border-t border-border p-5">
                           <input name="playerProfileId" type="hidden" value={player.id} />
                           <div className="grid gap-3 md:grid-cols-2">
@@ -363,6 +371,13 @@ export default async function PlayerDetailPage({
                                 <option value="DISCIPLINE">Verhalten / Disziplin</option>
                                 <option value="LOAD_INJURY">Verletzung / Belastung</option>
                                 <option value="OTHER">Sonstige Notiz</option>
+                              </select>
+                            </label>
+                            <label className="text-sm font-semibold text-foreground">
+                              Sichtbarkeit
+                              <select className="mt-2 h-10 w-full rounded-lg border border-border px-3 text-sm" defaultValue="INTERNAL" name="visibility">
+                                <option value="INTERNAL">Intern (nur Trainerteam)</option>
+                                <option value="PLAYER">Spieler-Notiz (fuer Gespraech)</option>
                               </select>
                             </label>
                             <Field defaultValue={today} label="Datum" name="occurredAt" type="date" required />
@@ -632,16 +647,19 @@ function PitchCard({ position }: { position: string | null }) {
 
 function NotesList({
   entries,
+  playerProfileId,
 }: {
   entries: {
     id: string;
     type: string;
+    visibility: string;
     title: string;
     body: string;
     occurredAt: Date;
     followUpAt: Date | null;
     createdByUser: { displayName: string | null; email: string } | null;
   }[];
+  playerProfileId: string;
 }) {
   if (entries.length === 0) {
     return <p className="p-5 text-sm text-muted">Noch keine Akteneintraege vorhanden.</p>;
@@ -650,24 +668,7 @@ function NotesList({
   return (
     <div className="space-y-4 p-5">
       {entries.map((entry) => (
-        <article className="border-l-2 border-primary pl-4" key={entry.id}>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-foreground">{formatDate(entry.occurredAt)}</span>
-            <span className="rounded-full bg-primary-soft px-2 py-1 text-xs font-semibold text-primary">
-              {fileEntryTypeLabel(entry.type)}
-            </span>
-            {entry.followUpAt ? (
-              <span className="rounded-full bg-warning-soft px-2 py-1 text-xs font-semibold text-warning">
-                Wiedervorlage {formatDate(entry.followUpAt)}
-              </span>
-            ) : null}
-          </div>
-          <h3 className="mt-2 font-semibold text-foreground">{entry.title}</h3>
-          <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-6 text-muted">{entry.body}</p>
-          <p className="mt-2 text-xs text-muted">
-            {entry.createdByUser?.displayName ?? entry.createdByUser?.email ?? "Trainerteam"}
-          </p>
-        </article>
+        <FileEntryRow entry={entry} key={entry.id} playerProfileId={playerProfileId} />
       ))}
     </div>
   );

@@ -127,6 +127,11 @@ enum PlayerFileEntryType {
   OTHER
 }
 
+enum PlayerFileEntryVisibility {
+  INTERNAL
+  PLAYER
+}
+
 enum PlayerFormTrend {
   UP
   STABLE
@@ -676,6 +681,7 @@ model PlayerFileEntry {
   playerProfileId String
   teamId          String
   type            PlayerFileEntryType
+  visibility      PlayerFileEntryVisibility @default(INTERNAL)
   title           String
   body            String
   occurredAt      DateTime
@@ -692,6 +698,7 @@ model PlayerFileEntry {
   updatedByUser User?         @relation("PlayerFileEntryUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
   @@index([playerProfileId, occurredAt])
+  @@index([playerProfileId, visibility])
   @@index([teamId])
   @@index([createdByUserId])
   @@index([updatedByUserId])
@@ -972,7 +979,7 @@ model ScoutingProspect {
   firstName                String
   lastName                 String
   birthDate                DateTime?
-  position                 String?
+  positions                String[]       @default([])
   currentClub              String?
   phone                    String?
   email                    String?
