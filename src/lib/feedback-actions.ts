@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAppContext } from "@/lib/app-context";
+import { sendFeedbackResolvedEmail } from "@/lib/email";
 import { canUseFeedback, getActiveTeamRoleKeys } from "@/lib/feedback-permissions";
 import { prisma } from "@/lib/prisma";
 
@@ -95,6 +96,23 @@ export async function updateFeedbackStatus(formData: FormData) {
   const feedbackId = readString(formData, "feedbackId");
   const status = parseFeedbackStatus(readString(formData, "status"));
 
+  const existing = await prisma.feedbackItem.findFirst({
+    where: {
+      clubId: context.club.id,
+      id: feedbackId,
+    },
+    select: {
+      status: true,
+      title: true,
+      createdByUserId: true,
+      createdByUser: {
+        select: {
+          email: true,
+        },
+      },
+    },
+  });
+
   await prisma.feedbackItem.update({
     where: {
       clubId: context.club.id,
@@ -105,9 +123,54 @@ export async function updateFeedbackStatus(formData: FormData) {
     },
   });
 
+  const justResolved = existing && existing.status !== FeedbackStatus.DONE && status === FeedbackStatus.DONE;
+
+  if (justResolved && existing.createdByUserId) {
+    await prisma.feedbackNotification.create({
+      data: {
+        userId: existing.createdByUserId,
+        feedbackItemId: feedbackId,
+      },
+    });
+
+    if (existing.createdByUser?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+      const feedbackUrl = `${appUrl.replace(/\/$/, "")}/feedback/${feedbackId}`;
+
+      try {
+        await sendFeedbackResolvedEmail({
+          to: existing.createdByUser.email,
+          title: existing.title,
+          feedbackUrl,
+        });
+      } catch (error) {
+        console.error("Feedback-Erledigt-E-Mail konnte nicht verschickt werden.", error);
+      }
+    }
+  }
+
   revalidatePath("/feedback");
   revalidatePath(`/feedback/${feedbackId}`);
   redirect(`/feedback/${feedbackId}`);
+}
+
+export async function markFeedbackNotificationRead(formData: FormData) {
+  const context = await requireAppContext();
+  const notificationId = readString(formData, "notificationId");
+  const redirectTo = readString(formData, "redirectTo") || "/dashboard";
+
+  await prisma.feedbackNotification.updateMany({
+    where: {
+      id: notificationId,
+      userId: context.appUser.id,
+    },
+    data: {
+      readAt: new Date(),
+    },
+  });
+
+  revalidatePath(redirectTo);
+  redirect(redirectTo);
 }
 
 export async function markFeedbackTriaged(formData: FormData) {

@@ -308,6 +308,7 @@ model User {
   scoutingEventsCreated             ScoutingEvent[]             @relation("ScoutingEventCreatedBy")
   scoutingEventsUpdated             ScoutingEvent[]             @relation("ScoutingEventUpdatedBy")
   scoutingAttributeSnapshotsCreated ScoutingAttributeSnapshot[] @relation("ScoutingAttributeSnapshotCreatedBy")
+  feedbackNotifications             FeedbackNotification[]
 
   @@index([email])
   @@map("users")
@@ -758,11 +759,28 @@ model FeedbackItem {
   season        Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
   createdByUser User?   @relation("FeedbackItemCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
 
+  notifications FeedbackNotification[]
+
   @@index([clubId, status, createdAt])
   @@index([teamId])
   @@index([seasonId])
   @@index([createdByUserId])
   @@map("feedback_items")
+}
+
+model FeedbackNotification {
+  id             String    @id @default(cuid())
+  userId         String
+  feedbackItemId String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedbackItem FeedbackItem @relation(fields: [feedbackItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([feedbackItemId])
+  @@map("feedback_notifications")
 }
 
 model TrainingExercise {
