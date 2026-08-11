@@ -3,6 +3,7 @@ import {
   Binoculars,
   CalendarDays,
   CalendarRange,
+  CheckCircle2,
   ChevronRight,
   ClipboardList,
   MailPlus,
@@ -16,6 +17,7 @@ import {
   Trophy,
   Users,
   UserCog,
+  X,
 } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -26,6 +28,8 @@ import { Sidebar, type SidebarNavEntry } from "@/components/sidebar";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { hasPermission, type AppContext } from "@/lib/app-context";
 import { canUseFeedback } from "@/lib/feedback-permissions";
+import { markFeedbackNotificationRead } from "@/lib/feedback-actions";
+import { prisma } from "@/lib/prisma";
 
 const primaryNavItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -96,6 +100,25 @@ export async function AppShell({
   const cookieStore = await cookies();
   const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "1";
 
+  const unreadFeedbackNotifications = await prisma.feedbackNotification.findMany({
+    where: {
+      userId: context.appUser.id,
+      readAt: null,
+    },
+    include: {
+      feedbackItem: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 5,
+  });
+
   const clubSwitcherSlot =
     context.clubs.length > 1 ? (
       <div>
@@ -138,6 +161,35 @@ export async function AppShell({
         />
 
         <section className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          {unreadFeedbackNotifications.length > 0 ? (
+            <div className="mb-4 space-y-2">
+              {unreadFeedbackNotifications.map((notification) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm text-success"
+                  key={notification.id}
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      Dein Feedback{" "}
+                      <Link className="font-semibold underline" href={`/feedback/${notification.feedbackItem.id}`}>
+                        {notification.feedbackItem.title}
+                      </Link>{" "}
+                      wurde umgesetzt.
+                    </span>
+                  </div>
+                  <form action={markFeedbackNotificationRead}>
+                    <input name="notificationId" type="hidden" value={notification.id} />
+                    <input name="redirectTo" type="hidden" value={activePath} />
+                    <button className="rounded-lg p-1 text-success transition hover:bg-success/10" type="submit">
+                      <X className="size-4" aria-hidden="true" />
+                      <span className="sr-only">Als gelesen markieren</span>
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          ) : null}
           {showFeedback ? (
             <div className="mb-4 flex justify-end">
               <FeedbackWidget />

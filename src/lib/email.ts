@@ -71,6 +71,50 @@ export async function sendInvitationEmail(params: {
   }
 }
 
+export async function sendFeedbackResolvedEmail(params: { to: string; title: string; feedbackUrl: string }) {
+  const client = getResendClient();
+
+  if (!client) {
+    console.warn("RESEND_API_KEY ist nicht gesetzt, Feedback-Erledigt-E-Mail wurde nicht verschickt.");
+    return { sent: false };
+  }
+
+  const from = process.env.INVITATION_EMAIL_FROM || "VereinDigital <onboarding@resend.dev>";
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h1 style="font-size: 20px;">Dein Feedback wurde umgesetzt</h1>
+      <p>
+        Dein Feedback <strong>${escapeHtml(params.title)}</strong> wurde als erledigt markiert.
+      </p>
+      <p>
+        <a href="${params.feedbackUrl}" style="display: inline-block; padding: 10px 16px; background: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px;">
+          Feedback ansehen
+        </a>
+      </p>
+    </div>
+  `;
+
+  try {
+    const result = await client.emails.send({
+      from,
+      to: params.to,
+      subject: "Dein Feedback wurde umgesetzt",
+      html,
+    });
+
+    if (result.error) {
+      console.error("Feedback-Erledigt-E-Mail konnte nicht verschickt werden.", result.error);
+      return { sent: false };
+    }
+
+    return { sent: true };
+  } catch (error) {
+    console.error("Feedback-Erledigt-E-Mail konnte nicht verschickt werden.", error);
+    return { sent: false };
+  }
+}
+
 function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
