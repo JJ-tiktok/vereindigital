@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs } from "@/components/app-shell";
 import { MatchLineupEditor } from "@/app/spiele/[matchId]/matchday-lineup-editor";
+import { MatchNoteColumn } from "@/app/spiele/[matchId]/match-note-column";
 import { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic } from "@/lib/actions";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime, getInitials } from "@/lib/format";
@@ -41,6 +42,14 @@ export default async function MatchDetailPage({
       },
       lineupSlots: {
         orderBy: { sortOrder: "asc" },
+      },
+      notes: {
+        include: {
+          createdByUser: {
+            select: { displayName: true, email: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
       },
     },
   });
@@ -148,6 +157,11 @@ export default async function MatchDetailPage({
     playerProfileId: slot.playerProfileId,
   }));
   const canManageMatch = hasPermission(context, "match.manage", activeTeam.id);
+  const notesByCategory = {
+    OWN_TEAM: match.notes.filter((note) => note.category === "OWN_TEAM"),
+    OPPONENT: match.notes.filter((note) => note.category === "OPPONENT"),
+    GENERAL: match.notes.filter((note) => note.category === "GENERAL"),
+  };
 
   return (
     <AppShell context={context} activePath="/spiele">
@@ -269,6 +283,40 @@ export default async function MatchDetailPage({
             />
           </form>
         </div>
+
+        {canManageMatch ? (
+          <article className="rounded-lg border border-border bg-surface p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">Trainerteam</p>
+            <h2 className="mt-1 text-2xl font-bold text-foreground">Anmerkungen</h2>
+            <p className="mt-1 text-sm text-muted">
+              Eindruecke zum Spiel festhalten, unabhaengig von den Spielerbewertungen - fuer die spaetere
+              Besprechung im Trainerteam.
+            </p>
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              <MatchNoteColumn
+                category="OWN_TEAM"
+                description="Eigene Mannschaft: Leistung, Auffaelligkeiten, Trainingsansaetze."
+                matchId={match.id}
+                notes={notesByCategory.OWN_TEAM}
+                title="Eigenes Team"
+              />
+              <MatchNoteColumn
+                category="OPPONENT"
+                description="Beobachtungen zum Gegner."
+                matchId={match.id}
+                notes={notesByCategory.OPPONENT}
+                title="Gegner"
+              />
+              <MatchNoteColumn
+                category="GENERAL"
+                description="Sonstiges, z.B. Schiedsrichter, Rahmenbedingungen."
+                matchId={match.id}
+                notes={notesByCategory.GENERAL}
+                title="Allgemein"
+              />
+            </div>
+          </article>
+        ) : null}
       </div>
     </AppShell>
   );

@@ -1,6 +1,6 @@
 "use server";
 
-import { LineupStatus, MatchStatus } from "@prisma/client";
+import { LineupStatus, MatchNoteCategory, MatchStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -277,6 +277,90 @@ export async function updatePlayerMatchStat(formData: FormData) {
   });
 
   revalidateMatches(matchId);
+}
+
+const matchNoteSchema = z.object({
+  matchId: zRequiredString,
+  category: z.enum(MatchNoteCategory),
+  body: zRequiredString,
+});
+
+export async function createMatchNote(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "match.manage", activeTeam.id);
+
+  const parsed = parseForm(formData, matchNoteSchema);
+
+  if (!parsed.success) {
+    redirect("/spiele");
+  }
+
+  const { matchId, category, body } = parsed.data;
+
+  const match = await prisma.match.findFirst({
+    where: { id: matchId, teamId: activeTeam.id },
+    select: { id: true },
+  });
+
+  if (!match) {
+    redirect("/spiele");
+  }
+
+  await prisma.matchNote.create({
+    data: {
+      matchId,
+      category,
+      body,
+      createdByUserId: context.appUser.id,
+    },
+  });
+
+  revalidateMatches(matchId);
+  redirect(`/spiele/${matchId}`);
+}
+
+export async function updateMatchNote(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "match.manage", activeTeam.id);
+
+  const noteId = String(formData.get("noteId") ?? "");
+  const parsed = parseForm(formData, matchNoteSchema);
+
+  if (!parsed.success) {
+    redirect("/spiele");
+  }
+
+  const { matchId, category, body } = parsed.data;
+
+  await prisma.matchNote.updateMany({
+    where: { id: noteId, matchId, match: { teamId: activeTeam.id } },
+    data: { category, body },
+  });
+
+  revalidateMatches(matchId);
+  redirect(`/spiele/${matchId}`);
+}
+
+export async function deleteMatchNote(formData: FormData) {
+  const context = await requireAppContext();
+  const activeTeam = requireActiveTeam(context);
+  requirePermission(context, "match.manage", activeTeam.id);
+
+  const noteId = String(formData.get("noteId") ?? "");
+  const matchId = String(formData.get("matchId") ?? "");
+
+  if (!noteId || !matchId) {
+    redirect("/spiele");
+  }
+
+  await prisma.matchNote.deleteMany({
+    where: { id: noteId, matchId, match: { teamId: activeTeam.id } },
+  });
+
+  revalidateMatches(matchId);
+  redirect(`/spiele/${matchId}`);
 }
 
 export async function updateAllPlayerMatchStats(formData: FormData) {
