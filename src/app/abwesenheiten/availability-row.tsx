@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { deletePlayerAvailability, updatePlayerAvailability, type ActionState } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { toDateTimeLocalValue } from "@/lib/format";
 
 type Availability = {
@@ -97,9 +98,9 @@ export function AvailabilityRow({ availability, redirectTo }: { availability: Av
         >
           <input name="availabilityId" type="hidden" value={availability.id} />
           {redirectTo ? <input name="redirectTo" type="hidden" value={redirectTo} /> : null}
-          <button className="h-9 rounded-lg border border-danger-soft px-3 text-xs font-semibold text-danger" type="submit">
+          <SubmitButton className="h-9 rounded-lg border border-danger-soft px-3 text-xs font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="...">
             Loeschen
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>

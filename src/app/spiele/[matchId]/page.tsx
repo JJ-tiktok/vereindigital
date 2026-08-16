@@ -2,6 +2,7 @@ import { BarChart3, CalendarClock, LayoutGrid, Save } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { MatchLineupEditor } from "@/app/spiele/[matchId]/matchday-lineup-editor";
 import { MatchNoteColumn } from "@/app/spiele/[matchId]/match-note-column";
 import { updateAllPlayerMatchStats, updateMatchResult, updateMatchTactic } from "@/lib/actions";
@@ -233,10 +234,13 @@ export default async function MatchDetailPage({
                         ))}
                       </select>
                     </label>
-                    <button className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+                    <SubmitButton
+                      className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      pendingLabel="Wird uebernommen..."
+                    >
                       <Save className="size-4" aria-hidden="true" />
                       Taktik uebernehmen
-                    </button>
+                    </SubmitButton>
                   </>
                 ) : (
                   <p className="mt-4 text-sm leading-6 text-muted">
@@ -266,10 +270,13 @@ export default async function MatchDetailPage({
               <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
                 <span className="rounded-full bg-primary-soft px-3 py-1 text-primary">{playedRows.length} eingesetzt</span>
                 <span className="rounded-full bg-surface-muted px-3 py-1 text-foreground">{playerRows.length - playedRows.length} ohne Einsatz</span>
-                <button className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="submit">
+                <SubmitButton
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  pendingLabel="Speichert..."
+                >
                   <Save className="size-4" aria-hidden="true" />
                   Alle speichern
-                </button>
+                </SubmitButton>
               </div>
             </div>
 
@@ -414,10 +421,13 @@ function MatchHero({
                 <option value="FINISHED">Beendet</option>
                 <option value="CANCELLED">Abgesagt</option>
               </select>
-              <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-xs font-bold text-white" type="submit">
+              <SubmitButton
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                pendingLabel="Speichert..."
+              >
                 <Save className="size-3.5" aria-hidden="true" />
                 Ergebnis speichern
-              </button>
+              </SubmitButton>
             </div>
           </form>
         ) : (

@@ -6,6 +6,7 @@ import { AppShell, Breadcrumbs, EmptyState, PageHeader } from "@/components/app-
 import { AttendancePanel } from "@/app/kalender/[eventId]/attendance-panel";
 import { TrainingPerformanceTable } from "@/app/kalender/[eventId]/training-performance-table";
 import { PlayerTabs } from "@/components/player-tabs";
+import { SubmitButton } from "@/components/submit-button";
 import { addExerciseToTrainingPlan, upsertTrainingPlan } from "@/lib/actions";
 import { hasPermission, requireActiveTeam, requireAppContext } from "@/lib/app-context";
 import { formatDateTime } from "@/lib/format";
@@ -182,9 +183,9 @@ export default async function CalendarEventDetailPage({
               name="notes"
               placeholder="Notizen zur Einheit"
             />
-            <button className="mt-3 h-10 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+            <SubmitButton className="mt-3 h-10 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
               Plan speichern
-            </button>
+            </SubmitButton>
           </form>
 
           <form action={addExerciseToTrainingPlan} className="rounded-lg border border-border bg-surface p-4">
@@ -210,9 +211,9 @@ export default async function CalendarEventDetailPage({
               name="coachingPoints"
               placeholder="Spezifische Coaching Points fuer diese Einheit"
             />
-            <button className="mt-3 h-10 w-full rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white" type="submit">
+            <SubmitButton className="mt-3 h-10 w-full rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Wird hinzugefuegt...">
               Hinzufuegen
-            </button>
+            </SubmitButton>
             {catalogExercises.length === 0 ? (
               <Link className="mt-3 inline-flex text-sm font-semibold text-primary" href="/training/new">
                 Erst eine Kataloguebung anlegen

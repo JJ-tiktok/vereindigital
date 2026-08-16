@@ -2,6 +2,7 @@ import { Lock, Trash2 } from "lucide-react";
 
 import { CreateRoleForm } from "@/app/rollen/create-role-form";
 import { AppShell, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { deleteRole, updateAllRolePermissions } from "@/lib/actions";
 import { requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
@@ -58,12 +59,12 @@ export default async function RolesPage({
         <form action={updateAllRolePermissions} className="space-y-4">
           <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-border bg-surface p-4">
             <p className="text-sm font-semibold text-foreground">Aenderungen an allen Rollen gemeinsam speichern.</p>
-            <button
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong"
-              type="submit"
+            <SubmitButton
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="Speichert..."
             >
               Alle Rollen speichern
-            </button>
+            </SubmitButton>
           </div>
 
           {roles.map((role) => {
@@ -85,19 +86,19 @@ export default async function RolesPage({
                   </div>
 
                   {!role.isSystemRole ? (
-                    <button
+                    <SubmitButton
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={inUse}
                       formAction={deleteRole}
                       formNoValidate
                       name="roleId"
+                      pendingLabel="..."
                       title={inUse ? "Rolle wird noch verwendet und kann nicht geloescht werden." : undefined}
-                      type="submit"
                       value={role.id}
                     >
                       <Trash2 className="size-4" aria-hidden="true" />
                       Loeschen
-                    </button>
+                    </SubmitButton>
                   ) : null}
                 </div>
 

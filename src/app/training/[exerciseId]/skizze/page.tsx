@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { SketchCanvasPanel, SketchEditorProvider, SketchToolPanel } from "@/app/training/[exerciseId]/sketch-editor";
+import { DeleteSketchButton } from "@/app/training/[exerciseId]/skizze/delete-sketch-button";
 import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
-import { createTrainingExerciseSketch, deleteTrainingExerciseSketch } from "@/lib/actions";
+import { createTrainingExerciseSketch } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { prisma } from "@/lib/prisma";
 import { trainingPitchLabel } from "@/lib/training";
@@ -78,15 +80,7 @@ export default async function TrainingSketchPage({
             <article className="rounded-2xl border border-border bg-surface p-3 shadow-sm">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Skizzen</p>
-                {activeSketch ? (
-                  <form action={deleteTrainingExerciseSketch}>
-                    <input name="exerciseId" type="hidden" value={exercise.id} />
-                    <input name="sketchId" type="hidden" value={activeSketch.id} />
-                    <button className="text-xs font-semibold text-danger hover:text-danger-strong" type="submit">
-                      Loeschen
-                    </button>
-                  </form>
-                ) : null}
+                {activeSketch ? <DeleteSketchButton exerciseId={exercise.id} sketchId={activeSketch.id} /> : null}
               </div>
               <div className="mt-2 space-y-2">
                 {exercise.sketches.length > 0 ? (
@@ -123,9 +117,9 @@ export default async function TrainingSketchPage({
                   name="title"
                   placeholder="z.B. Phase 2"
                 />
-                <button className="h-9 shrink-0 rounded-lg bg-primary px-3 text-sm font-bold text-white" type="submit">
+                <SubmitButton className="h-9 shrink-0 rounded-lg bg-primary px-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="...">
                   +
-                </button>
+                </SubmitButton>
               </form>
             </article>
 

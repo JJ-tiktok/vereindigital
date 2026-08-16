@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { acceptInvitation } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { prisma } from "@/lib/prisma";
 
 export default async function InvitePage({
@@ -68,9 +69,9 @@ export default async function InvitePage({
             clerkUser ? (
               <form action={acceptInvitation} className="mt-5">
                 <input name="token" type="hidden" value={token} />
-                <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+                <SubmitButton className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Wird angenommen...">
                   Einladung annehmen
-                </button>
+                </SubmitButton>
               </form>
             ) : (
               <div className="mt-5 grid gap-3">

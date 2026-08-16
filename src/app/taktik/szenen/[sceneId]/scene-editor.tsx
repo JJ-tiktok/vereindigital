@@ -13,6 +13,7 @@ import {
 } from "react";
 import { Arrow, Circle, Ellipse, Group, Image as KonvaImageNode, Layer, Line, Path, Rect, Stage, Text, Transformer } from "react-konva";
 
+import { SubmitButton } from "@/components/submit-button";
 import { saveTacticSceneStep } from "@/lib/actions";
 
 // Own, independent copy of the sketch-editor's coordinate model (see
@@ -603,9 +604,12 @@ export function SceneCanvasPanel() {
         <input name="sceneId" type="hidden" value={sceneId} />
         <input name="stepId" type="hidden" value={stepId ?? ""} />
         <input name="elementsData" type="hidden" value={elementsData} />
-        <button className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-strong" type="submit">
+        <SubmitButton
+          className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="Speichert..."
+        >
           Szene speichern
-        </button>
+        </SubmitButton>
       </form>
     </section>
   );

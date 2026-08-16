@@ -13,6 +13,7 @@ import {
 } from "react";
 import { Arrow, Circle, Ellipse, Group, Image as KonvaImageNode, Layer, Line, Path, Rect, Stage, Text, Transformer } from "react-konva";
 
+import { SubmitButton } from "@/components/submit-button";
 import { updateTrainingExerciseSketch } from "@/lib/actions";
 
 // Elements store x/y (and width/height, x1/y1/x2/y2) as 0-100 percentages of the field.
@@ -811,9 +812,12 @@ export function SketchCanvasPanel() {
         <button className="rounded-xl border border-border px-5 py-3 text-sm font-bold text-foreground" onClick={undo} type="button">
           Rueckgaengig
         </button>
-        <button className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-strong" type="submit">
+        <SubmitButton
+          className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="Speichert..."
+        >
           Skizze speichern
-        </button>
+        </SubmitButton>
       </form>
     </section>
   );

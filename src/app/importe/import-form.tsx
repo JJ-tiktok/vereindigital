@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/submit-button";
 import {
   createAiUrlImportJob,
   createFixturesTemplateImportJob,
@@ -71,9 +72,9 @@ export function ImportForm({
               name="csv"
             />
           </div>
-          <button className="mt-5 h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+          <SubmitButton className="mt-5 h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Wird geprueft...">
             CSV pruefen
-          </button>
+          </SubmitButton>
         </form>
 
         <form action={createAiUrlImportJob} className="rounded-lg border border-border bg-surface p-5">
@@ -98,9 +99,12 @@ export function ImportForm({
               type="url"
             />
           </div>
-          <button className="mt-5 h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground" type="submit">
+          <SubmitButton
+            className="mt-5 h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            pendingLabel="Wird ausgewertet..."
+          >
             URL pruefen
-          </button>
+          </SubmitButton>
         </form>
       </section>
 

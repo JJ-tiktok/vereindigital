@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { deleteTactic, renameTactic, saveTactic, saveTacticAsNew } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import {
   createSlotsFromFormation,
   dutyAbbreviation,
@@ -557,16 +558,19 @@ export function TacticsPlanner({
             value={name}
           />
         </label>
-        <button
-          className="h-10 rounded-xl border border-border px-4 text-sm font-bold text-foreground"
+        <SubmitButton
+          className="h-10 rounded-xl border border-border px-4 text-sm font-bold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           formAction={saveTacticAsNew}
-          type="submit"
+          pendingLabel="Wird angelegt..."
         >
           Als neue Taktik speichern
-        </button>
-        <button className="h-10 rounded-xl bg-primary px-4 text-sm font-bold text-white" type="submit">
+        </SubmitButton>
+        <SubmitButton
+          className="h-10 rounded-xl bg-primary px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="Speichert..."
+        >
           Speichern
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

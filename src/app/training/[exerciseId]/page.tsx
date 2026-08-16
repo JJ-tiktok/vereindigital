@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { TrainingSketchPreview } from "@/components/training-sketch-preview";
 import { duplicateTrainingExercise } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
@@ -57,13 +58,13 @@ export default async function TrainingExerciseDetailPage({
           <>
             <form action={duplicateTrainingExercise}>
               <input name="exerciseId" type="hidden" value={exercise.id} />
-              <button
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
-                type="submit"
+              <SubmitButton
+                className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                pendingLabel="Wird dupliziert..."
               >
                 <Copy className="size-4" aria-hidden="true" />
                 Duplizieren
-              </button>
+              </SubmitButton>
             </form>
             <Link
               className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"

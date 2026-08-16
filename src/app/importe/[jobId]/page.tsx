@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DeleteImportJobButton } from "@/app/importe/delete-import-job-button";
 import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import {
   confirmFixturesImportJob,
   confirmMatchStatsImportJob,
@@ -186,17 +187,21 @@ export default async function ImportReviewPage({
               </table>
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
-              <button
-                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
+              <SubmitButton
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
                 formAction={saveImportReviewData}
                 formNoValidate
-                type="submit"
+                pendingLabel="Speichert..."
               >
                 Aenderungen speichern
-              </button>
-              <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" formNoValidate type="submit">
+              </SubmitButton>
+              <SubmitButton
+                className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                formNoValidate
+                pendingLabel="Wird angewendet..."
+              >
                 {job.status === "CONFIRMED" ? "Kaderimport erneut anwenden" : "Kaderimport bestaetigen"}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         ) : null}
@@ -358,17 +363,21 @@ export default async function ImportReviewPage({
               </table>
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
-              <button
-                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
+              <SubmitButton
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
                 formAction={saveImportReviewData}
                 formNoValidate
-                type="submit"
+                pendingLabel="Speichert..."
               >
                 Aenderungen speichern
-              </button>
-              <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" formNoValidate type="submit">
+              </SubmitButton>
+              <SubmitButton
+                className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                formNoValidate
+                pendingLabel="Wird angewendet..."
+              >
                 {job.status === "CONFIRMED" ? "Spieltagsimport erneut anwenden" : "Spieltagsimport bestaetigen"}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         ) : null}
@@ -455,17 +464,21 @@ export default async function ImportReviewPage({
               </table>
             </div>
             <div className="flex flex-col gap-3 border-t border-border p-5 sm:flex-row sm:justify-end">
-              <button
-                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground"
+              <SubmitButton
+                className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
                 formAction={saveImportReviewData}
                 formNoValidate
-                type="submit"
+                pendingLabel="Speichert..."
               >
                 Aenderungen speichern
-              </button>
-              <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" formNoValidate type="submit">
+              </SubmitButton>
+              <SubmitButton
+                className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                formNoValidate
+                pendingLabel="Wird angewendet..."
+              >
                 {job.status === "CONFIRMED" ? "Spielplan erneut anwenden" : "Spielplan bestaetigen"}
-              </button>
+              </SubmitButton>
             </div>
           </form>
         ) : null}

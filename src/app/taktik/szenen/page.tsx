@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppShell, Breadcrumbs, EmptyState } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { createTacticScene } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { tacticSceneCategoryLabel } from "@/lib/labels";
@@ -46,9 +47,12 @@ export default async function TacticScenesPage({
                 </option>
               ))}
             </select>
-            <button className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+            <SubmitButton
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="Wird angelegt..."
+            >
               Neue Szene
-            </button>
+            </SubmitButton>
           </form>
         </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 
 import { updateClubMembershipRole, updateTeamMembershipRole } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 
 type Option = { id: string; name: string };
 
@@ -58,9 +59,9 @@ export function MembershipRow({
               <option value="INVITED">Eingeladen</option>
               <option value="INACTIVE">Inaktiv</option>
             </select>
-            <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+            <SubmitButton className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
               Speichern
-            </button>
+            </SubmitButton>
             <button className="h-10 rounded-lg border border-border px-4 text-sm font-semibold text-foreground" onClick={() => setIsEditing(false)} type="button">
               Abbrechen
             </button>

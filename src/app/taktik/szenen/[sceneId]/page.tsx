@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 
 import { AppShell, Breadcrumbs } from "@/components/app-shell";
 import { PlayerTabs } from "@/components/player-tabs";
+import { SubmitButton } from "@/components/submit-button";
 import { SceneCanvasPanel, SceneEditorProvider, SceneToolPanel } from "@/app/taktik/szenen/[sceneId]/scene-editor";
+import { DeleteSceneButton } from "@/app/taktik/szenen/[sceneId]/delete-scene-button";
 import { ScenePreview } from "@/app/taktik/szenen/[sceneId]/scene-preview";
 import { StepStrip } from "@/app/taktik/szenen/[sceneId]/step-strip";
-import { deleteTacticScene, duplicateTacticScene, updateTacticSceneMeta } from "@/lib/actions";
+import { duplicateTacticScene, updateTacticSceneMeta } from "@/lib/actions";
 import { requireActiveTeam, requireAppContext, requirePermission } from "@/lib/app-context";
 import { tacticSceneCategoryLabel } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
@@ -100,24 +102,25 @@ export default async function TacticScenePage({
                 type="number"
               />
             </label>
-            <button className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+            <SubmitButton
+              className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="Speichert..."
+            >
               Details speichern
-            </button>
+            </SubmitButton>
           </form>
 
           <form action={duplicateTacticScene}>
             <input name="sceneId" type="hidden" value={scene.id} />
-            <button className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary" type="submit">
+            <SubmitButton
+              className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="Wird angelegt..."
+            >
               Als neue Szene speichern
-            </button>
+            </SubmitButton>
           </form>
 
-          <form action={deleteTacticScene}>
-            <input name="sceneId" type="hidden" value={scene.id} />
-            <button className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-danger-soft px-4 text-sm font-semibold text-danger" type="submit">
-              Szene loeschen
-            </button>
-          </form>
+          <DeleteSceneButton sceneId={scene.id} />
         </aside>
 
         <div className="space-y-4">

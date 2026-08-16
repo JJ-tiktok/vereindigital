@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { LinkIcon, Pencil, XCircle } from "lucide-react";
 
 import { CopyInviteLink } from "@/components/copy-invite-link";
+import { SubmitButton } from "@/components/submit-button";
 import { revokeInvitation, updateInvitation, type ActionState } from "@/lib/actions";
 
 type Option = { id: string; name: string };
@@ -112,10 +113,13 @@ export function InvitationRow({
         {canEdit ? (
           <form action={revokeInvitation}>
             <input name="invitationId" type="hidden" value={invitation.id} />
-            <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger" type="submit">
+            <SubmitButton
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-danger-soft px-3 text-sm font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="..."
+            >
               <XCircle className="size-4" aria-hidden="true" />
               Widerrufen
-            </button>
+            </SubmitButton>
           </form>
         ) : null}
       </div>
