@@ -15,7 +15,10 @@ export {
 export { bulkAcceptEventAttendance, createCalendarEvent, updateCalendarEvent, updateEventAttendance } from "./calendar";
 export {
   assignMatchLineupSlotPlayer,
+  createMatchNote,
+  deleteMatchNote,
   updateAllPlayerMatchStats,
+  updateMatchNote,
   updateMatchResult,
   updateMatchTactic,
   updatePlayerMatchStat,
