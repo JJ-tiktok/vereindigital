@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Pencil } from "lucide-react";
 
 import { setActiveSeason, updateSeason } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { toDateInputValue } from "@/lib/format";
 
 type SeasonTeam = { id: string; name: string };
@@ -65,9 +66,9 @@ export function SeasonCard({ season, canManage }: { season: Season; canManage: b
               />
             </div>
             <div className="flex items-end gap-2 sm:col-span-3">
-              <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+              <SubmitButton className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
                 Speichern
-              </button>
+              </SubmitButton>
               <button
                 className="h-10 rounded-lg border border-border px-4 text-sm font-semibold text-foreground"
                 onClick={() => setIsEditing(false)}
@@ -107,12 +108,12 @@ export function SeasonCard({ season, canManage }: { season: Season; canManage: b
             {!season.isActive ? (
               <form action={setActiveSeason}>
                 <input name="seasonId" type="hidden" value={season.id} />
-                <button
-                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                  type="submit"
+                <SubmitButton
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  pendingLabel="Wird gesetzt..."
                 >
                   Aktiv setzen
-                </button>
+                </SubmitButton>
               </form>
             ) : null}
           </div>

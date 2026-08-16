@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { deletePlayerFileEntry, updatePlayerFileEntry } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { formatDate, toDateInputValue } from "@/lib/format";
 import { fileEntryTypeLabel, fileEntryVisibilityLabel } from "@/lib/attribute-groups";
 
@@ -75,9 +76,9 @@ export function FileEntryRow({ entry, playerProfileId }: { entry: FileEntry; pla
           <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" defaultValue={entry.body} name="body" required />
         </label>
         <div className="flex items-center gap-2">
-          <button className="h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-white" type="submit">
+          <SubmitButton className="h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
             Speichern
-          </button>
+          </SubmitButton>
           <button className="h-9 rounded-lg border border-border px-3 text-xs font-semibold text-foreground" onClick={() => setIsEditing(false)} type="button">
             Abbrechen
           </button>
@@ -124,9 +125,12 @@ export function FileEntryRow({ entry, playerProfileId }: { entry: FileEntry; pla
           >
             <input name="entryId" type="hidden" value={entry.id} />
             <input name="playerProfileId" type="hidden" value={playerProfileId} />
-            <button className="h-8 rounded-lg border border-danger-soft px-3 text-xs font-semibold text-danger" type="submit">
+            <SubmitButton
+              className="h-8 rounded-lg border border-danger-soft px-3 text-xs font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="..."
+            >
               Loeschen
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>

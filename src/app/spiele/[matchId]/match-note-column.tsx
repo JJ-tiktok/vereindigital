@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { createMatchNote, deleteMatchNote, updateMatchNote } from "@/lib/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { formatDateTime } from "@/lib/format";
 
 type MatchNote = {
@@ -47,9 +48,12 @@ export function MatchNoteColumn({
           placeholder="Notiz hinzufuegen..."
           required
         />
-        <button className="h-9 w-full rounded-lg border border-dashed border-slate-400 text-sm font-semibold text-foreground" type="submit">
+        <SubmitButton
+          className="h-9 w-full rounded-lg border border-dashed border-slate-400 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="Wird hinzugefuegt..."
+        >
           Notiz hinzufuegen
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );
@@ -74,9 +78,9 @@ function MatchNoteItem({
         <input name="category" type="hidden" value={category} />
         <textarea className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm" defaultValue={note.body} name="body" required />
         <div className="flex items-center gap-2">
-          <button className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-white" type="submit">
+          <SubmitButton className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
             Speichern
-          </button>
+          </SubmitButton>
           <button className="h-8 rounded-lg border border-border px-3 text-xs font-semibold text-foreground" onClick={() => setIsEditing(false)} type="button">
             Abbrechen
           </button>
@@ -106,9 +110,12 @@ function MatchNoteItem({
           >
             <input name="noteId" type="hidden" value={note.id} />
             <input name="matchId" type="hidden" value={matchId} />
-            <button className="rounded-lg border border-danger-soft px-2 py-1 font-semibold text-danger" type="submit">
+            <SubmitButton
+              className="rounded-lg border border-danger-soft px-2 py-1 font-semibold text-danger disabled:cursor-not-allowed disabled:opacity-60"
+              pendingLabel="..."
+            >
               Loeschen
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { DeleteFeedbackButton } from "@/app/feedback/[feedbackId]/delete-feedback-button";
 import { AppShell, Breadcrumbs, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { requireAppContext } from "@/lib/app-context";
 import { updateFeedbackStatus } from "@/lib/feedback-actions";
 import { canUseFeedback } from "@/lib/feedback-permissions";
@@ -103,9 +104,9 @@ export default async function FeedbackDetailPage({
                   </option>
                 ))}
               </select>
-              <button className="mt-4 h-10 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white" type="submit">
+              <SubmitButton className="mt-4 h-10 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="Speichert...">
                 Status speichern
-              </button>
+              </SubmitButton>
             </form>
           ) : null}
 

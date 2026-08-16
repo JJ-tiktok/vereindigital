@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 
 import { SeasonCard } from "@/app/saisons/season-card";
 import { AppShell, PageHeader } from "@/components/app-shell";
+import { SubmitButton } from "@/components/submit-button";
 import { createSeason } from "@/lib/actions";
 import { requireAppContext } from "@/lib/app-context";
 import { toDateInputValue } from "@/lib/format";
@@ -128,12 +129,12 @@ export default async function SeasonsPage({
                 Direkt als aktive Saison setzen
               </label>
 
-              <button
-                className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong"
-                type="submit"
+              <SubmitButton
+                className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+                pendingLabel="Wird erstellt..."
               >
                 Saison erstellen
-              </button>
+              </SubmitButton>
             </form>
           ) : null}
 

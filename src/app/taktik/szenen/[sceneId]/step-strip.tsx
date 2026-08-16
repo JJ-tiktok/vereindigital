@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Copy, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { SubmitButton } from "@/components/submit-button";
 import { deleteTacticSceneStep, duplicateTacticSceneStep, reorderTacticSceneSteps } from "@/lib/actions";
 
 type Step = { id: string; label: string | null };
@@ -100,14 +101,13 @@ export function StepStrip({ sceneId, steps, activeStepId }: { sceneId: string; s
       <form action={duplicateTacticSceneStep} className="contents">
         <input name="sceneId" type="hidden" value={sceneId} />
         <input name="stepId" type="hidden" value={activeStepId} />
-        <button
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground transition hover:border-primary"
-          title="Aktuellen Schritt duplizieren"
-          type="submit"
+        <SubmitButton
+          className="flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 text-sm font-semibold text-foreground transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="..."
         >
           <Copy className="size-4" aria-hidden="true" />
           Schritt
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

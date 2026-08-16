@@ -27,6 +27,7 @@ import { FeedbackWidget } from "@/components/feedback-widget";
 import { Sidebar, type SidebarNavEntry } from "@/components/sidebar";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { hasPermission, type AppContext } from "@/lib/app-context";
+import { SubmitButton } from "@/components/submit-button";
 import { canUseFeedback } from "@/lib/feedback-permissions";
 import { markFeedbackNotificationRead } from "@/lib/feedback-actions";
 import { prisma } from "@/lib/prisma";
@@ -181,10 +182,10 @@ export async function AppShell({
                   <form action={markFeedbackNotificationRead}>
                     <input name="notificationId" type="hidden" value={notification.id} />
                     <input name="redirectTo" type="hidden" value={activePath} />
-                    <button className="rounded-lg p-1 text-success transition hover:bg-success/10" type="submit">
+                    <SubmitButton className="rounded-lg p-1 text-success transition hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-60" pendingLabel="...">
                       <X className="size-4" aria-hidden="true" />
                       <span className="sr-only">Als gelesen markieren</span>
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               ))}

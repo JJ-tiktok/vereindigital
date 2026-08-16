@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { SubmitButton } from "@/components/submit-button";
 import { completeClubOnboarding } from "@/lib/onboarding";
 import { prisma } from "@/lib/prisma";
 
@@ -74,12 +75,12 @@ export default async function OnboardingPage({
             </p>
           ) : null}
 
-          <button
-            className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong"
-            type="submit"
+          <SubmitButton
+            className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-strong disabled:cursor-not-allowed disabled:opacity-60"
+            pendingLabel="Wird erstellt..."
           >
             Verein erstellen
-          </button>
+          </SubmitButton>
         </form>
       </section>
     </main>

@@ -22,6 +22,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { GoalkeeperAnalysis, type GoalkeeperSnapshotTarget } from "@/components/goalkeeper-analysis";
 import { PlayerTabs } from "@/components/player-tabs";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function PlayerDetailPage({
   params,
@@ -387,10 +388,13 @@ export default async function PlayerDetailPage({
                             Notiz
                             <textarea className="mt-2 min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm" name="body" required />
                           </label>
-                          <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-foreground md:w-max" type="submit">
+                          <SubmitButton
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-slate-400 px-4 text-sm font-semibold text-foreground md:w-max disabled:cursor-not-allowed disabled:opacity-60"
+                            pendingLabel="Wird hinzugefuegt..."
+                          >
                             <ClipboardEdit className="size-4" aria-hidden="true" />
                             Eintrag hinzufuegen
-                          </button>
+                          </SubmitButton>
                         </form>
                       </article>
                     </div>
@@ -515,9 +519,12 @@ export default async function PlayerDetailPage({
                         </div>
                       ))}
                     </div>
-                    <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white md:w-max" type="submit">
+                    <SubmitButton
+                      className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white md:w-max disabled:cursor-not-allowed disabled:opacity-60"
+                      pendingLabel="Speichert..."
+                    >
                       Bewertungsstand speichern
-                    </button>
+                    </SubmitButton>
                   </form>
                 </section>
               ),

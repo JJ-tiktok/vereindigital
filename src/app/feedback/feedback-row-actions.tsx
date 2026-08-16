@@ -3,6 +3,7 @@
 import { CheckCircle2, Trash2 } from "lucide-react";
 
 import { deleteFeedbackItem, markFeedbackTriaged } from "@/lib/feedback-actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export function FeedbackRowActions({ feedbackId, isNew }: { feedbackId: string; isNew: boolean }) {
   return (
@@ -10,10 +11,13 @@ export function FeedbackRowActions({ feedbackId, isNew }: { feedbackId: string; 
       {isNew ? (
         <form action={markFeedbackTriaged}>
           <input name="feedbackId" type="hidden" value={feedbackId} />
-          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-semibold text-foreground transition hover:bg-surface-muted" type="submit">
+          <SubmitButton
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-semibold text-foreground transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+            pendingLabel="..."
+          >
             <CheckCircle2 className="size-3.5" aria-hidden="true" />
             Als gelesen
-          </button>
+          </SubmitButton>
         </form>
       ) : null}
       <form
@@ -25,10 +29,13 @@ export function FeedbackRowActions({ feedbackId, isNew }: { feedbackId: string; 
         }}
       >
         <input name="feedbackId" type="hidden" value={feedbackId} />
-        <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-danger-soft px-2.5 text-xs font-semibold text-danger transition hover:bg-danger-soft" type="submit">
+        <SubmitButton
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-danger-soft px-2.5 text-xs font-semibold text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-60"
+          pendingLabel="..."
+        >
           <Trash2 className="size-3.5" aria-hidden="true" />
           Loeschen
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );
